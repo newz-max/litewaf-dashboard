@@ -8,6 +8,18 @@ export interface ItemResponse<T> {
   item: T
 }
 
+export interface LoginUser {
+  id: number
+  username: string
+  role: string
+}
+
+export interface LoginResponse {
+  access_token: string
+  expires_at: string
+  user: LoginUser
+}
+
 export interface Site {
   id: number
   name: string
@@ -97,6 +109,81 @@ export interface ReleaseRecord {
   config_path?: string
 }
 
+export interface PublishPreview {
+  summary: {
+    sites: number
+    rules: number
+    policies: number
+    access_lists: number
+    rate_limits: number
+  }
+}
+
+export interface AuditLog {
+  id: number
+  actor: string
+  role: string
+  action: string
+  resource_type: string
+  resource_id: string
+  result: string
+  remote_addr: string
+  user_agent: string
+  message: string
+  created_at?: string
+  time?: string
+}
+
+export interface AccessListEntry {
+  id: number
+  name: string
+  kind: string
+  target: string
+  value: string
+  action: string
+  site_id: number
+  enabled: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface AccessListInput {
+  name: string
+  kind: string
+  target: string
+  value: string
+  action: string
+  site_id: number
+  enabled: boolean
+}
+
+export interface RateLimitRule {
+  id: number
+  name: string
+  scope: string
+  match_value: string
+  threshold: number
+  window_sec: number
+  action: string
+  ban_duration_sec: number
+  site_id: number
+  enabled: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface RateLimitInput {
+  name: string
+  scope: string
+  match_value: string
+  threshold: number
+  window_sec: number
+  action: string
+  ban_duration_sec: number
+  site_id: number
+  enabled: boolean
+}
+
 export interface VersionInfo {
   name: string
   version: string
@@ -105,6 +192,10 @@ export interface VersionInfo {
 
 export function getVersion() {
   return apiClient.get<VersionInfo>("/api/v1/version").then((response) => response.data)
+}
+
+export function login(payload: { username: string; password: string }) {
+  return apiClient.post<LoginResponse>("/api/v1/auth/login", payload).then((response) => response.data)
 }
 
 export function getSites() {
@@ -173,4 +264,64 @@ export function publishRelease(payload: { operator?: string; note?: string } = {
   return apiClient
     .post<ItemResponse<ReleaseRecord>>("/api/v1/releases", payload)
     .then((response) => response.data.item)
+}
+
+export function previewRelease() {
+  return apiClient.get<PublishPreview>("/api/v1/releases/preview").then((response) => response.data)
+}
+
+export function rollbackRelease(version: string) {
+  return apiClient
+    .post<ItemResponse<ReleaseRecord>>(`/api/v1/releases/${encodeURIComponent(version)}/rollback`, {})
+    .then((response) => response.data.item)
+}
+
+export function getAuditLogs(params: Record<string, string> = {}) {
+  return apiClient
+    .get<ListResponse<AuditLog>>("/api/v1/audit-logs", { params })
+    .then((response) => response.data.items)
+}
+
+export function getAccessLists() {
+  return apiClient
+    .get<ListResponse<AccessListEntry>>("/api/v1/access-lists")
+    .then((response) => response.data.items)
+}
+
+export function createAccessList(payload: AccessListInput) {
+  return apiClient
+    .post<ItemResponse<AccessListEntry>>("/api/v1/access-lists", payload)
+    .then((response) => response.data.item)
+}
+
+export function updateAccessList(id: number, payload: AccessListInput) {
+  return apiClient
+    .put<ItemResponse<AccessListEntry>>(`/api/v1/access-lists/${id}`, payload)
+    .then((response) => response.data.item)
+}
+
+export function deleteAccessList(id: number) {
+  return apiClient.delete(`/api/v1/access-lists/${id}`)
+}
+
+export function getRateLimits() {
+  return apiClient
+    .get<ListResponse<RateLimitRule>>("/api/v1/rate-limits")
+    .then((response) => response.data.items)
+}
+
+export function createRateLimit(payload: RateLimitInput) {
+  return apiClient
+    .post<ItemResponse<RateLimitRule>>("/api/v1/rate-limits", payload)
+    .then((response) => response.data.item)
+}
+
+export function updateRateLimit(id: number, payload: RateLimitInput) {
+  return apiClient
+    .put<ItemResponse<RateLimitRule>>(`/api/v1/rate-limits/${id}`, payload)
+    .then((response) => response.data.item)
+}
+
+export function deleteRateLimit(id: number) {
+  return apiClient.delete(`/api/v1/rate-limits/${id}`)
 }

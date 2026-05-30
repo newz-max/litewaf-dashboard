@@ -7,13 +7,25 @@ import PoliciesView from "@/views/PoliciesView.vue"
 import AttackLogsView from "@/views/AttackLogsView.vue"
 import ReleasesView from "@/views/ReleasesView.vue"
 import SettingsView from "@/views/SettingsView.vue"
+import LoginView from "@/views/LoginView.vue"
+import AuditLogsView from "@/views/AuditLogsView.vue"
+import AccessListsView from "@/views/AccessListsView.vue"
+import RateLimitsView from "@/views/RateLimitsView.vue"
+import { useAuthStore } from "@/stores/auth"
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
+      path: "/login",
+      name: "login",
+      component: LoginView,
+      meta: { title: "登录" }
+    },
+    {
       path: "/",
       component: MainLayout,
+      meta: { requiresAuth: true },
       children: [
         {
           path: "",
@@ -52,6 +64,24 @@ const router = createRouter({
           meta: { title: "发布记录" }
         },
         {
+          path: "audit-logs",
+          name: "auditLogs",
+          component: AuditLogsView,
+          meta: { title: "审计日志" }
+        },
+        {
+          path: "access-lists",
+          name: "accessLists",
+          component: AccessListsView,
+          meta: { title: "黑白名单" }
+        },
+        {
+          path: "rate-limits",
+          name: "rateLimits",
+          component: RateLimitsView,
+          meta: { title: "限流配置" }
+        },
+        {
           path: "settings",
           name: "settings",
           component: SettingsView,
@@ -60,6 +90,16 @@ const router = createRouter({
       ]
     }
   ]
+})
+
+router.beforeEach((to) => {
+  const authStore = useAuthStore()
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    return { name: "login", query: { redirect: to.fullPath } }
+  }
+  if (to.name === "login" && authStore.isAuthenticated) {
+    return { name: "dashboard" }
+  }
 })
 
 router.afterEach((to) => {

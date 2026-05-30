@@ -9,16 +9,21 @@ import {
   FlashOutline,
   GlobeOutline,
   LayersOutline,
+  ListOutline,
   MoonOutline,
   OptionsOutline,
+  ReaderOutline,
   ShieldCheckmarkOutline,
   SunnyOutline,
+  TimerOutline,
   WarningOutline
 } from "@vicons/ionicons5"
 import { useThemeStore } from "@/stores/theme"
+import { useAuthStore } from "@/stores/auth"
 
 const route = useRoute()
 const themeStore = useThemeStore()
+const authStore = useAuthStore()
 
 function renderIcon(icon: typeof AnalyticsOutline) {
   return () => h(NIcon, null, { default: () => h(icon) })
@@ -28,7 +33,7 @@ function renderLabel(label: string, to: string) {
   return () => h(RouterLink, { to }, { default: () => label })
 }
 
-const menuOptions: MenuOption[] = [
+const menuOptions = computed<MenuOption[]>(() => [
   {
     key: "dashboard",
     label: renderLabel("仪表盘", "/"),
@@ -59,12 +64,31 @@ const menuOptions: MenuOption[] = [
     label: renderLabel("发布记录", "/releases"),
     icon: renderIcon(CloudUploadOutline)
   },
+  ...(authStore.canAudit
+    ? [
+        {
+          key: "auditLogs",
+          label: renderLabel("审计日志", "/audit-logs"),
+          icon: renderIcon(ReaderOutline)
+        }
+      ]
+    : []),
+  {
+    key: "accessLists",
+    label: renderLabel("黑白名单", "/access-lists"),
+    icon: renderIcon(ListOutline)
+  },
+  {
+    key: "rateLimits",
+    label: renderLabel("限流配置", "/rate-limits"),
+    icon: renderIcon(TimerOutline)
+  },
   {
     key: "settings",
     label: renderLabel("系统设置", "/settings"),
     icon: renderIcon(OptionsOutline)
   }
-]
+])
 
 const activeKey = computed(() => String(route.name || "dashboard"))
 const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline))
@@ -106,7 +130,7 @@ const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline
 
         <div class="header-actions">
           <NTag type="success" size="small" round>Debian 12</NTag>
-          <NTag type="info" size="small" round>Docker Ready</NTag>
+          <NTag type="info" size="small" round>{{ authStore.user?.role || "未登录" }}</NTag>
           <NButton circle quaternary @click="themeStore.toggleTheme">
             <template #icon>
               <NIcon>
@@ -114,6 +138,7 @@ const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline
               </NIcon>
             </template>
           </NButton>
+          <NButton quaternary @click="authStore.signOut">退出</NButton>
         </div>
       </NLayoutHeader>
 
