@@ -12,6 +12,7 @@ import {
   ListOutline,
   MoonOutline,
   OptionsOutline,
+  PulseOutline,
   ReaderOutline,
   ShieldCheckmarkOutline,
   SunnyOutline,
@@ -58,6 +59,11 @@ const menuOptions = computed<MenuOption[]>(() => [
     key: "attackLogs",
     label: renderLabel("攻击日志", "/attack-logs"),
     icon: renderIcon(WarningOutline)
+  },
+  {
+    key: "accessLogs",
+    label: renderLabel("访问日志", "/access-logs"),
+    icon: renderIcon(PulseOutline)
   },
   {
     key: "releases",

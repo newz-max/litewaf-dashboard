@@ -84,17 +84,56 @@ export interface PolicyInput {
 }
 
 export interface AttackLog {
-  id: string
+  id: number
+  request_id: string
   created_at?: string
   time?: string
-  site_id?: string
-  site?: string
-  client_ip?: string
-  ip?: string
+  site_id: number
+  event_type: string
+  client_ip: string
+  method: string
   uri: string
-  rule_id?: string
-  rule?: string
+  rule_id: number
+  rule_type: string
+  target: string
   action: string
+  disposition: string
+  summary: string
+  access_list_id: number
+  rate_limit_id: number
+}
+
+export interface AccessLog {
+  id: number
+  request_id: string
+  site_id: number
+  host: string
+  method: string
+  uri: string
+  status: number
+  upstream_status: number
+  duration_ms: number
+  client_ip: string
+  user_agent: string
+  disposition: string
+  created_at?: string
+  time?: string
+}
+
+export interface ObservabilitySummary {
+  requests: number
+  blocked_requests: number
+  waf_matches: number
+  rate_limited: number
+  top_ips: SummaryCount[]
+  top_uris: SummaryCount[]
+  top_rules: SummaryCount[]
+  attack_types: SummaryCount[]
+}
+
+export interface SummaryCount {
+  key: string
+  count: number
 }
 
 export interface ReleaseRecord {
@@ -248,10 +287,22 @@ export function deletePolicy(id: number) {
   return apiClient.delete(`/api/v1/policies/${id}`)
 }
 
-export function getAttackLogs() {
+export function getAttackLogs(params: Record<string, string | number> = {}) {
   return apiClient
-    .get<ListResponse<AttackLog>>("/api/v1/attack-logs")
+    .get<ListResponse<AttackLog>>("/api/v1/attack-logs", { params })
     .then((response) => response.data.items)
+}
+
+export function getAccessLogs(params: Record<string, string | number> = {}) {
+  return apiClient
+    .get<ListResponse<AccessLog>>("/api/v1/access-logs", { params })
+    .then((response) => response.data.items)
+}
+
+export function getObservabilitySummary(params: Record<string, string | number> = {}) {
+  return apiClient
+    .get<ItemResponse<ObservabilitySummary>>("/api/v1/observability/summary", { params })
+    .then((response) => response.data.item)
 }
 
 export function getReleases() {

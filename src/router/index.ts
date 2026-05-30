@@ -5,6 +5,7 @@ import SitesView from "@/views/SitesView.vue"
 import RulesView from "@/views/RulesView.vue"
 import PoliciesView from "@/views/PoliciesView.vue"
 import AttackLogsView from "@/views/AttackLogsView.vue"
+import AccessLogsView from "@/views/AccessLogsView.vue"
 import ReleasesView from "@/views/ReleasesView.vue"
 import SettingsView from "@/views/SettingsView.vue"
 import LoginView from "@/views/LoginView.vue"
@@ -56,6 +57,12 @@ const router = createRouter({
           name: "attackLogs",
           component: AttackLogsView,
           meta: { title: "攻击日志" }
+        },
+        {
+          path: "access-logs",
+          name: "accessLogs",
+          component: AccessLogsView,
+          meta: { title: "访问日志" }
         },
         {
           path: "releases",

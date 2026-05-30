@@ -1,31 +1,32 @@
 <script setup lang="ts">
 import { computed, reactive } from "vue"
-import { getAttackLogs } from "@/api/litewaf"
+import { getAccessLogs } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 
 const filters = reactive({
   site_id: "",
+  host: "",
   client_ip: "",
-  rule_id: "",
-  action: "",
-  disposition: "",
-  event_type: ""
+  method: "",
+  uri: "",
+  status: "",
+  disposition: ""
 })
 
-const logsResource = useApiResource(() => getAttackLogs(cleanFilters()))
+const logsResource = useApiResource(() => getAccessLogs(cleanFilters()))
 const logs = computed(() => [...(logsResource.data.value ?? [])])
 
 const columns = [
   { title: "时间", key: "time" },
   { title: "请求 ID", key: "request_id" },
   { title: "站点", key: "site_id" },
-  { title: "来源 IP", key: "client_ip" },
-  { title: "类型", key: "event_type" },
-  { title: "规则", key: "rule_id" },
-  { title: "动作", key: "action" },
-  { title: "处置", key: "disposition" },
+  { title: "Host", key: "host" },
+  { title: "方法", key: "method" },
   { title: "URI", key: "uri" },
-  { title: "摘要", key: "summary" }
+  { title: "状态", key: "status" },
+  { title: "耗时 ms", key: "duration_ms" },
+  { title: "来源 IP", key: "client_ip" },
+  { title: "处置", key: "disposition" }
 ]
 
 function cleanFilters() {
@@ -37,8 +38,8 @@ function cleanFilters() {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">攻击日志</h1>
-        <p class="page-subtitle">检索规则、黑白名单和限流命中记录。</p>
+        <h1 class="page-title">访问日志</h1>
+        <p class="page-subtitle">查询网关请求、响应状态、耗时和最终处置。</p>
       </div>
       <NButton @click="logsResource.refresh">刷新</NButton>
     </div>
@@ -46,36 +47,29 @@ function cleanFilters() {
     <section class="section section-pad">
       <NSpace class="toolbar">
         <NInput v-model:value="filters.site_id" placeholder="站点 ID" clearable />
+        <NInput v-model:value="filters.host" placeholder="Host" clearable />
         <NInput v-model:value="filters.client_ip" placeholder="来源 IP" clearable />
-        <NInput v-model:value="filters.rule_id" placeholder="规则 ID" clearable />
         <NSelect
-          v-model:value="filters.event_type"
+          v-model:value="filters.method"
           clearable
-          placeholder="事件类型"
+          placeholder="方法"
           :options="[
-            { label: '规则', value: 'rule' },
-            { label: '黑白名单', value: 'access-list' },
-            { label: '限流', value: 'rate-limit' }
+            { label: 'GET', value: 'GET' },
+            { label: 'POST', value: 'POST' },
+            { label: 'PUT', value: 'PUT' },
+            { label: 'DELETE', value: 'DELETE' }
           ]"
         />
-        <NSelect
-          v-model:value="filters.action"
-          clearable
-          placeholder="动作"
-          :options="[
-            { label: '阻断', value: 'block' },
-            { label: '观察', value: 'log-only' },
-            { label: '放行', value: 'allow' }
-          ]"
-        />
+        <NInput v-model:value="filters.uri" placeholder="URI" clearable />
+        <NInput v-model:value="filters.status" placeholder="状态码" clearable />
         <NSelect
           v-model:value="filters.disposition"
           clearable
           placeholder="处置"
           :options="[
+            { label: '已代理', value: 'proxied' },
             { label: '已阻断', value: 'blocked' },
             { label: '已限流', value: 'rate-limited' },
-            { label: '已观察', value: 'observed' },
             { label: '已拒绝', value: 'rejected' }
           ]"
         />
@@ -88,7 +82,7 @@ function cleanFilters() {
         :data="logs"
         :bordered="false"
       />
-      <NEmpty v-if="!logsResource.loading.value && logs.length === 0" description="暂无攻击日志" />
+      <NEmpty v-if="!logsResource.loading.value && logs.length === 0" description="暂无访问日志" />
       <NAlert v-if="logsResource.error.value" type="error" style="margin-top: 12px">
         {{ logsResource.error.value }}
       </NAlert>

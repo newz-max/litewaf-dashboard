@@ -3,54 +3,45 @@ import { computed } from "vue"
 import VChart from "vue-echarts"
 import { use } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
-import { LineChart, PieChart } from "echarts/charts"
-import {
-  GridComponent,
-  LegendComponent,
-  TooltipComponent
-} from "echarts/components"
-import { getAttackLogs, getRules, getSites } from "@/api/litewaf"
+import { BarChart, PieChart } from "echarts/charts"
+import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components"
+import { getObservabilitySummary, getRules, getSites } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 
-use([CanvasRenderer, LineChart, PieChart, GridComponent, LegendComponent, TooltipComponent])
+use([CanvasRenderer, BarChart, PieChart, GridComponent, LegendComponent, TooltipComponent])
 
 const sitesResource = useApiResource(getSites)
 const rulesResource = useApiResource(getRules)
-const logsResource = useApiResource(getAttackLogs)
+const summaryResource = useApiResource(getObservabilitySummary)
+
+const summary = computed(() => summaryResource.data.value)
 
 const metrics = computed(() => [
   { label: "防护站点", value: String(sitesResource.data.value?.length ?? 0), note: "来自控制面接口" },
   { label: "规则数量", value: String(rulesResource.data.value?.length ?? 0), note: "已加载规则" },
-  { label: "攻击日志", value: String(logsResource.data.value?.length ?? 0), note: "当前查询结果" },
-  { label: "实时 QPS", value: "-", note: "等待指标接口接入" }
+  { label: "请求总数", value: String(summary.value?.requests ?? 0), note: "来自访问日志" },
+  { label: "拦截/拒绝", value: String(summary.value?.blocked_requests ?? 0), note: "来自观测汇总" },
+  { label: "WAF 命中", value: String(summary.value?.waf_matches ?? 0), note: "规则与控制命中" },
+  { label: "限流次数", value: String(summary.value?.rate_limited ?? 0), note: "来自访问和事件日志" }
 ])
 
-const trendOption = computed(() => ({
-  tooltip: { trigger: "axis" },
-  grid: { left: 36, right: 16, top: 24, bottom: 28 },
-  xAxis: {
-    type: "category",
-    data: []
-  },
-  yAxis: { type: "value" },
-  series: [
-    {
-      name: "请求",
-      type: "line",
-      smooth: true,
-      data: [],
-      lineStyle: { color: "#0f766e", width: 3 },
-      areaStyle: { color: "rgba(15, 118, 110, 0.14)" }
-    },
-    {
-      name: "拦截",
-      type: "line",
-      smooth: true,
-      data: [],
-      lineStyle: { color: "#b42318", width: 2 }
-    }
-  ]
-}))
+const topIpOption = computed(() => {
+  const rows = summary.value?.top_ips ?? []
+  return {
+    tooltip: { trigger: "axis" },
+    grid: { left: 40, right: 16, top: 20, bottom: 32 },
+    xAxis: { type: "category", data: rows.map((item) => item.key) },
+    yAxis: { type: "value" },
+    series: [
+      {
+        name: "请求",
+        type: "bar",
+        data: rows.map((item) => item.count),
+        itemStyle: { color: "#0f766e" }
+      }
+    ]
+  }
+})
 
 const attackTypeOption = computed(() => ({
   tooltip: { trigger: "item" },
@@ -59,7 +50,7 @@ const attackTypeOption = computed(() => ({
     {
       type: "pie",
       radius: ["46%", "70%"],
-      data: []
+      data: (summary.value?.attack_types ?? []).map((item) => ({ name: item.key, value: item.count }))
     }
   ]
 }))
@@ -70,12 +61,15 @@ const attackTypeOption = computed(() => ({
     <div class="page-header">
       <div>
         <h1 class="page-title">安全态势</h1>
-        <p class="page-subtitle">实时观察 LiteWaf 网关流量、防护效果和攻击分布。</p>
+        <p class="page-subtitle">观察 LiteWaf 网关流量、防护效果和攻击分布。</p>
       </div>
-      <NButton type="primary" @click="logsResource.refresh">刷新态势</NButton>
+      <NButton type="primary" @click="summaryResource.refresh">刷新态势</NButton>
     </div>
 
-    <NAlert v-if="sitesResource.error.value || rulesResource.error.value || logsResource.error.value" type="error">
+    <NAlert
+      v-if="sitesResource.error.value || rulesResource.error.value || summaryResource.error.value"
+      type="error"
+    >
       控制面接口暂不可用，请确认 litewaf-api 已启动。
     </NAlert>
 
@@ -89,19 +83,41 @@ const attackTypeOption = computed(() => ({
 
     <div class="dashboard-grid">
       <section class="section section-pad chart-panel">
-        <div class="panel-title">流量与拦截趋势</div>
-        <VChart class="chart" :option="trendOption" autoresize />
+        <div class="panel-title">Top 来源 IP</div>
+        <VChart v-if="(summary?.top_ips.length ?? 0) > 0" class="chart" :option="topIpOption" autoresize />
+        <NEmpty v-else description="暂无来源统计" />
       </section>
 
       <section class="section section-pad chart-panel">
         <div class="panel-title">攻击类型分布</div>
-        <VChart class="chart" :option="attackTypeOption" autoresize />
+        <VChart
+          v-if="(summary?.attack_types.length ?? 0) > 0"
+          class="chart"
+          :option="attackTypeOption"
+          autoresize
+        />
+        <NEmpty v-else description="暂无攻击类型统计" />
       </section>
     </div>
 
     <section class="section section-pad">
-      <div class="panel-title">Top 来源</div>
-      <NEmpty description="等待攻击来源统计接口接入" />
+      <div class="panel-title">Top URI / 规则</div>
+      <div class="rank-grid">
+        <NList>
+          <NListItem v-for="item in summary?.top_uris ?? []" :key="item.key">
+            <span>{{ item.key }}</span>
+            <template #suffix>{{ item.count }}</template>
+          </NListItem>
+          <NEmpty v-if="(summary?.top_uris.length ?? 0) === 0" description="暂无 URI 统计" />
+        </NList>
+        <NList>
+          <NListItem v-for="item in summary?.top_rules ?? []" :key="item.key">
+            <span>规则 {{ item.key }}</span>
+            <template #suffix>{{ item.count }}</template>
+          </NListItem>
+          <NEmpty v-if="(summary?.top_rules.length ?? 0) === 0" description="暂无规则统计" />
+        </NList>
+      </div>
     </section>
   </main>
 </template>
@@ -109,7 +125,7 @@ const attackTypeOption = computed(() => ({
 <style scoped>
 .dashboard-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.85fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.85fr);
   gap: 16px;
 }
 
@@ -127,8 +143,15 @@ const attackTypeOption = computed(() => ({
   height: 280px;
 }
 
+.rank-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
 @media (max-width: 1080px) {
-  .dashboard-grid {
+  .dashboard-grid,
+  .rank-grid {
     grid-template-columns: 1fr;
   }
 }
