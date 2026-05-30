@@ -67,6 +67,22 @@ export interface Policy {
   name: string
   risk_threshold: number
   default_action: string
+  normalization_enabled: boolean
+  normalization_decode_passes: number
+  normalization_max_value_bytes: number
+  body_inspection_enabled: boolean
+  body_inspection_content_types: string[]
+  body_inspection_path_prefixes: string[]
+  body_inspection_max_bytes: number
+  oversized_body_action: string
+  upload_inspection_enabled: boolean
+  upload_max_bytes: number
+  upload_size_action: string
+  dynamic_ban_enabled: boolean
+  dynamic_ban_duration_sec: number
+  dynamic_ban_score_threshold: number
+  dynamic_ban_trigger_count: number
+  dynamic_ban_window_sec: number
   enabled: boolean
   site_ids: number[]
   rule_ids: number[]
@@ -78,6 +94,22 @@ export interface PolicyInput {
   name: string
   risk_threshold: number
   default_action: string
+  normalization_enabled: boolean
+  normalization_decode_passes: number
+  normalization_max_value_bytes: number
+  body_inspection_enabled: boolean
+  body_inspection_content_types: string[]
+  body_inspection_path_prefixes: string[]
+  body_inspection_max_bytes: number
+  oversized_body_action: string
+  upload_inspection_enabled: boolean
+  upload_max_bytes: number
+  upload_size_action: string
+  dynamic_ban_enabled: boolean
+  dynamic_ban_duration_sec: number
+  dynamic_ban_score_threshold: number
+  dynamic_ban_trigger_count: number
+  dynamic_ban_window_sec: number
   enabled: boolean
   site_ids: number[]
   rule_ids: number[]
@@ -101,6 +133,16 @@ export interface AttackLog {
   summary: string
   access_list_id: number
   rate_limit_id: number
+  advanced_target: string
+  normalized_value: string
+  score: number
+  threshold: number
+  matched_rule_ids: string
+  body_metadata: string
+  upload_metadata: string
+  ban_reason: string
+  ban_duration_sec: number
+  ban_remaining_sec: number
 }
 
 export interface AccessLog {
@@ -125,6 +167,10 @@ export interface ObservabilitySummary {
   blocked_requests: number
   waf_matches: number
   rate_limited: number
+  score_blocks: number
+  body_detections: number
+  upload_detections: number
+  dynamic_bans: number
   top_ips: SummaryCount[]
   top_uris: SummaryCount[]
   top_rules: SummaryCount[]
@@ -155,6 +201,7 @@ export interface PublishPreview {
     policies: number
     access_lists: number
     rate_limits: number
+    advanced_protection?: number
   }
 }
 
@@ -205,6 +252,8 @@ export interface RateLimitRule {
   window_sec: number
   action: string
   ban_duration_sec: number
+  violation_threshold: number
+  violation_window_sec: number
   site_id: number
   enabled: boolean
   created_at?: string
@@ -219,6 +268,8 @@ export interface RateLimitInput {
   window_sec: number
   action: string
   ban_duration_sec: number
+  violation_threshold: number
+  violation_window_sec: number
   site_id: number
   enabled: boolean
 }

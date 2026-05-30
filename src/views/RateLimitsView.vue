@@ -28,6 +28,8 @@ const columns = [
   { title: "窗口(秒)", key: "window_sec" },
   { title: "动作", key: "action" },
   { title: "封禁(秒)", key: "ban_duration_sec" },
+  { title: "违规阈值", key: "violation_threshold" },
+  { title: "违规窗口", key: "violation_window_sec" },
   { title: "站点 ID", key: "site_id" },
   { title: "启用", key: "enabled" }
 ]
@@ -41,6 +43,8 @@ function emptyForm(): RateLimitInput {
     window_sec: 60,
     action: "block",
     ban_duration_sec: 0,
+    violation_threshold: 0,
+    violation_window_sec: 0,
     site_id: 0,
     enabled: true
   }
@@ -106,6 +110,8 @@ async function remove(item: RateLimitRule) {
           <NSelect v-model:value="form.action" :options="[{ label: '阻断', value: 'block' }, { label: '仅记录', value: 'log-only' }]" />
         </NFormItem>
         <NFormItem label="封禁秒"><NInputNumber v-model:value="form.ban_duration_sec" :min="0" /></NFormItem>
+        <NFormItem label="违规阈值"><NInputNumber v-model:value="form.violation_threshold" :min="0" /></NFormItem>
+        <NFormItem label="违规窗口秒"><NInputNumber v-model:value="form.violation_window_sec" :min="0" /></NFormItem>
         <NFormItem label="站点 ID"><NInputNumber v-model:value="form.site_id" :min="0" /></NFormItem>
         <NFormItem label="启用"><NSwitch v-model:value="form.enabled" /></NFormItem>
         <NFormItem label="操作">

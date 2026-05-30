@@ -39,7 +39,18 @@ const typeOptions = [
 const targetOptions = [
   { label: "查询参数", value: "args" },
   { label: "URI", value: "uri" },
-  { label: "请求头", value: "headers" }
+  { label: "请求头", value: "headers" },
+  { label: "归一化 URI", value: "normalized_uri" },
+  { label: "归一化路径", value: "normalized_path" },
+  { label: "归一化参数", value: "normalized_args" },
+  { label: "归一化请求头", value: "normalized_headers" },
+  { label: "请求体", value: "body" },
+  { label: "JSON Body", value: "body_json" },
+  { label: "Form Body", value: "body_form" },
+  { label: "上传文件名", value: "upload_filename" },
+  { label: "上传扩展名", value: "upload_extension" },
+  { label: "上传 MIME", value: "upload_mime" },
+  { label: "上传大小", value: "upload_size" }
 ]
 const actionOptions = [
   { label: "阻断", value: "block" },

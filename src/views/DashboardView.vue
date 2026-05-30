@@ -22,7 +22,11 @@ const metrics = computed(() => [
   { label: "请求总数", value: String(summary.value?.requests ?? 0), note: "来自访问日志" },
   { label: "拦截/拒绝", value: String(summary.value?.blocked_requests ?? 0), note: "来自观测汇总" },
   { label: "WAF 命中", value: String(summary.value?.waf_matches ?? 0), note: "规则与控制命中" },
-  { label: "限流次数", value: String(summary.value?.rate_limited ?? 0), note: "来自访问和事件日志" }
+  { label: "限流次数", value: String(summary.value?.rate_limited ?? 0), note: "来自访问和事件日志" },
+  { label: "评分阻断", value: String(summary.value?.score_blocks ?? 0), note: "累计风险分" },
+  { label: "Body 检测", value: String(summary.value?.body_detections ?? 0), note: "请求体命中" },
+  { label: "上传检测", value: String(summary.value?.upload_detections ?? 0), note: "上传元数据" },
+  { label: "动态封禁", value: String(summary.value?.dynamic_bans ?? 0), note: "临时来源封禁" }
 ])
 
 const topIpOption = computed(() => {

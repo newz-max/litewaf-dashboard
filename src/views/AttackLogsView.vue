@@ -9,7 +9,9 @@ const filters = reactive({
   rule_id: "",
   action: "",
   disposition: "",
-  event_type: ""
+  event_type: "",
+  advanced_target: "",
+  min_score: ""
 })
 
 const logsResource = useApiResource(() => getAttackLogs(cleanFilters()))
@@ -22,10 +24,15 @@ const columns = [
   { title: "来源 IP", key: "client_ip" },
   { title: "类型", key: "event_type" },
   { title: "规则", key: "rule_id" },
+  { title: "高级目标", key: "advanced_target" },
+  { title: "分数", key: "score" },
   { title: "动作", key: "action" },
   { title: "处置", key: "disposition" },
   { title: "URI", key: "uri" },
-  { title: "摘要", key: "summary" }
+  { title: "摘要", key: "summary" },
+  { title: "Body", key: "body_metadata" },
+  { title: "上传", key: "upload_metadata" },
+  { title: "封禁", key: "ban_reason" }
 ]
 
 function cleanFilters() {
@@ -55,9 +62,27 @@ function cleanFilters() {
           :options="[
             { label: '规则', value: 'rule' },
             { label: '黑白名单', value: 'access-list' },
-            { label: '限流', value: 'rate-limit' }
+            { label: '限流', value: 'rate-limit' },
+            { label: '评分阈值', value: 'score-threshold' },
+            { label: '请求体检测', value: 'body-inspection' },
+            { label: '上传检测', value: 'upload-inspection' },
+            { label: '动态封禁', value: 'dynamic-ban' }
           ]"
         />
+        <NSelect
+          v-model:value="filters.advanced_target"
+          clearable
+          placeholder="高级目标"
+          :options="[
+            { label: 'Body', value: 'body' },
+            { label: 'JSON Body', value: 'body_json' },
+            { label: '上传文件名', value: 'upload_filename' },
+            { label: '上传扩展名', value: 'upload_extension' },
+            { label: '上传 MIME', value: 'upload_mime' },
+            { label: '上传大小', value: 'upload_size' }
+          ]"
+        />
+        <NInput v-model:value="filters.min_score" placeholder="最低分数" clearable />
         <NSelect
           v-model:value="filters.action"
           clearable
