@@ -1,0 +1,50 @@
+# LiteWaf Dashboard
+
+LiteWaf Dashboard 是 LiteWaf 的后台管理前端，基于 Vue 3、TypeScript、Vite 和 Naive UI。
+
+## 技术栈
+
+```text
+Vue 3
+TypeScript
+Vite
+Naive UI
+Pinia
+Vue Router
+ECharts
+Axios
+```
+
+## 本地开发
+
+```bash
+npm install
+npm run dev
+```
+
+默认开发地址：
+
+```text
+http://localhost:5173
+```
+
+开发环境会将 `/api` 代理到：
+
+```text
+http://localhost:8080
+```
+
+## 构建
+
+```bash
+npm run build
+```
+
+## Docker
+
+```bash
+docker build -t litewaf-dashboard .
+docker run --rm -p 8081:80 litewaf-dashboard
+```
+
+镜像构建阶段使用 `node:22-bookworm`，运行阶段使用 `nginx:1.27-bookworm`，默认面向 Debian 12 生态。

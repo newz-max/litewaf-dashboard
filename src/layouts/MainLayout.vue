@@ -1,0 +1,197 @@
+<script setup lang="ts">
+import { computed, h } from "vue"
+import { RouterLink, RouterView, useRoute } from "vue-router"
+import { NIcon, type MenuOption } from "naive-ui"
+import {
+  AnalyticsOutline,
+  CloudUploadOutline,
+  DocumentTextOutline,
+  FlashOutline,
+  GlobeOutline,
+  LayersOutline,
+  MoonOutline,
+  OptionsOutline,
+  ShieldCheckmarkOutline,
+  SunnyOutline,
+  WarningOutline
+} from "@vicons/ionicons5"
+import { useThemeStore } from "@/stores/theme"
+
+const route = useRoute()
+const themeStore = useThemeStore()
+
+function renderIcon(icon: typeof AnalyticsOutline) {
+  return () => h(NIcon, null, { default: () => h(icon) })
+}
+
+function renderLabel(label: string, to: string) {
+  return () => h(RouterLink, { to }, { default: () => label })
+}
+
+const menuOptions: MenuOption[] = [
+  {
+    key: "dashboard",
+    label: renderLabel("仪表盘", "/"),
+    icon: renderIcon(AnalyticsOutline)
+  },
+  {
+    key: "sites",
+    label: renderLabel("站点管理", "/sites"),
+    icon: renderIcon(GlobeOutline)
+  },
+  {
+    key: "rules",
+    label: renderLabel("规则管理", "/rules"),
+    icon: renderIcon(ShieldCheckmarkOutline)
+  },
+  {
+    key: "policies",
+    label: renderLabel("防护策略", "/policies"),
+    icon: renderIcon(LayersOutline)
+  },
+  {
+    key: "attackLogs",
+    label: renderLabel("攻击日志", "/attack-logs"),
+    icon: renderIcon(WarningOutline)
+  },
+  {
+    key: "releases",
+    label: renderLabel("发布记录", "/releases"),
+    icon: renderIcon(CloudUploadOutline)
+  },
+  {
+    key: "settings",
+    label: renderLabel("系统设置", "/settings"),
+    icon: renderIcon(OptionsOutline)
+  }
+]
+
+const activeKey = computed(() => String(route.name || "dashboard"))
+const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline))
+</script>
+
+<template>
+  <NLayout class="app-shell" has-sider>
+    <NLayoutSider
+      bordered
+      collapse-mode="width"
+      :collapsed-width="68"
+      :width="232"
+      show-trigger
+      class="app-sider"
+    >
+      <div class="brand">
+        <div class="brand-mark">
+          <NIcon size="24">
+            <FlashOutline />
+          </NIcon>
+        </div>
+        <div class="brand-text">
+          <strong>LiteWaf</strong>
+          <span>OpenResty WAF</span>
+        </div>
+      </div>
+
+      <NMenu :value="activeKey" :options="menuOptions" />
+    </NLayoutSider>
+
+    <NLayout>
+      <NLayoutHeader bordered class="app-header">
+        <div class="header-title">
+          <NIcon size="22">
+            <DocumentTextOutline />
+          </NIcon>
+          <span>{{ route.meta.title || "控制台" }}</span>
+        </div>
+
+        <div class="header-actions">
+          <NTag type="success" size="small" round>Debian 12</NTag>
+          <NTag type="info" size="small" round>Docker Ready</NTag>
+          <NButton circle quaternary @click="themeStore.toggleTheme">
+            <template #icon>
+              <NIcon>
+                <component :is="themeIcon" />
+              </NIcon>
+            </template>
+          </NButton>
+        </div>
+      </NLayoutHeader>
+
+      <NLayoutContent class="app-content">
+        <RouterView />
+      </NLayoutContent>
+    </NLayout>
+  </NLayout>
+</template>
+
+<style scoped>
+.app-shell {
+  height: 100vh;
+}
+
+.app-sider {
+  background:
+    linear-gradient(180deg, rgba(15, 118, 110, 0.08), transparent 220px),
+    var(--lw-panel);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 64px;
+  padding: 0 16px;
+}
+
+.brand-mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 8px;
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.brand-text {
+  display: grid;
+  line-height: 1.2;
+}
+
+.brand-text strong {
+  font-size: 16px;
+}
+
+.brand-text span {
+  color: var(--lw-text-muted);
+  font-size: 12px;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 20px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(14px);
+}
+
+.header-title,
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.app-content {
+  height: calc(100vh - 64px);
+  padding: 20px;
+  overflow: auto;
+}
+</style>
