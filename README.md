@@ -47,4 +47,4 @@ docker build -t litewaf-dashboard .
 docker run --rm -p 8081:80 litewaf-dashboard
 ```
 
-镜像构建阶段使用 `node:22-bookworm`，运行阶段使用 `nginx:1.27-bookworm`，默认面向 Debian 12 生态。
+镜像构建阶段使用 `node:22-bookworm`，运行阶段使用 `nginx:1.27-alpine`，以减少前端静态服务运行时体积。宿主机推荐 Debian 12 minimal，同时兼容主流 Linux + Docker Compose 环境。
