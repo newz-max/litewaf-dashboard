@@ -133,6 +133,11 @@ export interface AttackLog {
   summary: string
   access_list_id: number
   rate_limit_id: number
+  module: string
+  category: string
+  rule_name: string
+  counter: string
+  window_sec: number
   advanced_target: string
   normalized_value: string
   score: number
@@ -272,6 +277,50 @@ export interface RateLimitInput {
   violation_window_sec: number
   site_id: number
   enabled: boolean
+}
+
+export interface ProtectionRuleMatch {
+  path: string
+  path_match: string
+  methods: string[]
+}
+
+export interface ProtectionRuleLimit {
+  counter: string
+  threshold: number
+  window_sec: number
+  ban_duration_sec: number
+}
+
+export interface ProtectionRuleAction {
+  type: string
+}
+
+export interface ProtectionRule {
+  id: number
+  name: string
+  module: string
+  category: string
+  site_id: number
+  enabled: boolean
+  priority: number
+  match: ProtectionRuleMatch
+  limit: ProtectionRuleLimit
+  action: ProtectionRuleAction
+  created_at?: string
+  updated_at?: string
+}
+
+export interface ProtectionRuleInput {
+  name: string
+  module?: string
+  category?: string
+  site_id: number
+  enabled: boolean
+  priority?: number
+  match: ProtectionRuleMatch
+  limit: ProtectionRuleLimit
+  action: ProtectionRuleAction
 }
 
 export interface VersionInfo {
@@ -426,4 +475,26 @@ export function updateRateLimit(id: number, payload: RateLimitInput) {
 
 export function deleteRateLimit(id: number) {
   return apiClient.delete(`/api/v1/rate-limits/${id}`)
+}
+
+export function getCCProtectionRules(params: Record<string, string | number | boolean> = {}) {
+  return apiClient
+    .get<ListResponse<ProtectionRule>>("/api/v1/cc-protection/rules", { params })
+    .then((response) => response.data.items)
+}
+
+export function createCCProtectionRule(payload: ProtectionRuleInput) {
+  return apiClient
+    .post<ItemResponse<ProtectionRule>>("/api/v1/cc-protection/rules", payload)
+    .then((response) => response.data.item)
+}
+
+export function updateCCProtectionRule(id: number, payload: ProtectionRuleInput) {
+  return apiClient
+    .put<ItemResponse<ProtectionRule>>(`/api/v1/cc-protection/rules/${id}`, payload)
+    .then((response) => response.data.item)
+}
+
+export function deleteCCProtectionRule(id: number) {
+  return apiClient.delete(`/api/v1/cc-protection/rules/${id}`)
 }

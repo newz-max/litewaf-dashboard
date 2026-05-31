@@ -14,6 +14,7 @@ import {
   OptionsOutline,
   PulseOutline,
   ReaderOutline,
+  RocketOutline,
   ShieldCheckmarkOutline,
   SunnyOutline,
   TimerOutline,
@@ -83,6 +84,11 @@ const menuOptions = computed<MenuOption[]>(() => [
     key: "accessLists",
     label: renderLabel("黑白名单", "/access-lists"),
     icon: renderIcon(ListOutline)
+  },
+  {
+    key: "ccProtection",
+    label: renderLabel("CC 防护", "/cc-protection"),
+    icon: renderIcon(RocketOutline)
   },
   {
     key: "rateLimits",
