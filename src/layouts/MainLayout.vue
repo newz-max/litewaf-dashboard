@@ -12,6 +12,7 @@ import {
   ListOutline,
   MoonOutline,
   OptionsOutline,
+  PersonCircleOutline,
   PulseOutline,
   ReaderOutline,
   RocketOutline,
@@ -106,6 +107,11 @@ const menuOptions = computed<MenuOption[]>(() => [
     key: "uploadProtection",
     label: renderLabel("上传防护", "/upload-protection"),
     icon: renderIcon(CloudUploadOutline)
+  },
+  {
+    key: "botProtection",
+    label: renderLabel("Bot / 人机验证", "/bot-protection"),
+    icon: renderIcon(PersonCircleOutline)
   },
   {
     key: "rateLimits",

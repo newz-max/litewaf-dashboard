@@ -36,6 +36,11 @@ const metrics = computed(() => [
     label: "上传防护",
     value: String((summary.value?.upload_protection ?? []).reduce((total, item) => total + item.count, 0)),
     note: "扩展名/大小处置"
+  },
+  {
+    label: "Bot 验证",
+    value: String((summary.value?.bot_protection ?? []).reduce((total, item) => total + item.count, 0)),
+    note: "挑战/通过/失败"
   }
 ])
 

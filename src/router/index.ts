@@ -16,6 +16,7 @@ import CcProtectionView from "@/views/CcProtectionView.vue"
 import AttackProtectionView from "@/views/AttackProtectionView.vue"
 import AccessControlView from "@/views/AccessControlView.vue"
 import UploadProtectionView from "@/views/UploadProtectionView.vue"
+import BotProtectionView from "@/views/BotProtectionView.vue"
 import { useAuthStore } from "@/stores/auth"
 
 const router = createRouter({
@@ -109,6 +110,12 @@ const router = createRouter({
           name: "uploadProtection",
           component: UploadProtectionView,
           meta: { title: "上传防护" }
+        },
+        {
+          path: "bot-protection",
+          name: "botProtection",
+          component: BotProtectionView,
+          meta: { title: "Bot / 人机验证" }
         },
         {
           path: "rate-limits",

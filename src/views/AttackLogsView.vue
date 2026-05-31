@@ -13,6 +13,7 @@ const filters = reactive({
   module: "",
   attack_type: "",
   advanced_target: "",
+  challenge_result: "",
   min_score: ""
 })
 
@@ -33,6 +34,8 @@ const columns = [
   { title: "计数维度", key: "counter" },
   { title: "阈值", key: "threshold" },
   { title: "窗口", key: "window_sec" },
+  { title: "挑战方式", key: "challenge_mode" },
+  { title: "挑战结果", key: "challenge_result" },
   { title: "高级目标", key: "advanced_target" },
   { title: "分数", key: "score" },
   { title: "动作", key: "action" },
@@ -86,7 +89,8 @@ function cleanFilters() {
             { label: '攻击防护', value: 'attack-protection' },
             { label: 'CC 防护', value: 'cc-protection' },
             { label: '访问控制', value: 'access-control' },
-            { label: '上传防护', value: 'upload-protection' }
+            { label: '上传防护', value: 'upload-protection' },
+            { label: 'Bot / 人机验证', value: 'bot-protection' }
           ]"
         />
         <NSelect
@@ -111,6 +115,16 @@ function cleanFilters() {
             { label: '上传扩展名', value: 'upload_extension' },
             { label: '上传 MIME', value: 'upload_mime' },
             { label: '上传大小', value: 'upload_size' }
+          ]"
+        />
+        <NSelect
+          v-model:value="filters.challenge_result"
+          clearable
+          placeholder="挑战结果"
+          :options="[
+            { label: '已发起', value: 'issued' },
+            { label: '已通过', value: 'passed' },
+            { label: '失败', value: 'failed' }
           ]"
         />
         <NInput v-model:value="filters.min_score" placeholder="最低分数" clearable />

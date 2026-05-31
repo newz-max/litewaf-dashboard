@@ -160,6 +160,8 @@ export interface AttackLog {
   ban_reason: string
   ban_duration_sec: number
   ban_remaining_sec: number
+  challenge_mode: string
+  challenge_result: string
 }
 
 export interface AccessLog {
@@ -195,6 +197,7 @@ export interface ObservabilitySummary {
   attack_types: SummaryCount[]
   attack_protection: SummaryCount[]
   upload_protection: SummaryCount[]
+  bot_protection: SummaryCount[]
 }
 
 export interface SummaryCount {
@@ -233,6 +236,14 @@ export interface PublishPreview {
       enabled: number
       extension_rules: number
       size_rules: number
+      block: number
+      log_only: number
+      warnings: string[]
+    }
+    bot_protection?: {
+      rules: number
+      enabled: number
+      challenges: number
       block: number
       log_only: number
       warnings: string[]
@@ -340,6 +351,12 @@ export interface ProtectionRuleUpload {
   max_bytes: number
 }
 
+export interface ProtectionRuleChallenge {
+  mode: string
+  verify_ttl_sec: number
+  failure_action: string
+}
+
 export interface ProtectionRuleAction {
   type: string
 }
@@ -355,6 +372,7 @@ export interface ProtectionRule {
   match: ProtectionRuleMatch
   limit: ProtectionRuleLimit
   upload?: ProtectionRuleUpload
+  challenge?: ProtectionRuleChallenge
   action: ProtectionRuleAction
   created_at?: string
   updated_at?: string
@@ -370,6 +388,7 @@ export interface ProtectionRuleInput {
   match: ProtectionRuleMatch
   limit: ProtectionRuleLimit
   upload?: ProtectionRuleUpload
+  challenge?: ProtectionRuleChallenge
   action: ProtectionRuleAction
 }
 
@@ -624,6 +643,28 @@ export function updateUploadProtectionRule(id: number, payload: ProtectionRuleIn
 
 export function deleteUploadProtectionRule(id: number) {
   return apiClient.delete(`/api/v1/upload-protection/rules/${id}`)
+}
+
+export function getBotProtectionRules(params: Record<string, string | number | boolean> = {}) {
+  return apiClient
+    .get<ListResponse<ProtectionRule>>("/api/v1/bot-protection/rules", { params })
+    .then((response) => response.data.items)
+}
+
+export function createBotProtectionRule(payload: ProtectionRuleInput) {
+  return apiClient
+    .post<ItemResponse<ProtectionRule>>("/api/v1/bot-protection/rules", payload)
+    .then((response) => response.data.item)
+}
+
+export function updateBotProtectionRule(id: number, payload: ProtectionRuleInput) {
+  return apiClient
+    .put<ItemResponse<ProtectionRule>>(`/api/v1/bot-protection/rules/${id}`, payload)
+    .then((response) => response.data.item)
+}
+
+export function deleteBotProtectionRule(id: number) {
+  return apiClient.delete(`/api/v1/bot-protection/rules/${id}`)
 }
 
 export function getAttackProtectionGroups() {
