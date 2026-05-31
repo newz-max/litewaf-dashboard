@@ -194,6 +194,7 @@ export interface ObservabilitySummary {
   top_rules: SummaryCount[]
   attack_types: SummaryCount[]
   attack_protection: SummaryCount[]
+  upload_protection: SummaryCount[]
 }
 
 export interface SummaryCount {
@@ -223,6 +224,15 @@ export interface PublishPreview {
       rules: number
       enabled: number
       allow: number
+      block: number
+      log_only: number
+      warnings: string[]
+    }
+    upload_protection?: {
+      rules: number
+      enabled: number
+      extension_rules: number
+      size_rules: number
       block: number
       log_only: number
       warnings: string[]
@@ -325,6 +335,11 @@ export interface ProtectionRuleLimit {
   ban_duration_sec: number
 }
 
+export interface ProtectionRuleUpload {
+  extensions: string[]
+  max_bytes: number
+}
+
 export interface ProtectionRuleAction {
   type: string
 }
@@ -339,6 +354,7 @@ export interface ProtectionRule {
   priority: number
   match: ProtectionRuleMatch
   limit: ProtectionRuleLimit
+  upload?: ProtectionRuleUpload
   action: ProtectionRuleAction
   created_at?: string
   updated_at?: string
@@ -353,6 +369,7 @@ export interface ProtectionRuleInput {
   priority?: number
   match: ProtectionRuleMatch
   limit: ProtectionRuleLimit
+  upload?: ProtectionRuleUpload
   action: ProtectionRuleAction
 }
 
@@ -585,6 +602,28 @@ export function updateAccessControlRule(id: number, payload: ProtectionRuleInput
 
 export function deleteAccessControlRule(id: number) {
   return apiClient.delete(`/api/v1/access-control/rules/${id}`)
+}
+
+export function getUploadProtectionRules(params: Record<string, string | number | boolean> = {}) {
+  return apiClient
+    .get<ListResponse<ProtectionRule>>("/api/v1/upload-protection/rules", { params })
+    .then((response) => response.data.items)
+}
+
+export function createUploadProtectionRule(payload: ProtectionRuleInput) {
+  return apiClient
+    .post<ItemResponse<ProtectionRule>>("/api/v1/upload-protection/rules", payload)
+    .then((response) => response.data.item)
+}
+
+export function updateUploadProtectionRule(id: number, payload: ProtectionRuleInput) {
+  return apiClient
+    .put<ItemResponse<ProtectionRule>>(`/api/v1/upload-protection/rules/${id}`, payload)
+    .then((response) => response.data.item)
+}
+
+export function deleteUploadProtectionRule(id: number) {
+  return apiClient.delete(`/api/v1/upload-protection/rules/${id}`)
 }
 
 export function getAttackProtectionGroups() {

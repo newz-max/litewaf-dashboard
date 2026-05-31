@@ -103,6 +103,11 @@ const menuOptions = computed<MenuOption[]>(() => [
     icon: renderIcon(LockClosedOutline)
   },
   {
+    key: "uploadProtection",
+    label: renderLabel("上传防护", "/upload-protection"),
+    icon: renderIcon(CloudUploadOutline)
+  },
+  {
     key: "rateLimits",
     label: renderLabel("限流配置", "/rate-limits"),
     icon: renderIcon(TimerOutline)

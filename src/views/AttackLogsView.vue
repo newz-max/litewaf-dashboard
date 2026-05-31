@@ -85,7 +85,8 @@ function cleanFilters() {
           :options="[
             { label: '攻击防护', value: 'attack-protection' },
             { label: 'CC 防护', value: 'cc-protection' },
-            { label: '访问控制', value: 'access-control' }
+            { label: '访问控制', value: 'access-control' },
+            { label: '上传防护', value: 'upload-protection' }
           ]"
         />
         <NSelect

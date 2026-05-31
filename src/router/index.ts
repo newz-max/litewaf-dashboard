@@ -15,6 +15,7 @@ import RateLimitsView from "@/views/RateLimitsView.vue"
 import CcProtectionView from "@/views/CcProtectionView.vue"
 import AttackProtectionView from "@/views/AttackProtectionView.vue"
 import AccessControlView from "@/views/AccessControlView.vue"
+import UploadProtectionView from "@/views/UploadProtectionView.vue"
 import { useAuthStore } from "@/stores/auth"
 
 const router = createRouter({
@@ -102,6 +103,12 @@ const router = createRouter({
           name: "accessControl",
           component: AccessControlView,
           meta: { title: "访问控制" }
+        },
+        {
+          path: "upload-protection",
+          name: "uploadProtection",
+          component: UploadProtectionView,
+          meta: { title: "上传防护" }
         },
         {
           path: "rate-limits",

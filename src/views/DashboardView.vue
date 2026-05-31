@@ -31,6 +31,11 @@ const metrics = computed(() => [
     label: "访问控制",
     value: String((summary.value?.access_control ?? []).reduce((total, item) => total + item.count, 0)),
     note: "放行/观察/阻断"
+  },
+  {
+    label: "上传防护",
+    value: String((summary.value?.upload_protection ?? []).reduce((total, item) => total + item.count, 0)),
+    note: "扩展名/大小处置"
   }
 ])
 
