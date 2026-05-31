@@ -10,6 +10,8 @@ const filters = reactive({
   action: "",
   disposition: "",
   event_type: "",
+  module: "",
+  attack_type: "",
   advanced_target: "",
   min_score: ""
 })
@@ -24,6 +26,8 @@ const columns = [
   { title: "来源 IP", key: "client_ip" },
   { title: "类型", key: "event_type" },
   { title: "模块", key: "module" },
+  { title: "攻击类型", key: "attack_type" },
+  { title: "防护组", key: "group_name" },
   { title: "规则", key: "rule_id" },
   { title: "规则名称", key: "rule_name" },
   { title: "计数维度", key: "counter" },
@@ -72,6 +76,26 @@ function cleanFilters() {
             { label: '请求体检测', value: 'body-inspection' },
             { label: '上传检测', value: 'upload-inspection' },
             { label: '动态封禁', value: 'dynamic-ban' }
+          ]"
+        />
+        <NSelect
+          v-model:value="filters.module"
+          clearable
+          placeholder="模块"
+          :options="[
+            { label: '攻击防护', value: 'attack-protection' },
+            { label: 'CC 防护', value: 'cc-protection' }
+          ]"
+        />
+        <NSelect
+          v-model:value="filters.attack_type"
+          clearable
+          placeholder="攻击类型"
+          :options="[
+            { label: 'SQL 注入', value: 'sqli' },
+            { label: 'XSS', value: 'xss' },
+            { label: 'RCE', value: 'rce' },
+            { label: '路径穿越', value: 'path-traversal' }
           ]"
         />
         <NSelect

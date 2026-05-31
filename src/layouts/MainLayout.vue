@@ -15,6 +15,7 @@ import {
   PulseOutline,
   ReaderOutline,
   RocketOutline,
+  SkullOutline,
   ShieldCheckmarkOutline,
   SunnyOutline,
   TimerOutline,
@@ -89,6 +90,11 @@ const menuOptions = computed<MenuOption[]>(() => [
     key: "ccProtection",
     label: renderLabel("CC 防护", "/cc-protection"),
     icon: renderIcon(RocketOutline)
+  },
+  {
+    key: "attackProtection",
+    label: renderLabel("攻击防护", "/attack-protection"),
+    icon: renderIcon(SkullOutline)
   },
   {
     key: "rateLimits",

@@ -48,6 +48,11 @@ export interface Rule {
   expression: string
   score: number
   enabled: boolean
+  module?: string
+  category?: string
+  attack_type?: string
+  group?: string
+  priority?: number
   created_at?: string
   updated_at?: string
 }
@@ -60,6 +65,11 @@ export interface RuleInput {
   expression: string
   score: number
   enabled: boolean
+  module?: string
+  category?: string
+  attack_type?: string
+  group?: string
+  priority?: number
 }
 
 export interface Policy {
@@ -136,6 +146,8 @@ export interface AttackLog {
   module: string
   category: string
   rule_name: string
+  attack_type: string
+  group_name: string
   counter: string
   window_sec: number
   advanced_target: string
@@ -180,6 +192,7 @@ export interface ObservabilitySummary {
   top_uris: SummaryCount[]
   top_rules: SummaryCount[]
   attack_types: SummaryCount[]
+  attack_protection: SummaryCount[]
 }
 
 export interface SummaryCount {
@@ -321,6 +334,39 @@ export interface ProtectionRuleInput {
   match: ProtectionRuleMatch
   limit: ProtectionRuleLimit
   action: ProtectionRuleAction
+}
+
+export interface AttackProtectionRuleRef {
+  id: number
+  name: string
+  type: string
+  target: string
+  action: string
+  score: number
+  enabled: boolean
+  attack_type: string
+  group: string
+}
+
+export interface AttackProtectionGroup {
+  id: string
+  name: string
+  module: string
+  category: string
+  attack_type: string
+  action: string
+  enabled: boolean
+  priority: number
+  rule_count: number
+  enabled_rule_count: number
+  rules: AttackProtectionRuleRef[]
+  updated_at?: string
+}
+
+export interface AttackProtectionGroupInput {
+  action: string
+  enabled: boolean
+  priority: number
 }
 
 export interface VersionInfo {
@@ -497,4 +543,19 @@ export function updateCCProtectionRule(id: number, payload: ProtectionRuleInput)
 
 export function deleteCCProtectionRule(id: number) {
   return apiClient.delete(`/api/v1/cc-protection/rules/${id}`)
+}
+
+export function getAttackProtectionGroups() {
+  return apiClient
+    .get<ListResponse<AttackProtectionGroup>>("/api/v1/attack-protection/groups")
+    .then((response) => response.data.items)
+}
+
+export function updateAttackProtectionGroup(attackType: string, payload: AttackProtectionGroupInput) {
+  return apiClient
+    .put<ItemResponse<AttackProtectionGroup>>(
+      `/api/v1/attack-protection/groups/${encodeURIComponent(attackType)}`,
+      payload
+    )
+    .then((response) => response.data.item)
 }

@@ -13,6 +13,7 @@ import AuditLogsView from "@/views/AuditLogsView.vue"
 import AccessListsView from "@/views/AccessListsView.vue"
 import RateLimitsView from "@/views/RateLimitsView.vue"
 import CcProtectionView from "@/views/CcProtectionView.vue"
+import AttackProtectionView from "@/views/AttackProtectionView.vue"
 import { useAuthStore } from "@/stores/auth"
 
 const router = createRouter({
@@ -88,6 +89,12 @@ const router = createRouter({
           name: "ccProtection",
           component: CcProtectionView,
           meta: { title: "CC 防护" }
+        },
+        {
+          path: "attack-protection",
+          name: "attackProtection",
+          component: AttackProtectionView,
+          meta: { title: "攻击防护" }
         },
         {
           path: "rate-limits",
