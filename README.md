@@ -2,6 +2,12 @@
 
 LiteWaf Dashboard 是 LiteWaf 的后台管理前端，基于 Vue 3、TypeScript、Vite 和 Naive UI。
 
+## 相关仓库
+
+- 前端管理台：[litewaf-dashboard](https://github.com/newz-max/litewaf-dashboard)
+- 后端 API 与项目文档：[litewaf-api](https://github.com/newz-max/litewaf-api)
+- API、部署、规则和 OpenSpec 文档维护在后端仓库的 `doc/`、`deploy/`、`rules/` 和 `openspec/` 目录中。
+
 ## 技术栈
 
 ```text
