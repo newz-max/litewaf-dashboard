@@ -2,10 +2,10 @@
 import { computed, h, reactive, shallowRef } from "vue"
 import { NButton, NSpace, NTag, useMessage, type DataTableColumns } from "naive-ui"
 import {
-  createCCProtectionRule,
-  deleteCCProtectionRule,
-  getCCProtectionRules,
-  updateCCProtectionRule,
+  createAccessControlRule,
+  deleteAccessControlRule,
+  getAccessControlRules,
+  updateAccessControlRule,
   type ProtectionRule,
   type ProtectionRuleInput
 } from "@/api/litewaf"
@@ -14,7 +14,7 @@ import { useAuthStore } from "@/stores/auth"
 
 const message = useMessage()
 const authStore = useAuthStore()
-const resource = useApiResource(getCCProtectionRules)
+const resource = useApiResource(getAccessControlRules)
 
 const items = computed(() => [...(resource.data.value ?? [])])
 const editing = shallowRef<ProtectionRule | null>(null)
@@ -23,9 +23,17 @@ const saving = shallowRef(false)
 const form = reactive<ProtectionRuleInput>(emptyForm())
 
 const templateOptions = [
-  { label: "登录接口防爆破", value: "login" },
-  { label: "API 调用频率限制", value: "api" },
-  { label: "全站基础 CC 防护", value: "site" }
+  { label: "管理后台路径阻断", value: "admin" },
+  { label: "可信来源放行", value: "trusted" },
+  { label: "Host 限制", value: "host" }
+]
+
+const targetOptions = [
+  { label: "IP", value: "ip" },
+  { label: "CIDR", value: "cidr" },
+  { label: "路径", value: "path" },
+  { label: "Header", value: "header" },
+  { label: "Host", value: "host" }
 ]
 
 const pathMatchOptions = [
@@ -33,22 +41,32 @@ const pathMatchOptions = [
   { label: "前缀", value: "prefix" }
 ]
 
+const operatorOptions = computed(() => {
+  switch (form.match.target) {
+    case "header":
+      return [
+        { label: "精确", value: "exact" },
+        { label: "包含", value: "contains" }
+      ]
+    case "host":
+      return [
+        { label: "精确", value: "exact" },
+        { label: "后缀", value: "suffix" }
+      ]
+    default:
+      return []
+  }
+})
+
 const methodOptions = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].map((method) => ({
   label: method,
   value: method
 }))
 
-const counterOptions = [
-  { label: "客户端 IP", value: "client_ip" },
-  { label: "IP + 路径", value: "client_ip_path" },
-  { label: "全局", value: "global" }
-]
-
 const actionOptions = [
+  { label: "放行", value: "allow" },
   { label: "观察", value: "log-only" },
-  { label: "阻断", value: "block" },
-  { label: "限流", value: "rate-limit" },
-  { label: "临时封禁", value: "ban" }
+  { label: "阻断", value: "block" }
 ]
 
 const columns: DataTableColumns<ProtectionRule> = [
@@ -62,19 +80,11 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "路径",
-    key: "match.path",
-    minWidth: 160,
+    title: "匹配对象",
+    key: "match.target",
+    minWidth: 180,
     render(row) {
-      return row.match.path
-    }
-  },
-  {
-    title: "匹配方式",
-    key: "match.path_match",
-    width: 96,
-    render(row) {
-      return formatPathMatch(row.match.path_match ?? "exact")
+      return formatMatch(row)
     }
   },
   {
@@ -86,28 +96,17 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "统计对象",
-    key: "limit.counter",
-    width: 120,
-    render(row) {
-      return formatCounter(row.limit.counter)
-    }
-  },
-  {
-    title: "阈值和窗口",
-    key: "limit.threshold",
-    minWidth: 120,
-    render(row) {
-      return `${row.limit.threshold} 次 / ${row.limit.window_sec} 秒`
-    }
-  },
-  {
     title: "动作",
     key: "action.type",
-    width: 108,
+    width: 100,
     render(row) {
       return formatAction(row.action.type)
     }
+  },
+  {
+    title: "优先级",
+    key: "priority",
+    width: 88
   },
   {
     title: "启用",
@@ -161,24 +160,29 @@ const columns: DataTableColumns<ProtectionRule> = [
 function emptyForm(): ProtectionRuleInput {
   return {
     name: "",
-    module: "cc-protection",
-    category: "rate-limit",
+    module: "access-control",
+    category: "access-control",
     site_id: 0,
     enabled: true,
     priority: 100,
     match: {
-      path: "/",
+      target: "path",
+      path: "/admin",
       path_match: "prefix",
-      methods: []
+      methods: [],
+      value: "",
+      operator: "prefix",
+      header_name: "",
+      host: ""
     },
     limit: {
-      counter: "client_ip",
-      threshold: 300,
-      window_sec: 60,
-      ban_duration_sec: 300
+      counter: "",
+      threshold: 0,
+      window_sec: 0,
+      ban_duration_sec: 0
     },
     action: {
-      type: "rate-limit"
+      type: "block"
     }
   }
 }
@@ -207,7 +211,16 @@ function startEdit(item: ProtectionRule) {
     site_id: item.site_id,
     enabled: item.enabled,
     priority: item.priority,
-    match: item.match,
+    match: {
+      target: item.match.target || "path",
+      path: item.match.path || "",
+      path_match: item.match.path_match || item.match.operator || "exact",
+      methods: [...item.match.methods],
+      value: item.match.value || "",
+      operator: item.match.operator || item.match.path_match || "exact",
+      header_name: item.match.header_name || "",
+      host: item.match.host || ""
+    },
     limit: item.limit,
     action: item.action
   })
@@ -216,43 +229,67 @@ function startEdit(item: ProtectionRule) {
 
 function applyTemplate(value: string) {
   const templates: Record<string, ProtectionRuleInput> = {
-    login: {
+    admin: {
       ...emptyForm(),
-      name: "登录接口防爆破",
-      match: { path: "/api/login", path_match: "exact", methods: ["POST"] },
-      limit: { counter: "client_ip", threshold: 10, window_sec: 60, ban_duration_sec: 600 },
-      action: { type: "ban" }
+      name: "管理后台路径阻断",
+      match: { target: "path", path: "/admin", path_match: "prefix", operator: "prefix", methods: [] },
+      action: { type: "block" }
     },
-    api: {
+    trusted: {
       ...emptyForm(),
-      name: "API 调用频率限制",
-      match: { path: "/api/", path_match: "prefix", methods: [] },
-      limit: { counter: "client_ip_path", threshold: 120, window_sec: 60, ban_duration_sec: 60 },
-      action: { type: "rate-limit" }
+      name: "可信来源放行",
+      match: { target: "cidr", value: "10.0.0.0/8", methods: [] },
+      action: { type: "allow" }
     },
-    site: {
+    host: {
       ...emptyForm(),
-      name: "全站基础 CC 防护",
-      match: { path: "/", path_match: "prefix", methods: [] },
-      limit: { counter: "client_ip", threshold: 300, window_sec: 60, ban_duration_sec: 300 },
-      action: { type: "rate-limit" }
+      name: "Host 限制",
+      match: { target: "host", host: "example.com", value: "example.com", operator: "exact", methods: [] },
+      action: { type: "block" }
     }
   }
   assignForm(templates[value] ?? emptyForm())
 }
 
+function handleTargetChange(value: string) {
+  form.match.target = value
+  form.match.methods = []
+  if (value === "path") {
+    form.match.path = form.match.path || "/admin"
+    form.match.path_match = "prefix"
+    form.match.operator = "prefix"
+    return
+  }
+  if (value === "header") {
+    form.match.operator = "contains"
+    return
+  }
+  if (value === "host") {
+    form.match.operator = "exact"
+    return
+  }
+  form.match.operator = ""
+}
+
 function validateForm() {
+  const target = form.match.target
   if (!form.name.trim()) {
     return "规则名称不能为空"
   }
-  if (!String(form.match.path || "").startsWith("/")) {
+  if (Number(form.priority ?? 0) < 0) {
+    return "优先级不能小于 0"
+  }
+  if (target === "path" && !String(form.match.path || "").startsWith("/")) {
     return "路径必须以 / 开头"
   }
-  if (form.limit.threshold <= 0 || form.limit.window_sec <= 0) {
-    return "阈值和窗口必须大于 0"
+  if ((target === "ip" || target === "cidr") && !form.match.value?.trim()) {
+    return "来源不能为空"
   }
-  if (form.limit.ban_duration_sec < 0) {
-    return "封禁时间不能小于 0"
+  if (target === "header" && (!form.match.header_name?.trim() || !form.match.value?.trim())) {
+    return "Header 名称和值不能为空"
+  }
+  if (target === "host" && !form.match.host?.trim()) {
+    return "Host 不能为空"
   }
   return ""
 }
@@ -266,11 +303,11 @@ async function save() {
   saving.value = true
   try {
     if (editing.value) {
-      await updateCCProtectionRule(editing.value.id, form)
-      message.success("CC 防护规则已更新")
+      await updateAccessControlRule(editing.value.id, form)
+      message.success("访问控制规则已更新")
     } else {
-      await createCCProtectionRule(form)
-      message.success("CC 防护规则已创建")
+      await createAccessControlRule(form)
+      message.success("访问控制规则已创建")
     }
     formVisible.value = false
     await resource.refresh()
@@ -280,8 +317,8 @@ async function save() {
 }
 
 async function remove(item: ProtectionRule) {
-  await deleteCCProtectionRule(item.id)
-  message.success("CC 防护规则已删除")
+  await deleteAccessControlRule(item.id)
+  message.success("访问控制规则已删除")
   await resource.refresh()
 }
 
@@ -293,29 +330,28 @@ function hStatus(enabled: boolean) {
   )
 }
 
-function formatPathMatch(value: string) {
-  const labels: Record<string, string> = {
-    exact: "精确",
-    prefix: "前缀"
+function formatMatch(row: ProtectionRule) {
+  const target = row.match.target
+  if (target === "path") {
+    return `路径 ${row.match.path_match === "prefix" ? "前缀" : "精确"} ${row.match.path}`
   }
-  return labels[value] ?? value
-}
-
-function formatCounter(value: string) {
-  const labels: Record<string, string> = {
-    client_ip: "客户端 IP",
-    client_ip_path: "IP + 路径",
-    global: "全局"
+  if (target === "header") {
+    return `Header ${row.match.header_name} ${row.match.operator === "contains" ? "包含" : "等于"} ${row.match.value}`
   }
-  return labels[value] ?? value
+  if (target === "host") {
+    return `Host ${row.match.operator === "suffix" ? "后缀" : "等于"} ${row.match.host || row.match.value}`
+  }
+  if (target === "cidr") {
+    return `CIDR ${row.match.value}`
+  }
+  return `IP ${row.match.value}`
 }
 
 function formatAction(value: string) {
   const labels: Record<string, string> = {
+    allow: "放行",
     "log-only": "观察",
-    block: "阻断",
-    "rate-limit": "限流",
-    ban: "临时封禁"
+    block: "阻断"
   }
   return labels[value] ?? value
 }
@@ -332,8 +368,8 @@ function formatTime(value?: string) {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">CC 防护</h1>
-        <p class="page-subtitle">查看 URL 访问频率限制、登录防爆破和 API 调用限流规则。</p>
+        <h1 class="page-title">访问控制</h1>
+        <p class="page-subtitle">按来源、路径、Header 和 Host 管理放行、观察与阻断规则。</p>
       </div>
       <NSpace>
         <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
@@ -351,13 +387,16 @@ function formatTime(value?: string) {
         :columns="columns"
         :data="items"
         :bordered="false"
-        :scroll-x="1390"
+        :scroll-x="1140"
       />
-      <NEmpty v-if="!resource.loading.value && !resource.error.value && items.length === 0" description="暂无 CC 防护规则" />
+      <NEmpty
+        v-if="!resource.loading.value && !resource.error.value && items.length === 0"
+        description="暂无访问控制规则"
+      />
     </section>
 
     <NDrawer v-model:show="formVisible" :width="520">
-      <NDrawerContent :title="editing ? '编辑 CC 防护规则' : '新增 CC 防护规则'" closable>
+      <NDrawerContent :title="editing ? '编辑访问控制规则' : '新增访问控制规则'" closable>
         <NForm class="rule-form" label-placement="top">
           <NFormItem v-if="!editing" label="模板">
             <NSelect :options="templateOptions" placeholder="选择模板快速填充" @update:value="applyTemplate" />
@@ -368,29 +407,47 @@ function formatTime(value?: string) {
           <NFormItem label="站点 ID">
             <NInputNumber v-model:value="form.site_id" :min="0" />
           </NFormItem>
-          <NFormItem label="路径">
-            <NInput v-model:value="form.match.path" />
+          <NFormItem label="匹配对象">
+            <NSelect :value="form.match.target" :options="targetOptions" @update:value="handleTargetChange" />
           </NFormItem>
-          <NFormItem label="匹配方式">
-            <NSelect v-model:value="form.match.path_match" :options="pathMatchOptions" />
-          </NFormItem>
-          <NFormItem label="请求方法">
-            <NSelect v-model:value="form.match.methods" multiple :options="methodOptions" placeholder="全部方法" />
-          </NFormItem>
-          <NFormItem label="统计对象">
-            <NSelect v-model:value="form.limit.counter" :options="counterOptions" />
-          </NFormItem>
-          <NFormItem label="频率阈值">
-            <NInputNumber v-model:value="form.limit.threshold" :min="1" />
-          </NFormItem>
-          <NFormItem label="统计窗口秒">
-            <NInputNumber v-model:value="form.limit.window_sec" :min="1" />
+          <template v-if="form.match.target === 'path'">
+            <NFormItem label="路径">
+              <NInput v-model:value="form.match.path" />
+            </NFormItem>
+            <NFormItem label="路径匹配">
+              <NSelect v-model:value="form.match.path_match" :options="pathMatchOptions" />
+            </NFormItem>
+            <NFormItem label="请求方法">
+              <NSelect v-model:value="form.match.methods" multiple :options="methodOptions" placeholder="全部方法" />
+            </NFormItem>
+          </template>
+          <template v-else-if="form.match.target === 'header'">
+            <NFormItem label="Header 名称">
+              <NInput v-model:value="form.match.header_name" />
+            </NFormItem>
+            <NFormItem label="匹配方式">
+              <NSelect v-model:value="form.match.operator" :options="operatorOptions" />
+            </NFormItem>
+            <NFormItem label="Header 值">
+              <NInput v-model:value="form.match.value" />
+            </NFormItem>
+          </template>
+          <template v-else-if="form.match.target === 'host'">
+            <NFormItem label="匹配方式">
+              <NSelect v-model:value="form.match.operator" :options="operatorOptions" />
+            </NFormItem>
+            <NFormItem label="Host">
+              <NInput v-model:value="form.match.host" />
+            </NFormItem>
+          </template>
+          <NFormItem v-else label="来源">
+            <NInput v-model:value="form.match.value" />
           </NFormItem>
           <NFormItem label="动作">
             <NSelect v-model:value="form.action.type" :options="actionOptions" />
           </NFormItem>
-          <NFormItem label="封禁/缓解秒">
-            <NInputNumber v-model:value="form.limit.ban_duration_sec" :min="0" />
+          <NFormItem label="优先级">
+            <NInputNumber v-model:value="form.priority" :min="0" />
           </NFormItem>
           <NFormItem label="启用">
             <NSwitch v-model:value="form.enabled" />

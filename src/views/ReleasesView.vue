@@ -44,9 +44,13 @@ const columns = [
 
 async function publishNow() {
   const preview = await previewRelease()
+  const accessControl = preview.summary.access_control
+  const accessControlText = accessControl
+    ? `、${accessControl.enabled} 条访问控制规则`
+    : ""
   dialog.warning({
     title: "确认发布",
-    content: `将发布 ${preview.summary.sites} 个站点、${preview.summary.rules} 条规则、${preview.summary.policies} 个策略、${preview.summary.access_lists} 条名单、${preview.summary.rate_limits} 条限流配置、${preview.summary.advanced_protection ?? 0} 项高级防护配置。`,
+    content: `将发布 ${preview.summary.sites} 个站点、${preview.summary.rules} 条规则、${preview.summary.policies} 个策略、${preview.summary.access_lists} 条名单${accessControlText}、${preview.summary.rate_limits} 条限流配置、${preview.summary.advanced_protection ?? 0} 项高级防护配置。`,
     positiveText: "发布",
     negativeText: "取消",
     onPositiveClick: async () => {

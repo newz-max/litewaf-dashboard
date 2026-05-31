@@ -84,7 +84,8 @@ function cleanFilters() {
           placeholder="模块"
           :options="[
             { label: '攻击防护', value: 'attack-protection' },
-            { label: 'CC 防护', value: 'cc-protection' }
+            { label: 'CC 防护', value: 'cc-protection' },
+            { label: '访问控制', value: 'access-control' }
           ]"
         />
         <NSelect

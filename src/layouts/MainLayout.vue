@@ -16,6 +16,7 @@ import {
   ReaderOutline,
   RocketOutline,
   SkullOutline,
+  LockClosedOutline,
   ShieldCheckmarkOutline,
   SunnyOutline,
   TimerOutline,
@@ -95,6 +96,11 @@ const menuOptions = computed<MenuOption[]>(() => [
     key: "attackProtection",
     label: renderLabel("攻击防护", "/attack-protection"),
     icon: renderIcon(SkullOutline)
+  },
+  {
+    key: "accessControl",
+    label: renderLabel("访问控制", "/access-control"),
+    icon: renderIcon(LockClosedOutline)
   },
   {
     key: "rateLimits",

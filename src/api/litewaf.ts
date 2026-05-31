@@ -188,6 +188,7 @@ export interface ObservabilitySummary {
   body_detections: number
   upload_detections: number
   dynamic_bans: number
+  access_control: SummaryCount[]
   top_ips: SummaryCount[]
   top_uris: SummaryCount[]
   top_rules: SummaryCount[]
@@ -218,6 +219,14 @@ export interface PublishPreview {
     rules: number
     policies: number
     access_lists: number
+    access_control?: {
+      rules: number
+      enabled: number
+      allow: number
+      block: number
+      log_only: number
+      warnings: string[]
+    }
     rate_limits: number
     advanced_protection?: number
   }
@@ -244,9 +253,12 @@ export interface AccessListEntry {
   kind: string
   target: string
   value: string
+  match_operator?: string
+  header_name?: string
   action: string
   site_id: number
   enabled: boolean
+  priority?: number
   created_at?: string
   updated_at?: string
 }
@@ -256,9 +268,12 @@ export interface AccessListInput {
   kind: string
   target: string
   value: string
+  match_operator?: string
+  header_name?: string
   action: string
   site_id: number
   enabled: boolean
+  priority?: number
 }
 
 export interface RateLimitRule {
@@ -293,9 +308,14 @@ export interface RateLimitInput {
 }
 
 export interface ProtectionRuleMatch {
-  path: string
-  path_match: string
+  path?: string
+  path_match?: string
   methods: string[]
+  target?: string
+  value?: string
+  operator?: string
+  header_name?: string
+  host?: string
 }
 
 export interface ProtectionRuleLimit {
@@ -543,6 +563,28 @@ export function updateCCProtectionRule(id: number, payload: ProtectionRuleInput)
 
 export function deleteCCProtectionRule(id: number) {
   return apiClient.delete(`/api/v1/cc-protection/rules/${id}`)
+}
+
+export function getAccessControlRules(params: Record<string, string | number | boolean> = {}) {
+  return apiClient
+    .get<ListResponse<ProtectionRule>>("/api/v1/access-control/rules", { params })
+    .then((response) => response.data.items)
+}
+
+export function createAccessControlRule(payload: ProtectionRuleInput) {
+  return apiClient
+    .post<ItemResponse<ProtectionRule>>("/api/v1/access-control/rules", payload)
+    .then((response) => response.data.item)
+}
+
+export function updateAccessControlRule(id: number, payload: ProtectionRuleInput) {
+  return apiClient
+    .put<ItemResponse<ProtectionRule>>(`/api/v1/access-control/rules/${id}`, payload)
+    .then((response) => response.data.item)
+}
+
+export function deleteAccessControlRule(id: number) {
+  return apiClient.delete(`/api/v1/access-control/rules/${id}`)
 }
 
 export function getAttackProtectionGroups() {

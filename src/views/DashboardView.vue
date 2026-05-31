@@ -26,7 +26,12 @@ const metrics = computed(() => [
   { label: "评分阻断", value: String(summary.value?.score_blocks ?? 0), note: "累计风险分" },
   { label: "Body 检测", value: String(summary.value?.body_detections ?? 0), note: "请求体命中" },
   { label: "上传检测", value: String(summary.value?.upload_detections ?? 0), note: "上传元数据" },
-  { label: "动态封禁", value: String(summary.value?.dynamic_bans ?? 0), note: "临时来源封禁" }
+  { label: "动态封禁", value: String(summary.value?.dynamic_bans ?? 0), note: "临时来源封禁" },
+  {
+    label: "访问控制",
+    value: String((summary.value?.access_control ?? []).reduce((total, item) => total + item.count, 0)),
+    note: "放行/观察/阻断"
+  }
 ])
 
 const topIpOption = computed(() => {
