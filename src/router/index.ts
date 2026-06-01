@@ -3,6 +3,7 @@ import MainLayout from "@/layouts/MainLayout.vue"
 import DashboardView from "@/views/DashboardView.vue"
 import SitesView from "@/views/SitesView.vue"
 import RulesView from "@/views/RulesView.vue"
+import RuleEcosystemView from "@/views/RuleEcosystemView.vue"
 import PoliciesView from "@/views/PoliciesView.vue"
 import AttackLogsView from "@/views/AttackLogsView.vue"
 import AccessLogsView from "@/views/AccessLogsView.vue"
@@ -51,6 +52,12 @@ const router = createRouter({
           name: "rules",
           component: RulesView,
           meta: { title: "规则管理" }
+        },
+        {
+          path: "rule-ecosystem",
+          name: "ruleEcosystem",
+          component: RuleEcosystemView,
+          meta: { title: "高级规则生态" }
         },
         {
           path: "policies",

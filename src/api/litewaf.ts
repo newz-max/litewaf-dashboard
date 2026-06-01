@@ -53,6 +53,13 @@ export interface Rule {
   attack_type?: string
   group?: string
   priority?: number
+  package_id?: string
+  package_version?: string
+  package_rule_id?: string
+  source_checksum?: string
+  signature_status?: string
+  review_status?: string
+  last_test_status?: string
   created_at?: string
   updated_at?: string
 }
@@ -70,6 +77,13 @@ export interface RuleInput {
   attack_type?: string
   group?: string
   priority?: number
+  package_id?: string
+  package_version?: string
+  package_rule_id?: string
+  source_checksum?: string
+  signature_status?: string
+  review_status?: string
+  last_test_status?: string
 }
 
 export interface Policy {
@@ -259,9 +273,81 @@ export interface PublishPreview {
     waiting_room_action: number
     warnings: string[]
   }
+  rule_ecosystem?: {
+    packages: number
+    package_ids: string[]
+    signature_status: Record<string, number>
+    disabled_imported: number
+    untested_blocking: number
+    warnings: string[]
+    gateway_hot_path: string
+    remote_sync_enabled: boolean
+  }
     rate_limits: number
     advanced_protection?: number
   }
+}
+
+export interface RulePackageSignature {
+  key_id?: string
+  checksum?: string
+  signature?: string
+}
+
+export interface RulePackageMetadata {
+  id: string
+  name: string
+  version: string
+  author: string
+  license: string
+  compatibility: string
+  checksum?: string
+  signature?: RulePackageSignature
+  signature_status: string
+  rule_count: number
+  warnings: string[]
+  created_at?: string
+  updated_at?: string
+}
+
+export interface RulePackagePreview {
+  package: RulePackageMetadata
+  added: Rule[]
+  changed: Rule[]
+  skipped: Rule[]
+  invalid: Array<{ rule_id: string; message: string }>
+  default_enabled: boolean
+  warnings: string[]
+}
+
+export interface RulePackageImportResult {
+  package: RulePackageMetadata
+  imported: Rule[]
+  changed: Rule[]
+  skipped: Rule[]
+  invalid: Array<{ rule_id: string; message: string }>
+}
+
+export interface RuleTestSample {
+  method: string
+  path: string
+  query: Record<string, string>
+  headers: Record<string, string>
+  body: string
+  upload_filename: string
+  upload_mime: string
+  upload_size: number
+}
+
+export interface RuleTestResult {
+  rule_id: number
+  matched: boolean
+  target: string
+  evaluated_values: string[]
+  action: string
+  score: number
+  status: string
+  diagnostics: Record<string, string>
 }
 
 export interface AuditLog {
@@ -495,6 +581,34 @@ export function updateRule(id: number, payload: RuleInput) {
 
 export function deleteRule(id: number) {
   return apiClient.delete(`/api/v1/rules/${id}`)
+}
+
+export function getRulePackages() {
+  return apiClient
+    .get<ListResponse<RulePackageMetadata>>("/api/v1/rule-packages")
+    .then((response) => response.data.items)
+}
+
+export function previewRulePackage(payload: unknown = {}) {
+  return apiClient
+    .post<ItemResponse<RulePackagePreview>>("/api/v1/rule-packages/preview", { package: payload })
+    .then((response) => response.data.item)
+}
+
+export function importRulePackage(payload: unknown = {}) {
+  return apiClient
+    .post<ItemResponse<RulePackageImportResult>>("/api/v1/rule-packages/import", { package: payload })
+    .then((response) => response.data.item)
+}
+
+export function deleteRulePackage(id: string) {
+  return apiClient.delete(`/api/v1/rule-packages/${encodeURIComponent(id)}`)
+}
+
+export function testRule(payload: { rule_id?: number; rule?: RuleInput; sample: RuleTestSample }) {
+  return apiClient
+    .post<ItemResponse<RuleTestResult>>("/api/v1/rules/test", payload)
+    .then((response) => response.data.item)
 }
 
 export function getPolicies() {

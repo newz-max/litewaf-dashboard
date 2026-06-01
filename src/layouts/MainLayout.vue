@@ -19,6 +19,7 @@ import {
   RocketOutline,
   SkullOutline,
   LockClosedOutline,
+  PricetagsOutline,
   ShieldCheckmarkOutline,
   SunnyOutline,
   TimerOutline,
@@ -54,6 +55,11 @@ const menuOptions = computed<MenuOption[]>(() => [
     key: "rules",
     label: renderLabel("规则管理", "/rules"),
     icon: renderIcon(ShieldCheckmarkOutline)
+  },
+  {
+    key: "ruleEcosystem",
+    label: renderLabel("高级规则生态", "/rule-ecosystem"),
+    icon: renderIcon(PricetagsOutline)
   },
   {
     key: "policies",
