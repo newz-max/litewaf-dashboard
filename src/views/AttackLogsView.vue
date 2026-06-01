@@ -14,6 +14,7 @@ const filters = reactive({
   attack_type: "",
   advanced_target: "",
   challenge_result: "",
+  dynamic_result: "",
   min_score: ""
 })
 
@@ -36,6 +37,7 @@ const columns = [
   { title: "窗口", key: "window_sec" },
   { title: "挑战方式", key: "challenge_mode" },
   { title: "挑战结果", key: "challenge_result" },
+  { title: "动态结果", key: "advanced_target" },
   { title: "高级目标", key: "advanced_target" },
   { title: "分数", key: "score" },
   { title: "动作", key: "action" },
@@ -90,7 +92,8 @@ function cleanFilters() {
             { label: 'CC 防护', value: 'cc-protection' },
             { label: '访问控制', value: 'access-control' },
             { label: '上传防护', value: 'upload-protection' },
-            { label: 'Bot / 人机验证', value: 'bot-protection' }
+            { label: 'Bot / 人机验证', value: 'bot-protection' },
+            { label: '动态防护', value: 'dynamic-protection' }
           ]"
         />
         <NSelect
@@ -125,6 +128,20 @@ function cleanFilters() {
             { label: '已发起', value: 'issued' },
             { label: '已通过', value: 'passed' },
             { label: '失败', value: 'failed' }
+          ]"
+        />
+        <NSelect
+          v-model:value="filters.dynamic_result"
+          clearable
+          placeholder="动态结果"
+          :options="[
+            { label: '令牌发放', value: 'token-issued' },
+            { label: '令牌通过', value: 'token-passed' },
+            { label: '令牌失败', value: 'token-failed' },
+            { label: '页面已注入', value: 'mutation-applied' },
+            { label: '页面跳过', value: 'mutation-skipped' },
+            { label: '已准入', value: 'queue-admitted' },
+            { label: '已排队', value: 'queue-rejected' }
           ]"
         />
         <NInput v-model:value="filters.min_score" placeholder="最低分数" clearable />

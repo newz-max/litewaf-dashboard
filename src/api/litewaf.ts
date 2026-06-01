@@ -240,14 +240,25 @@ export interface PublishPreview {
       log_only: number
       warnings: string[]
     }
-    bot_protection?: {
-      rules: number
-      enabled: number
-      challenges: number
-      block: number
-      log_only: number
-      warnings: string[]
-    }
+  bot_protection?: {
+    rules: number
+    enabled: number
+    challenges: number
+    block: number
+    log_only: number
+    warnings: string[]
+  }
+  dynamic_protection?: {
+    rules: number
+    enabled: number
+    dynamic_tokens: number
+    page_mutations: number
+    waiting_rooms: number
+    block: number
+    log_only: number
+    waiting_room_action: number
+    warnings: string[]
+  }
     rate_limits: number
     advanced_protection?: number
   }
@@ -357,6 +368,19 @@ export interface ProtectionRuleChallenge {
   failure_action: string
 }
 
+export interface ProtectionRuleDynamic {
+  mode: string
+  token_ttl_sec: number
+  token_placement: string
+  failure_action: string
+  mutation_marker: string
+  mutation_max_bytes: number
+  queue_capacity: number
+  admission_ttl_sec: number
+  retry_interval_sec: number
+  overflow_action: string
+}
+
 export interface ProtectionRuleAction {
   type: string
 }
@@ -373,6 +397,7 @@ export interface ProtectionRule {
   limit: ProtectionRuleLimit
   upload?: ProtectionRuleUpload
   challenge?: ProtectionRuleChallenge
+  dynamic?: ProtectionRuleDynamic
   action: ProtectionRuleAction
   created_at?: string
   updated_at?: string
@@ -389,6 +414,7 @@ export interface ProtectionRuleInput {
   limit: ProtectionRuleLimit
   upload?: ProtectionRuleUpload
   challenge?: ProtectionRuleChallenge
+  dynamic?: ProtectionRuleDynamic
   action: ProtectionRuleAction
 }
 
@@ -665,6 +691,28 @@ export function updateBotProtectionRule(id: number, payload: ProtectionRuleInput
 
 export function deleteBotProtectionRule(id: number) {
   return apiClient.delete(`/api/v1/bot-protection/rules/${id}`)
+}
+
+export function getDynamicProtectionRules(params: Record<string, string | number | boolean> = {}) {
+  return apiClient
+    .get<ListResponse<ProtectionRule>>("/api/v1/dynamic-protection/rules", { params })
+    .then((response) => response.data.items)
+}
+
+export function createDynamicProtectionRule(payload: ProtectionRuleInput) {
+  return apiClient
+    .post<ItemResponse<ProtectionRule>>("/api/v1/dynamic-protection/rules", payload)
+    .then((response) => response.data.item)
+}
+
+export function updateDynamicProtectionRule(id: number, payload: ProtectionRuleInput) {
+  return apiClient
+    .put<ItemResponse<ProtectionRule>>(`/api/v1/dynamic-protection/rules/${id}`, payload)
+    .then((response) => response.data.item)
+}
+
+export function deleteDynamicProtectionRule(id: number) {
+  return apiClient.delete(`/api/v1/dynamic-protection/rules/${id}`)
 }
 
 export function getAttackProtectionGroups() {

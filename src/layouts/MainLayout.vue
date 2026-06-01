@@ -15,6 +15,7 @@ import {
   PersonCircleOutline,
   PulseOutline,
   ReaderOutline,
+  RepeatOutline,
   RocketOutline,
   SkullOutline,
   LockClosedOutline,
@@ -112,6 +113,11 @@ const menuOptions = computed<MenuOption[]>(() => [
     key: "botProtection",
     label: renderLabel("Bot / 人机验证", "/bot-protection"),
     icon: renderIcon(PersonCircleOutline)
+  },
+  {
+    key: "dynamicProtection",
+    label: renderLabel("动态防护 / 等候室", "/dynamic-protection"),
+    icon: renderIcon(RepeatOutline)
   },
   {
     key: "rateLimits",

@@ -17,6 +17,7 @@ import AttackProtectionView from "@/views/AttackProtectionView.vue"
 import AccessControlView from "@/views/AccessControlView.vue"
 import UploadProtectionView from "@/views/UploadProtectionView.vue"
 import BotProtectionView from "@/views/BotProtectionView.vue"
+import DynamicProtectionView from "@/views/DynamicProtectionView.vue"
 import { useAuthStore } from "@/stores/auth"
 
 const router = createRouter({
@@ -116,6 +117,12 @@ const router = createRouter({
           name: "botProtection",
           component: BotProtectionView,
           meta: { title: "Bot / 人机验证" }
+        },
+        {
+          path: "dynamic-protection",
+          name: "dynamicProtection",
+          component: DynamicProtectionView,
+          meta: { title: "动态防护 / 等候室" }
         },
         {
           path: "rate-limits",
