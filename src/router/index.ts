@@ -107,7 +107,7 @@ const router = createRouter({
           path: "access-lists",
           name: "accessLists",
           component: AccessListsView,
-          meta: { title: "黑白名单" }
+          meta: { title: "黑白名单（已废弃）" }
         },
         {
           path: "cc-protection",
@@ -149,7 +149,7 @@ const router = createRouter({
           path: "rate-limits",
           name: "rateLimits",
           component: RateLimitsView,
-          meta: { title: "限流配置" }
+          meta: { title: "限流配置（已废弃）" }
         },
         {
           path: "settings",

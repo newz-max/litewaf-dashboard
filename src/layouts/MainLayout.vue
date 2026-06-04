@@ -24,7 +24,6 @@ import {
   PricetagsOutline,
   ShieldCheckmarkOutline,
   SunnyOutline,
-  TimerOutline,
   WarningOutline
 } from "@vicons/ionicons5"
 import { useThemeStore } from "@/stores/theme"
@@ -57,6 +56,36 @@ const menuOptions = computed<MenuOption[]>(() => [
     key: "protectionOverview",
     label: renderLabel("防护概览", "/protection-overview"),
     icon: renderIcon(ShieldOutline)
+  },
+  {
+    key: "ccProtection",
+    label: renderLabel("CC 防护", "/cc-protection"),
+    icon: renderIcon(RocketOutline)
+  },
+  {
+    key: "attackProtection",
+    label: renderLabel("攻击防护", "/attack-protection"),
+    icon: renderIcon(SkullOutline)
+  },
+  {
+    key: "accessControl",
+    label: renderLabel("访问控制", "/access-control"),
+    icon: renderIcon(LockClosedOutline)
+  },
+  {
+    key: "uploadProtection",
+    label: renderLabel("上传防护", "/upload-protection"),
+    icon: renderIcon(CloudUploadOutline)
+  },
+  {
+    key: "botProtection",
+    label: renderLabel("Bot / 人机验证", "/bot-protection"),
+    icon: renderIcon(PersonCircleOutline)
+  },
+  {
+    key: "dynamicProtection",
+    label: renderLabel("动态防护 / 等候室", "/dynamic-protection"),
+    icon: renderIcon(RepeatOutline)
   },
   {
     key: "rules",
@@ -103,44 +132,19 @@ const menuOptions = computed<MenuOption[]>(() => [
       ]
     : []),
   {
-    key: "accessLists",
-    label: renderLabel("黑白名单（兼容）", "/access-lists"),
-    icon: renderIcon(ListOutline)
-  },
-  {
-    key: "ccProtection",
-    label: renderLabel("CC 防护（推荐）", "/cc-protection"),
-    icon: renderIcon(RocketOutline)
-  },
-  {
-    key: "attackProtection",
-    label: renderLabel("攻击防护", "/attack-protection"),
-    icon: renderIcon(SkullOutline)
-  },
-  {
-    key: "accessControl",
-    label: renderLabel("访问控制（推荐）", "/access-control"),
-    icon: renderIcon(LockClosedOutline)
-  },
-  {
-    key: "uploadProtection",
-    label: renderLabel("上传防护", "/upload-protection"),
-    icon: renderIcon(CloudUploadOutline)
-  },
-  {
-    key: "botProtection",
-    label: renderLabel("Bot / 人机验证", "/bot-protection"),
-    icon: renderIcon(PersonCircleOutline)
-  },
-  {
-    key: "dynamicProtection",
-    label: renderLabel("动态防护 / 等候室", "/dynamic-protection"),
-    icon: renderIcon(RepeatOutline)
-  },
-  {
-    key: "rateLimits",
-    label: renderLabel("限流配置（兼容）", "/rate-limits"),
-    icon: renderIcon(TimerOutline)
+    key: "legacyCompatibility",
+    label: "兼容入口",
+    icon: renderIcon(ListOutline),
+    children: [
+      {
+        key: "accessLists",
+        label: renderLabel("黑白名单（已废弃）", "/access-lists")
+      },
+      {
+        key: "rateLimits",
+        label: renderLabel("限流配置（已废弃）", "/rate-limits")
+      }
+    ]
   },
   {
     key: "settings",

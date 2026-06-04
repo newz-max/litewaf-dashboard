@@ -17,6 +17,7 @@ const authStore = useAuthStore()
 const resource = useApiResource(getAccessLists)
 const items = computed(() => [...(resource.data.value ?? [])])
 const editing = shallowRef<AccessListEntry | null>(null)
+const legacyFormVisible = shallowRef(false)
 const saving = shallowRef(false)
 const form = reactive<AccessListInput>(emptyForm())
 
@@ -49,11 +50,19 @@ function assignForm(payload: AccessListInput) {
 function startEdit(item: AccessListEntry) {
   editing.value = item
   assignForm({ ...item })
+  legacyFormVisible.value = true
+}
+
+function openLegacyCreate() {
+  editing.value = null
+  assignForm(emptyForm())
+  legacyFormVisible.value = true
 }
 
 function resetForm() {
   editing.value = null
   assignForm(emptyForm())
+  legacyFormVisible.value = false
 }
 
 async function save() {
@@ -84,23 +93,35 @@ async function remove(item: AccessListEntry) {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">黑白名单（兼容入口）</h1>
-        <p class="page-subtitle">保留旧黑白名单 API 和存储兼容；新建 IP/CIDR、路径、Header 和 Host 访问规则优先使用访问控制。</p>
+        <h1 class="page-title">黑白名单（已废弃兼容入口）</h1>
+        <p class="page-subtitle">仅保留旧黑白名单 API 和存储兼容；新建 IP/CIDR、路径、Header 和 Host 访问规则请使用访问控制。</p>
       </div>
     </div>
 
     <section class="section section-pad">
-      <NAlert class="compat-alert" type="info">
-        <template #header>访问控制是推荐入口</template>
-        这里继续维护旧 `/api/v1/access-lists` 兼容名单。模块化配置请进入访问控制，那里会以 `module=access-control`、`category=access-control` 展示同类规则。
+      <NAlert class="compat-alert" type="warning">
+        <template #header>旧黑白名单入口已废弃，访问控制是主入口</template>
+        这里仍从旧 `/api/v1/access-lists` 读取兼容名单，便于排障和处理历史数据。常规新增请进入访问控制，那里会以 `module=access-control`、`category=access-control` 管理同类规则；旧 API、发布字段和网关 fallback 仍保留。
         <div class="compat-actions">
           <RouterLink class="compat-link" to="/access-control">
-            <NButton type="primary" size="small">进入访问控制</NButton>
+            <NButton type="primary" size="small">去访问控制新增规则</NButton>
           </RouterLink>
+          <NButton v-if="authStore.canWrite" size="small" secondary @click="openLegacyCreate">
+            兼容写入旧名单
+          </NButton>
         </div>
       </NAlert>
 
-      <NForm v-if="authStore.canWrite" class="form-grid" label-placement="top">
+      <NAlert v-if="resource.error.value" class="view-alert" type="error">
+        {{ resource.error.value }}
+      </NAlert>
+
+      <NAlert v-if="legacyFormVisible" class="compat-alert" type="warning">
+        <template #header>{{ editing ? "正在编辑旧名单兼容规则" : "兼容写入旧名单规则" }}</template>
+        此表单只用于兼容旧客户端和历史数据，常规新增仍应从访问控制完成。
+      </NAlert>
+
+      <NForm v-if="authStore.canWrite && legacyFormVisible" class="form-grid" label-placement="top">
         <NFormItem label="名称"><NInput v-model:value="form.name" /></NFormItem>
         <NFormItem label="类型">
           <NSelect v-model:value="form.kind" :options="[{ label: '黑名单', value: 'blacklist' }, { label: '白名单', value: 'whitelist' }]" />
@@ -116,8 +137,8 @@ async function remove(item: AccessListEntry) {
         <NFormItem label="启用"><NSwitch v-model:value="form.enabled" /></NFormItem>
         <NFormItem label="操作">
           <NSpace>
-            <NButton type="primary" :loading="saving" @click="save">{{ editing ? "保存" : "创建" }}</NButton>
-            <NButton @click="resetForm">重置</NButton>
+            <NButton type="warning" :loading="saving" @click="save">{{ editing ? "保存兼容修改" : "创建兼容规则" }}</NButton>
+            <NButton @click="resetForm">收起表单</NButton>
           </NSpace>
         </NFormItem>
       </NForm>
@@ -131,7 +152,7 @@ async function remove(item: AccessListEntry) {
           删除 {{ item.id }}
         </NButton>
       </NSpace>
-      <NEmpty v-if="!resource.loading.value && items.length === 0" description="暂无名单" />
+      <NEmpty v-if="!resource.loading.value && !resource.error.value && items.length === 0" description="暂无名单" />
     </section>
   </main>
 </template>
@@ -145,6 +166,10 @@ async function remove(item: AccessListEntry) {
 }
 
 .compat-alert {
+  margin-bottom: 16px;
+}
+
+.view-alert {
   margin-bottom: 16px;
 }
 

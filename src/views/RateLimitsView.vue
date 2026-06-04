@@ -17,6 +17,7 @@ const authStore = useAuthStore()
 const resource = useApiResource(getRateLimits)
 const items = computed(() => [...(resource.data.value ?? [])])
 const editing = shallowRef<RateLimitRule | null>(null)
+const legacyFormVisible = shallowRef(false)
 const saving = shallowRef(false)
 const form = reactive<RateLimitInput>(emptyForm())
 
@@ -57,11 +58,19 @@ function assignForm(payload: RateLimitInput) {
 function startEdit(item: RateLimitRule) {
   editing.value = item
   assignForm({ ...item })
+  legacyFormVisible.value = true
+}
+
+function openLegacyCreate() {
+  editing.value = null
+  assignForm(emptyForm())
+  legacyFormVisible.value = true
 }
 
 function resetForm() {
   editing.value = null
   assignForm(emptyForm())
+  legacyFormVisible.value = false
 }
 
 async function save() {
@@ -92,23 +101,35 @@ async function remove(item: RateLimitRule) {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">限流配置（兼容入口）</h1>
-        <p class="page-subtitle">保留旧限流 API 和存储兼容；新建 URL 频率限制、登录防爆破和 API 限流优先使用 CC 防护。</p>
+        <h1 class="page-title">限流配置（已废弃兼容入口）</h1>
+        <p class="page-subtitle">仅保留旧限流 API 和存储兼容；新建 URL 频率限制、登录防爆破和 API 限流请使用 CC 防护。</p>
       </div>
     </div>
 
     <section class="section section-pad">
-      <NAlert class="compat-alert" type="info">
-        <template #header>CC 防护是推荐入口</template>
-        这里继续维护旧 `/api/v1/rate-limits` 兼容规则。模块化配置请进入 CC 防护，那里会以 `module=cc-protection`、`category=rate-limit` 展示同类规则。
+      <NAlert class="compat-alert" type="warning">
+        <template #header>旧限流入口已废弃，CC 防护是主入口</template>
+        这里仍从旧 `/api/v1/rate-limits` 读取兼容规则，便于排障和处理历史数据。常规新增请进入 CC 防护，那里会以 `module=cc-protection`、`category=rate-limit` 管理同类规则；旧 API、发布字段和网关 fallback 仍保留。
         <div class="compat-actions">
           <RouterLink class="compat-link" to="/cc-protection">
-            <NButton type="primary" size="small">进入 CC 防护</NButton>
+            <NButton type="primary" size="small">去 CC 防护新增规则</NButton>
           </RouterLink>
+          <NButton v-if="authStore.canWrite" size="small" secondary @click="openLegacyCreate">
+            兼容写入旧限流
+          </NButton>
         </div>
       </NAlert>
 
-      <NForm v-if="authStore.canWrite" class="form-grid" label-placement="top">
+      <NAlert v-if="resource.error.value" class="view-alert" type="error">
+        {{ resource.error.value }}
+      </NAlert>
+
+      <NAlert v-if="legacyFormVisible" class="compat-alert" type="warning">
+        <template #header>{{ editing ? "正在编辑旧限流兼容规则" : "兼容写入旧限流规则" }}</template>
+        此表单只用于兼容旧客户端和历史数据，常规新增仍应从 CC 防护完成。
+      </NAlert>
+
+      <NForm v-if="authStore.canWrite && legacyFormVisible" class="form-grid" label-placement="top">
         <NFormItem label="名称"><NInput v-model:value="form.name" /></NFormItem>
         <NFormItem label="范围">
           <NSelect v-model:value="form.scope" :options="[{ label: 'IP', value: 'ip' }, { label: 'URI', value: 'uri' }, { label: '站点', value: 'site' }]" />
@@ -126,8 +147,8 @@ async function remove(item: RateLimitRule) {
         <NFormItem label="启用"><NSwitch v-model:value="form.enabled" /></NFormItem>
         <NFormItem label="操作">
           <NSpace>
-            <NButton type="primary" :loading="saving" @click="save">{{ editing ? "保存" : "创建" }}</NButton>
-            <NButton @click="resetForm">重置</NButton>
+            <NButton type="warning" :loading="saving" @click="save">{{ editing ? "保存兼容修改" : "创建兼容规则" }}</NButton>
+            <NButton @click="resetForm">收起表单</NButton>
           </NSpace>
         </NFormItem>
       </NForm>
@@ -141,7 +162,7 @@ async function remove(item: RateLimitRule) {
           删除 {{ item.id }}
         </NButton>
       </NSpace>
-      <NEmpty v-if="!resource.loading.value && items.length === 0" description="暂无限流规则" />
+      <NEmpty v-if="!resource.loading.value && !resource.error.value && items.length === 0" description="暂无限流规则" />
     </section>
   </main>
 </template>
@@ -155,6 +176,10 @@ async function remove(item: RateLimitRule) {
 }
 
 .compat-alert {
+  margin-bottom: 16px;
+}
+
+.view-alert {
   margin-bottom: 16px;
 }
 
