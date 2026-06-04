@@ -649,6 +649,9 @@ export interface ProtectionRule {
   challenge?: ProtectionRuleChallenge
   dynamic?: ProtectionRuleDynamic
   action: ProtectionRuleAction
+  source?: string
+  migration_status?: string
+  legacy_ref?: string
   created_at?: string
   updated_at?: string
 }

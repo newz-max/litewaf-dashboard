@@ -142,6 +142,14 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
+    title: "来源",
+    key: "migration_status",
+    width: 104,
+    render(row) {
+      return hSource(row)
+    }
+  },
+  {
     title: "更新时间",
     key: "updated_at",
     minWidth: 160,
@@ -354,6 +362,13 @@ function hStatus(enabled: boolean) {
     { type: enabled ? "success" : "default", size: "small" },
     { default: () => (enabled ? "启用" : "停用") }
   )
+}
+
+function hSource(row: ProtectionRule) {
+  const status = row.migration_status ?? ""
+  const label = status === "legacy-only" ? "兼容" : status === "migrated" ? "已迁移" : "原生"
+  const type = status === "legacy-only" ? "warning" : status === "migrated" ? "info" : "success"
+  return h(NTag, { type, size: "small" }, { default: () => label })
 }
 
 function formatCategory(value: string) {
