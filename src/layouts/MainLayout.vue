@@ -14,6 +14,7 @@ import {
   OptionsOutline,
   PersonCircleOutline,
   PulseOutline,
+  ShieldOutline,
   ReaderOutline,
   RepeatOutline,
   RocketOutline,
@@ -50,6 +51,11 @@ const menuOptions = computed<MenuOption[]>(() => [
     key: "sites",
     label: renderLabel("站点管理", "/sites"),
     icon: renderIcon(GlobeOutline)
+  },
+  {
+    key: "protectionOverview",
+    label: renderLabel("防护概览", "/protection-overview"),
+    icon: renderIcon(ShieldOutline)
   },
   {
     key: "rules",

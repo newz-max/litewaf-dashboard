@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { computed, h, ref } from "vue"
-import { useDialog, useMessage, NButton, NSpace } from "naive-ui"
-import { getReleases, previewRelease, publishRelease, rollbackRelease, type ReleaseRecord } from "@/api/litewaf"
+import { useDialog, useMessage, NButton, NList, NListItem, NSpace, NTag } from "naive-ui"
+import {
+  getReleases,
+  previewRelease,
+  publishRelease,
+  rollbackRelease,
+  type ProtectionModuleOverview,
+  type ProtectionModuleRisk,
+  type ReleaseRecord
+} from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
 
@@ -44,19 +52,21 @@ const columns = [
 
 async function publishNow() {
   const preview = await previewRelease()
-  const accessControl = preview.summary.access_control
-  const ccProtection = preview.summary.cc_protection
-  const moduleSummary = [
-    ccProtection ? `${ccProtection.enabled} 条 CC 防护规则` : "",
-    accessControl ? `${accessControl.enabled} 条访问控制规则` : ""
-  ].filter(Boolean).join("、")
-  const moduleText = moduleSummary ? `模块化防护包含 ${moduleSummary}。` : ""
+  const moduleSummary = (preview.summary.module_matrix ?? [])
+    .filter((item) => item.rules > 0 || item.enabled > 0 || item.warnings.length > 0)
+  const moduleText = moduleSummary.length > 0
+    ? `模块化防护包含 ${moduleSummary.map((item) => `${item.label} ${item.enabled}/${item.rules}`).join("、")}。`
+    : ""
   const compatibilityText = preview.summary.access_lists > 0 || preview.summary.rate_limits > 0
     ? `兼容字段保留 ${preview.summary.access_lists} 条旧名单、${preview.summary.rate_limits} 条旧限流配置。`
     : ""
   dialog.warning({
     title: "确认发布",
-    content: `将发布 ${preview.summary.sites} 个站点、${preview.summary.rules} 条规则、${preview.summary.policies} 个策略、${preview.summary.advanced_protection ?? 0} 项高级防护配置。${moduleText}${compatibilityText}`,
+    content: () => renderPublishPreview(
+      `将发布 ${preview.summary.sites} 个站点、${preview.summary.rules} 条规则、${preview.summary.policies} 个策略、${preview.summary.advanced_protection ?? 0} 项高级防护配置。${moduleText}${compatibilityText}`,
+      moduleSummary,
+      preview.summary.risk_warnings ?? []
+    ),
     positiveText: "发布",
     negativeText: "取消",
     onPositiveClick: async () => {
@@ -70,6 +80,44 @@ async function publishNow() {
       }
     }
   })
+}
+
+function renderPublishPreview(summary: string, modules: ProtectionModuleOverview[], risks: ProtectionModuleRisk[]) {
+  return h("div", { class: "publish-preview" }, [
+    h("p", summary),
+    modules.length > 0
+      ? h(
+          NList,
+          { class: "publish-preview-list" },
+          {
+            default: () => modules.map((module) =>
+              h(
+                NListItem,
+                { key: module.key },
+                {
+                  default: () => `${module.label}：启用 ${module.enabled} / 总数 ${module.rules}，观察 ${module.observe}，阻断 ${module.block}`,
+                  suffix: () => module.compatibility_source
+                    ? h(NTag, { size: "small", type: "info" }, { default: () => `兼容 ${module.compatibility_source}` })
+                    : null
+                }
+              )
+            )
+          }
+        )
+      : null,
+    risks.length > 0
+      ? h(
+          "div",
+          { class: "publish-risk-list" },
+          risks.slice(0, 5).map((risk) =>
+            h("div", { class: "publish-risk", key: `${risk.module}-${risk.message}` }, [
+              h(NTag, { size: "small", type: "warning" }, { default: () => risk.label }),
+              h("span", risk.message)
+            ])
+          )
+        )
+      : null
+  ])
 }
 
 async function rollback(version: string) {
@@ -105,3 +153,21 @@ async function rollback(version: string) {
     </section>
   </main>
 </template>
+
+<style scoped>
+.publish-preview-list {
+  margin-top: 8px;
+}
+
+.publish-risk-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.publish-risk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+</style>

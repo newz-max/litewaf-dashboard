@@ -13,6 +13,7 @@ import LoginView from "@/views/LoginView.vue"
 import AuditLogsView from "@/views/AuditLogsView.vue"
 import AccessListsView from "@/views/AccessListsView.vue"
 import RateLimitsView from "@/views/RateLimitsView.vue"
+import ProtectionOverviewView from "@/views/ProtectionOverviewView.vue"
 import CcProtectionView from "@/views/CcProtectionView.vue"
 import AttackProtectionView from "@/views/AttackProtectionView.vue"
 import AccessControlView from "@/views/AccessControlView.vue"
@@ -46,6 +47,12 @@ const router = createRouter({
           name: "sites",
           component: SitesView,
           meta: { title: "站点管理" }
+        },
+        {
+          path: "protection-overview",
+          name: "protectionOverview",
+          component: ProtectionOverviewView,
+          meta: { title: "防护概览" }
         },
         {
           path: "rules",

@@ -1,22 +1,29 @@
 <script setup lang="ts">
-import { computed, reactive } from "vue"
-import { getAttackLogs } from "@/api/litewaf"
+import { computed, h, reactive } from "vue"
+import { RouterLink, useRoute, useRouter } from "vue-router"
+import { NButton, NSpace } from "naive-ui"
+import { getAttackLogs, type AttackLog } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 
-const filters = reactive({
-  site_id: "",
-  client_ip: "",
-  rule_id: "",
-  action: "",
-  disposition: "",
-  event_type: "",
-  module: "",
-  attack_type: "",
-  advanced_target: "",
-  challenge_result: "",
-  dynamic_result: "",
-  min_score: ""
-})
+const route = useRoute()
+const router = useRouter()
+
+const filterKeys = [
+  "site_id",
+  "client_ip",
+  "rule_id",
+  "action",
+  "disposition",
+  "event_type",
+  "module",
+  "attack_type",
+  "advanced_target",
+  "challenge_result",
+  "dynamic_result",
+  "min_score"
+] as const
+
+const filters = reactive(Object.fromEntries(filterKeys.map((key) => [key, queryString(key)])) as Record<typeof filterKeys[number], string>)
 
 const logsResource = useApiResource(() => getAttackLogs(cleanFilters()))
 const logs = computed(() => [...(logsResource.data.value ?? [])])
@@ -46,11 +53,52 @@ const columns = [
   { title: "摘要", key: "summary" },
   { title: "Body", key: "body_metadata" },
   { title: "上传", key: "upload_metadata" },
-  { title: "封禁", key: "ban_reason" }
+  { title: "封禁", key: "ban_reason" },
+  {
+    title: "回跳",
+    key: "actions",
+    render(row: AttackLog) {
+      const path = moduleRoute(row.module)
+      if (!path) {
+        return null
+      }
+      return h(NSpace, { size: "small" }, {
+        default: () => [
+          h(
+            RouterLink,
+            { to: { path, query: row.rule_id > 0 ? { rule_id: row.rule_id } : {} } },
+            { default: () => h(NButton, { size: "small", quaternary: true }, { default: () => "查看模块" }) }
+          )
+        ]
+      })
+    }
+  }
 ]
 
 function cleanFilters() {
   return Object.fromEntries(Object.entries(filters).filter(([, value]) => value.trim() !== ""))
+}
+
+async function searchLogs() {
+  await router.replace({ query: cleanFilters() })
+  await logsResource.refresh()
+}
+
+function queryString(key: string) {
+  const value = route.query[key]
+  return Array.isArray(value) ? value[0] ?? "" : String(value ?? "")
+}
+
+function moduleRoute(module: string) {
+  const routes: Record<string, string> = {
+    "cc-protection": "/cc-protection",
+    "attack-protection": "/attack-protection",
+    "access-control": "/access-control",
+    "upload-protection": "/upload-protection",
+    "bot-protection": "/bot-protection",
+    "dynamic-protection": "/dynamic-protection"
+  }
+  return routes[module] ?? ""
 }
 </script>
 
@@ -166,7 +214,7 @@ function cleanFilters() {
             { label: '已拒绝', value: 'rejected' }
           ]"
         />
-        <NButton type="primary" @click="logsResource.refresh">查询</NButton>
+        <NButton type="primary" @click="searchLogs">查询</NButton>
       </NSpace>
 
       <NDataTable

@@ -188,6 +188,9 @@ export interface AttackLog {
   ban_remaining_sec: number
   challenge_mode: string
   challenge_result: string
+  package_id?: string
+  package_version?: string
+  package_rule_id?: string
 }
 
 export interface AccessLog {
@@ -224,11 +227,39 @@ export interface ObservabilitySummary {
   attack_protection: SummaryCount[]
   upload_protection: SummaryCount[]
   bot_protection: SummaryCount[]
+  dynamic_protection: SummaryCount[]
 }
 
 export interface SummaryCount {
   key: string
   count: number
+}
+
+export interface ProtectionModuleRisk {
+  module: string
+  label: string
+  message: string
+}
+
+export interface ProtectionModuleOverview {
+  key: string
+  label: string
+  category: string
+  route: string
+  log_module?: string
+  rules: number
+  enabled: number
+  observe: number
+  block: number
+  allow?: number
+  compatibility_source?: string
+  warnings: string[]
+  evidence: SummaryCount[]
+}
+
+export interface ProtectionOverview {
+  modules: ProtectionModuleOverview[]
+  risks: ProtectionModuleRisk[]
 }
 
 export interface ReleaseRecord {
@@ -290,7 +321,7 @@ export interface PublishPreview {
     waiting_room_action: number
     warnings: string[]
   }
-  rule_ecosystem?: {
+    rule_ecosystem?: {
     packages: number
     package_ids: string[]
     signature_status: Record<string, number>
@@ -303,9 +334,11 @@ export interface PublishPreview {
     warnings: string[]
     gateway_hot_path: string
     remote_sync_enabled: boolean
-  }
+    }
     rate_limits: number
     advanced_protection?: number
+    module_matrix?: ProtectionModuleOverview[]
+    risk_warnings?: ProtectionModuleRisk[]
   }
 }
 
@@ -850,6 +883,12 @@ export function getAccessLogs(params: Record<string, string | number> = {}) {
 export function getObservabilitySummary(params: Record<string, string | number> = {}) {
   return apiClient
     .get<ItemResponse<ObservabilitySummary>>("/api/v1/observability/summary", { params })
+    .then((response) => response.data.item)
+}
+
+export function getProtectionOverview(params: Record<string, string | number> = {}) {
+  return apiClient
+    .get<ItemResponse<ProtectionOverview>>("/api/v1/protection/overview", { params })
     .then((response) => response.data.item)
 }
 
