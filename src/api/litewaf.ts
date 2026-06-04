@@ -257,6 +257,11 @@ export interface PublishPreview {
       log_only: number
       warnings: string[]
     }
+    cc_protection?: {
+      rules: number
+      enabled: number
+      warnings: string[]
+    }
     upload_protection?: {
       rules: number
       enabled: number

@@ -45,12 +45,18 @@ const columns = [
 async function publishNow() {
   const preview = await previewRelease()
   const accessControl = preview.summary.access_control
-  const accessControlText = accessControl
-    ? `、${accessControl.enabled} 条访问控制规则`
+  const ccProtection = preview.summary.cc_protection
+  const moduleSummary = [
+    ccProtection ? `${ccProtection.enabled} 条 CC 防护规则` : "",
+    accessControl ? `${accessControl.enabled} 条访问控制规则` : ""
+  ].filter(Boolean).join("、")
+  const moduleText = moduleSummary ? `模块化防护包含 ${moduleSummary}。` : ""
+  const compatibilityText = preview.summary.access_lists > 0 || preview.summary.rate_limits > 0
+    ? `兼容字段保留 ${preview.summary.access_lists} 条旧名单、${preview.summary.rate_limits} 条旧限流配置。`
     : ""
   dialog.warning({
     title: "确认发布",
-    content: `将发布 ${preview.summary.sites} 个站点、${preview.summary.rules} 条规则、${preview.summary.policies} 个策略、${preview.summary.access_lists} 条名单${accessControlText}、${preview.summary.rate_limits} 条限流配置、${preview.summary.advanced_protection ?? 0} 项高级防护配置。`,
+    content: `将发布 ${preview.summary.sites} 个站点、${preview.summary.rules} 条规则、${preview.summary.policies} 个策略、${preview.summary.advanced_protection ?? 0} 项高级防护配置。${moduleText}${compatibilityText}`,
     positiveText: "发布",
     negativeText: "取消",
     onPositiveClick: async () => {

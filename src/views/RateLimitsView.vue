@@ -92,12 +92,22 @@ async function remove(item: RateLimitRule) {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">限流配置</h1>
-        <p class="page-subtitle">维护 IP、URI 和站点级请求频率限制。</p>
+        <h1 class="page-title">限流配置（兼容入口）</h1>
+        <p class="page-subtitle">保留旧限流 API 和存储兼容；新建 URL 频率限制、登录防爆破和 API 限流优先使用 CC 防护。</p>
       </div>
     </div>
 
     <section class="section section-pad">
+      <NAlert class="compat-alert" type="info">
+        <template #header>CC 防护是推荐入口</template>
+        这里继续维护旧 `/api/v1/rate-limits` 兼容规则。模块化配置请进入 CC 防护，那里会以 `module=cc-protection`、`category=rate-limit` 展示同类规则。
+        <div class="compat-actions">
+          <RouterLink class="compat-link" to="/cc-protection">
+            <NButton type="primary" size="small">进入 CC 防护</NButton>
+          </RouterLink>
+        </div>
+      </NAlert>
+
       <NForm v-if="authStore.canWrite" class="form-grid" label-placement="top">
         <NFormItem label="名称"><NInput v-model:value="form.name" /></NFormItem>
         <NFormItem label="范围">
@@ -142,6 +152,18 @@ async function remove(item: RateLimitRule) {
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.compat-alert {
+  margin-bottom: 16px;
+}
+
+.compat-link {
+  text-decoration: none;
+}
+
+.compat-actions {
+  margin-top: 12px;
 }
 
 .row-actions {

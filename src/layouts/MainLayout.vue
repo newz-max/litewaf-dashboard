@@ -92,12 +92,12 @@ const menuOptions = computed<MenuOption[]>(() => [
     : []),
   {
     key: "accessLists",
-    label: renderLabel("黑白名单", "/access-lists"),
+    label: renderLabel("黑白名单（兼容）", "/access-lists"),
     icon: renderIcon(ListOutline)
   },
   {
     key: "ccProtection",
-    label: renderLabel("CC 防护", "/cc-protection"),
+    label: renderLabel("CC 防护（推荐）", "/cc-protection"),
     icon: renderIcon(RocketOutline)
   },
   {
@@ -107,7 +107,7 @@ const menuOptions = computed<MenuOption[]>(() => [
   },
   {
     key: "accessControl",
-    label: renderLabel("访问控制", "/access-control"),
+    label: renderLabel("访问控制（推荐）", "/access-control"),
     icon: renderIcon(LockClosedOutline)
   },
   {
@@ -127,7 +127,7 @@ const menuOptions = computed<MenuOption[]>(() => [
   },
   {
     key: "rateLimits",
-    label: renderLabel("限流配置", "/rate-limits"),
+    label: renderLabel("限流配置（兼容）", "/rate-limits"),
     icon: renderIcon(TimerOutline)
   },
   {

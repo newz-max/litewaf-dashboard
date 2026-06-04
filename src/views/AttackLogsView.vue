@@ -59,7 +59,7 @@ function cleanFilters() {
     <div class="page-header">
       <div>
         <h1 class="page-title">攻击日志</h1>
-        <p class="page-subtitle">检索规则、黑白名单和限流命中记录。</p>
+        <p class="page-subtitle">按防护模块检索命中记录，兼容查看旧黑白名单和限流事件类型。</p>
       </div>
       <NButton @click="logsResource.refresh">刷新</NButton>
     </div>
@@ -75,8 +75,8 @@ function cleanFilters() {
           placeholder="事件类型"
           :options="[
             { label: '规则', value: 'rule' },
-            { label: '黑白名单', value: 'access-list' },
-            { label: '限流', value: 'rate-limit' },
+            { label: '访问控制兼容事件', value: 'access-list' },
+            { label: 'CC 防护兼容事件', value: 'rate-limit' },
             { label: '评分阈值', value: 'score-threshold' },
             { label: '请求体检测', value: 'body-inspection' },
             { label: '上传检测', value: 'upload-inspection' },

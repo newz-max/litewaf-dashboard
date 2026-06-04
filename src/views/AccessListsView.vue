@@ -84,12 +84,22 @@ async function remove(item: AccessListEntry) {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">黑白名单</h1>
-        <p class="page-subtitle">维护 IP、CIDR、URI 和 UA 访问控制。</p>
+        <h1 class="page-title">黑白名单（兼容入口）</h1>
+        <p class="page-subtitle">保留旧黑白名单 API 和存储兼容；新建 IP/CIDR、路径、Header 和 Host 访问规则优先使用访问控制。</p>
       </div>
     </div>
 
     <section class="section section-pad">
+      <NAlert class="compat-alert" type="info">
+        <template #header>访问控制是推荐入口</template>
+        这里继续维护旧 `/api/v1/access-lists` 兼容名单。模块化配置请进入访问控制，那里会以 `module=access-control`、`category=access-control` 展示同类规则。
+        <div class="compat-actions">
+          <RouterLink class="compat-link" to="/access-control">
+            <NButton type="primary" size="small">进入访问控制</NButton>
+          </RouterLink>
+        </div>
+      </NAlert>
+
       <NForm v-if="authStore.canWrite" class="form-grid" label-placement="top">
         <NFormItem label="名称"><NInput v-model:value="form.name" /></NFormItem>
         <NFormItem label="类型">
@@ -132,6 +142,18 @@ async function remove(item: AccessListEntry) {
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.compat-alert {
+  margin-bottom: 16px;
+}
+
+.compat-link {
+  text-decoration: none;
+}
+
+.compat-actions {
+  margin-top: 12px;
 }
 
 .row-actions {
