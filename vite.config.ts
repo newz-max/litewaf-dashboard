@@ -4,6 +4,8 @@ import AutoImport from "unplugin-auto-import/vite"
 import Components from "unplugin-vue-components/vite"
 import { NaiveUiResolver } from "unplugin-vue-components/resolvers"
 
+const apiProxyTarget = process.env.VITE_DEV_PROXY_TARGET || "http://localhost:8080"
+
 export default defineConfig({
   plugins: [
     vue(),
@@ -37,7 +39,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        target: apiProxyTarget,
         changeOrigin: true
       }
     }

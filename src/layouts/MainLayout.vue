@@ -20,6 +20,7 @@ import {
   RocketOutline,
   SkullOutline,
   LockClosedOutline,
+  MedkitOutline,
   PricetagsOutline,
   ShieldCheckmarkOutline,
   SunnyOutline,
@@ -86,6 +87,11 @@ const menuOptions = computed<MenuOption[]>(() => [
     key: "releases",
     label: renderLabel("发布记录", "/releases"),
     icon: renderIcon(CloudUploadOutline)
+  },
+  {
+    key: "protectionMigrationHealth",
+    label: renderLabel("迁移健康检查", "/protection-migration-health"),
+    icon: renderIcon(MedkitOutline)
   },
   ...(authStore.canAudit
     ? [

@@ -60,10 +60,14 @@ async function publishNow() {
   const compatibilityText = preview.summary.access_lists > 0 || preview.summary.rate_limits > 0
     ? `兼容字段保留 ${preview.summary.access_lists} 条旧名单、${preview.summary.rate_limits} 条旧限流配置。`
     : ""
+  const diagnostics = preview.summary.compatibility_diagnostics
+  const diagnosticsText = diagnostics
+    ? `兼容诊断：protection_rules ${diagnostics.protection_rules} 条，legacy_ref 去重 ${diagnostics.deduplicated} 条。`
+    : ""
   dialog.warning({
     title: "确认发布",
     content: () => renderPublishPreview(
-      `将发布 ${preview.summary.sites} 个站点、${preview.summary.rules} 条规则、${preview.summary.policies} 个策略、${preview.summary.advanced_protection ?? 0} 项高级防护配置。${moduleText}${compatibilityText}`,
+      `将发布 ${preview.summary.sites} 个站点、${preview.summary.rules} 条规则、${preview.summary.policies} 个策略、${preview.summary.advanced_protection ?? 0} 项高级防护配置。${moduleText}${compatibilityText}${diagnosticsText}`,
       moduleSummary,
       preview.summary.risk_warnings ?? []
     ),

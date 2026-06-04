@@ -8,6 +8,7 @@ import PoliciesView from "@/views/PoliciesView.vue"
 import AttackLogsView from "@/views/AttackLogsView.vue"
 import AccessLogsView from "@/views/AccessLogsView.vue"
 import ReleasesView from "@/views/ReleasesView.vue"
+import MigrationHealthView from "@/views/MigrationHealthView.vue"
 import SettingsView from "@/views/SettingsView.vue"
 import LoginView from "@/views/LoginView.vue"
 import AuditLogsView from "@/views/AuditLogsView.vue"
@@ -89,6 +90,12 @@ const router = createRouter({
           name: "releases",
           component: ReleasesView,
           meta: { title: "发布记录" }
+        },
+        {
+          path: "protection-migration-health",
+          name: "protectionMigrationHealth",
+          component: MigrationHealthView,
+          meta: { title: "迁移健康检查" }
         },
         {
           path: "audit-logs",

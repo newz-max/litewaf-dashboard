@@ -339,7 +339,84 @@ export interface PublishPreview {
     advanced_protection?: number
     module_matrix?: ProtectionModuleOverview[]
     risk_warnings?: ProtectionModuleRisk[]
+    compatibility_diagnostics?: PublishCompatibilityDiagnostics
   }
+}
+
+export interface CompatibilityCounts {
+  protection_rules: number
+  native: number
+  migrated: number
+  legacy_fallback: number
+  legacy_store: number
+  deduplicated: number
+}
+
+export interface PublishCompatibilityDiagnostics {
+  protection_rules: number
+  rate_limits: number
+  access_lists: number
+  legacy_modules: Record<string, number>
+  by_module: Record<string, CompatibilityCounts>
+  deduplicated: number
+  warnings: string[]
+}
+
+export interface ProtectionRuleHealthSummary {
+  total: number
+  enabled: number
+  disabled: number
+  by_module: Record<string, number>
+  by_category: Record<string, number>
+  by_source: Record<string, number>
+  by_migration_status: Record<string, number>
+  by_site: Record<string, number>
+}
+
+export interface LegacyProtectionStoreState {
+  store: string
+  module: string
+  category: string
+  total: number
+  enabled: number
+  migrated: number
+  missing: number
+  orphaned: number
+  duplicates: number
+  conflicts: number
+  missing_samples: string[]
+  orphan_samples: string[]
+}
+
+export interface ProtectionRuleHealthIssue {
+  type: string
+  severity: string
+  store?: string
+  module?: string
+  count: number
+  samples: string[]
+  message: string
+  recommendation: string
+}
+
+export interface BackfillHealthState {
+  status: string
+  last_run_at?: string
+  created: number
+  updated: number
+  skipped: number
+  failed: number
+  command: string
+  recommendation: string
+}
+
+export interface ProtectionRuleMigrationHealth {
+  generated_at: string
+  protection_rules: ProtectionRuleHealthSummary
+  legacy_stores: LegacyProtectionStoreState[]
+  issues: ProtectionRuleHealthIssue[]
+  backfill: BackfillHealthState
+  remediation_hints: string[]
 }
 
 export interface RulePackageSignature {
@@ -1110,6 +1187,12 @@ export function getObservabilitySummary(params: Record<string, string | number> 
 export function getProtectionOverview(params: Record<string, string | number> = {}) {
   return apiClient
     .get<ItemResponse<ProtectionOverview>>("/api/v1/protection/overview", { params })
+    .then((response) => response.data.item)
+}
+
+export function getProtectionMigrationHealth() {
+  return apiClient
+    .get<ItemResponse<ProtectionRuleMigrationHealth>>("/api/v1/protection/migration-health")
     .then((response) => response.data.item)
 }
 
