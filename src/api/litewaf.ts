@@ -492,6 +492,134 @@ export interface RulePackageExportArtifact {
   created_at: string
 }
 
+export interface RuleAccountCredential {
+  alias: string
+  fingerprint?: string
+  last_four?: string
+  expires_at?: string
+  last_validated_at?: string
+  status: string
+}
+
+export interface RuleCommunityAccountSource {
+  id: number
+  name: string
+  provider_type: string
+  endpoint: string
+  enabled: boolean
+  timeout_sec: number
+  credential: RuleAccountCredential
+  subscription_status: string
+  entitlement_summary: string
+  package_count: number
+  status: string
+  last_sync_at?: string
+  last_error?: string
+  recommendation_count: number
+}
+
+export interface RuleCommunityAccountSourceInput {
+  name: string
+  provider_type: string
+  endpoint: string
+  enabled: boolean
+  timeout_sec: number
+  credential: Partial<RuleAccountCredential>
+  credential_secret?: string
+  subscription_status?: string
+  entitlement_summary?: string
+  package_count?: number
+}
+
+export interface RuleContributionTarget {
+  id: number
+  name: string
+  provider: string
+  endpoint: string
+  channel: string
+  enabled: boolean
+  credential: RuleAccountCredential
+  status: string
+  last_push_at?: string
+  last_error?: string
+}
+
+export interface RuleContributionTargetInput {
+  name: string
+  provider: string
+  endpoint: string
+  channel: string
+  enabled: boolean
+  credential: Partial<RuleAccountCredential>
+  credential_secret?: string
+}
+
+export interface RuleContributionPushAttempt {
+  id?: number
+  target_id: number
+  target_name: string
+  package_id: string
+  package_version: string
+  checksum: string
+  status: string
+  remote_reference?: string
+  error?: string
+  actor: string
+  preview_only: boolean
+  created_at?: string
+}
+
+export interface RuleReviewQueueItem {
+  id: number
+  item_type: string
+  package_id: string
+  package_version: string
+  current_version?: string
+  source_identity: string
+  recommendation: string
+  risk_summary: string
+  signature_status: string
+  compatibility_status: string
+  state: string
+  decision_reason?: string
+  actor?: string
+}
+
+export interface RuleFeedback {
+  id: number
+  rule_id: number
+  package_id?: string
+  package_rule_id?: string
+  attack_log_id?: number
+  reason: string
+  severity: string
+  status: string
+  redacted_sample?: Record<string, string>
+  actor?: string
+}
+
+export interface RuleFeedbackInput {
+  rule_id?: number
+  package_id?: string
+  package_rule_id?: string
+  attack_log_id?: number
+  reason: string
+  severity: string
+  redacted_sample?: Record<string, string>
+}
+
+export interface RuleFeedbackSuggestion {
+  id: number
+  feedback_id: number
+  rule_id: number
+  proposed_change: string
+  risk_warning: string
+  confidence: string
+  state: string
+  test_result?: RuleTestResult
+  actor?: string
+}
+
 export interface RuleTestSample {
   method: string
   path: string
@@ -844,6 +972,96 @@ export function previewRulePackageExport(payload: RulePackageExportRequest) {
 export function exportRulePackage(payload: RulePackageExportRequest) {
   return apiClient
     .post<ItemResponse<RulePackageExportArtifact>>("/api/v1/rule-community/export", payload)
+    .then((response) => response.data.item)
+}
+
+export function getRuleAccountSources() {
+  return apiClient
+    .get<ListResponse<RuleCommunityAccountSource>>("/api/v1/rule-community/account-sources")
+    .then((response) => response.data.items)
+}
+
+export function createRuleAccountSource(payload: RuleCommunityAccountSourceInput) {
+  return apiClient
+    .post<ItemResponse<RuleCommunityAccountSource>>("/api/v1/rule-community/account-sources", payload)
+    .then((response) => response.data.item)
+}
+
+export function refreshRuleAccountSource(id: number) {
+  return apiClient
+    .post<ItemResponse<RuleCommunityAccountSource>>(`/api/v1/rule-community/account-sources/${id}/refresh`, {})
+    .then((response) => response.data.item)
+}
+
+export function getRuleContributionTargets() {
+  return apiClient
+    .get<ListResponse<RuleContributionTarget>>("/api/v1/rule-community/contribution-targets")
+    .then((response) => response.data.items)
+}
+
+export function createRuleContributionTarget(payload: RuleContributionTargetInput) {
+  return apiClient
+    .post<ItemResponse<RuleContributionTarget>>("/api/v1/rule-community/contribution-targets", payload)
+    .then((response) => response.data.item)
+}
+
+export function getRuleContributionPushes() {
+  return apiClient
+    .get<ListResponse<RuleContributionPushAttempt>>("/api/v1/rule-community/contribution-pushes")
+    .then((response) => response.data.items)
+}
+
+export function previewRuleContributionPush(payload: { target_id: number; artifact: RulePackageExportArtifact }) {
+  return apiClient
+    .post<ItemResponse<RuleContributionPushAttempt>>("/api/v1/rule-community/contribution-pushes/preview", payload)
+    .then((response) => response.data.item)
+}
+
+export function executeRuleContributionPush(payload: { target_id: number; artifact: RulePackageExportArtifact }) {
+  return apiClient
+    .post<ItemResponse<RuleContributionPushAttempt>>("/api/v1/rule-community/contribution-pushes", payload)
+    .then((response) => response.data.item)
+}
+
+export function getRuleReviewQueue() {
+  return apiClient
+    .get<ListResponse<RuleReviewQueueItem>>("/api/v1/rule-community/review-queue")
+    .then((response) => response.data.items)
+}
+
+export function decideRuleReviewQueueItem(id: number, payload: { state: string; reason?: string }) {
+  return apiClient
+    .put<ItemResponse<RuleReviewQueueItem>>(`/api/v1/rule-community/review-queue/${id}`, payload)
+    .then((response) => response.data.item)
+}
+
+export function getRuleFeedback() {
+  return apiClient
+    .get<ListResponse<RuleFeedback>>("/api/v1/rule-community/feedback")
+    .then((response) => response.data.items)
+}
+
+export function createRuleFeedback(payload: RuleFeedbackInput) {
+  return apiClient
+    .post<ItemResponse<RuleFeedback>>("/api/v1/rule-community/feedback", payload)
+    .then((response) => response.data.item)
+}
+
+export function getRuleFeedbackSuggestions() {
+  return apiClient
+    .get<ListResponse<RuleFeedbackSuggestion>>("/api/v1/rule-community/feedback-suggestions")
+    .then((response) => response.data.items)
+}
+
+export function testRuleFeedbackSuggestion(id: number) {
+  return apiClient
+    .post<ItemResponse<RuleFeedbackSuggestion>>(`/api/v1/rule-community/feedback-suggestions/${id}/test`, {})
+    .then((response) => response.data.item)
+}
+
+export function decideRuleFeedbackSuggestion(id: number, payload: { state: string }) {
+  return apiClient
+    .put<ItemResponse<RuleFeedbackSuggestion>>(`/api/v1/rule-community/feedback-suggestions/${id}`, payload)
     .then((response) => response.data.item)
 }
 
