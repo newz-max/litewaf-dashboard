@@ -60,6 +60,12 @@ export interface Rule {
   signature_status?: string
   review_status?: string
   last_test_status?: string
+  remote_catalog_id?: string
+  last_synced_version?: string
+  pending_update_state?: string
+  local_override_state?: string
+  export_eligible?: boolean
+  export_ineligible_reasons?: string[]
   created_at?: string
   updated_at?: string
 }
@@ -84,6 +90,12 @@ export interface RuleInput {
   signature_status?: string
   review_status?: string
   last_test_status?: string
+  remote_catalog_id?: string
+  last_synced_version?: string
+  pending_update_state?: string
+  local_override_state?: string
+  export_eligible?: boolean
+  export_ineligible_reasons?: string[]
 }
 
 export interface Policy {
@@ -279,6 +291,10 @@ export interface PublishPreview {
     signature_status: Record<string, number>
     disabled_imported: number
     untested_blocking: number
+    catalog_sources?: number
+    catalog_packages?: number
+    remote_origin_packages?: number
+    pending_updates?: number
     warnings: string[]
     gateway_hot_path: string
     remote_sync_enabled: boolean
@@ -292,6 +308,7 @@ export interface RulePackageSignature {
   key_id?: string
   checksum?: string
   signature?: string
+  expires_at?: string
 }
 
 export interface RulePackageMetadata {
@@ -318,6 +335,8 @@ export interface RulePackagePreview {
   invalid: Array<{ rule_id: string; message: string }>
   default_enabled: boolean
   warnings: string[]
+  compatibility_status?: string
+  source_catalog_id?: string
 }
 
 export interface RulePackageImportResult {
@@ -326,6 +345,113 @@ export interface RulePackageImportResult {
   changed: Rule[]
   skipped: Rule[]
   invalid: Array<{ rule_id: string; message: string }>
+}
+
+export interface RuleCatalogSource {
+  id: number
+  name: string
+  source: string
+  enabled: boolean
+  timeout_sec: number
+  status: string
+  last_sync_at?: string
+  last_error?: string
+  package_count: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface RuleCatalogSourceInput {
+  name: string
+  source: string
+  enabled: boolean
+  timeout_sec: number
+}
+
+export interface RuleCatalogPackage {
+  id: number
+  catalog_id: number
+  package_id: string
+  name: string
+  version: string
+  compatibility: string
+  checksum: string
+  signature?: RulePackageSignature
+  signature_status: string
+  updated_at_text: string
+  manifest_url: string
+  source_identity: string
+  sync_status: string
+  stale: boolean
+  last_synced_at?: string
+}
+
+export interface RuleTrustKey {
+  id: number
+  key_id: string
+  algorithm: string
+  owner: string
+  enabled: boolean
+  revoked: boolean
+  expires_at?: string
+  created_at?: string
+  updated_at?: string
+}
+
+export interface RuleTrustKeyInput {
+  key_id: string
+  algorithm: string
+  owner: string
+  public_key?: string
+  enabled: boolean
+  revoked: boolean
+  expires_at?: string
+}
+
+export interface RulePackageUpdatePreview {
+  package: RulePackageMetadata
+  current_version: string
+  candidate_version: string
+  current_checksum: string
+  candidate_checksum: string
+  source_catalog_id: number
+  added: Rule[]
+  changed: Rule[]
+  removed: Rule[]
+  unchanged: Rule[]
+  skipped: Rule[]
+  invalid: Array<{ rule_id: string; message: string }>
+  warnings: string[]
+  signature_status: string
+}
+
+export interface RulePackageExportRequest {
+  package_id: string
+  name: string
+  version: string
+  author: string
+  license: string
+  compatibility?: string
+  rule_ids: number[]
+  signing_key_id?: string
+}
+
+export interface RulePackageExportPreview {
+  package: RulePackageMetadata
+  selected_rules: Rule[]
+  invalid: Array<{ rule_id: string; message: string }>
+  warnings: string[]
+  checksum_plan: string
+  signing_status: string
+}
+
+export interface RulePackageExportArtifact {
+  package: RulePackageMetadata
+  artifact: string
+  checksum: string
+  rule_count: number
+  guidance: string[]
+  created_at: string
 }
 
 export interface RuleTestSample {
@@ -603,6 +729,81 @@ export function importRulePackage(payload: unknown = {}) {
 
 export function deleteRulePackage(id: string) {
   return apiClient.delete(`/api/v1/rule-packages/${encodeURIComponent(id)}`)
+}
+
+export function getRuleCatalogs() {
+  return apiClient
+    .get<ListResponse<RuleCatalogSource>>("/api/v1/rule-community/catalogs")
+    .then((response) => response.data.items)
+}
+
+export function createRuleCatalog(payload: RuleCatalogSourceInput) {
+  return apiClient
+    .post<ItemResponse<RuleCatalogSource>>("/api/v1/rule-community/catalogs", payload)
+    .then((response) => response.data.item)
+}
+
+export function syncRuleCatalog(id: number) {
+  return apiClient
+    .post<ListResponse<RuleCatalogPackage>>(`/api/v1/rule-community/catalogs/${id}/sync`, {})
+    .then((response) => response.data.items)
+}
+
+export function getRuleCatalogPackages(catalogId: number) {
+  return apiClient
+    .get<ListResponse<RuleCatalogPackage>>(`/api/v1/rule-community/catalogs/${catalogId}/packages`)
+    .then((response) => response.data.items)
+}
+
+export function previewRemoteRulePackage(catalogId: number, packageId: string) {
+  return apiClient
+    .post<ItemResponse<RulePackagePreview>>(
+      `/api/v1/rule-community/catalogs/${catalogId}/packages/${encodeURIComponent(packageId)}/preview`,
+      {}
+    )
+    .then((response) => response.data.item)
+}
+
+export function previewRulePackageUpdate(catalogId: number, packageId: string) {
+  return apiClient
+    .post<ItemResponse<RulePackageUpdatePreview>>(
+      `/api/v1/rule-community/catalogs/${catalogId}/packages/${encodeURIComponent(packageId)}/update-preview`,
+      {}
+    )
+    .then((response) => response.data.item)
+}
+
+export function applyRulePackageUpdate(catalogId: number, packageId: string) {
+  return apiClient
+    .post<ItemResponse<RulePackageImportResult>>(
+      `/api/v1/rule-community/catalogs/${catalogId}/packages/${encodeURIComponent(packageId)}/apply-update`,
+      {}
+    )
+    .then((response) => response.data.item)
+}
+
+export function getRuleTrustKeys() {
+  return apiClient
+    .get<ListResponse<RuleTrustKey>>("/api/v1/rule-community/trust-keys")
+    .then((response) => response.data.items)
+}
+
+export function createRuleTrustKey(payload: RuleTrustKeyInput) {
+  return apiClient
+    .post<ItemResponse<RuleTrustKey>>("/api/v1/rule-community/trust-keys", payload)
+    .then((response) => response.data.item)
+}
+
+export function previewRulePackageExport(payload: RulePackageExportRequest) {
+  return apiClient
+    .post<ItemResponse<RulePackageExportPreview>>("/api/v1/rule-community/export/preview", payload)
+    .then((response) => response.data.item)
+}
+
+export function exportRulePackage(payload: RulePackageExportRequest) {
+  return apiClient
+    .post<ItemResponse<RulePackageExportArtifact>>("/api/v1/rule-community/export", payload)
+    .then((response) => response.data.item)
 }
 
 export function testRule(payload: { rule_id?: number; rule?: RuleInput; sample: RuleTestSample }) {
