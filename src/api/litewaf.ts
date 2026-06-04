@@ -61,6 +61,9 @@ export interface Rule {
   review_status?: string
   last_test_status?: string
   remote_catalog_id?: string
+  provider_id?: number
+  provider_name?: string
+  provider_package_ref?: string
   last_synced_version?: string
   pending_update_state?: string
   local_override_state?: string
@@ -91,6 +94,9 @@ export interface RuleInput {
   review_status?: string
   last_test_status?: string
   remote_catalog_id?: string
+  provider_id?: number
+  provider_name?: string
+  provider_package_ref?: string
   last_synced_version?: string
   pending_update_state?: string
   local_override_state?: string
@@ -330,6 +336,10 @@ export interface PublishPreview {
     catalog_sources?: number
     catalog_packages?: number
     remote_origin_packages?: number
+    provider_adapters?: number
+    provider_packages?: number
+    provider_origin_packages?: number
+    stale_provider_packages?: number
     pending_updates?: number
     warnings: string[]
     gateway_hot_path: string
@@ -452,6 +462,14 @@ export interface RulePackagePreview {
   warnings: string[]
   compatibility_status?: string
   source_catalog_id?: string
+  provider_id?: number
+  provider_name?: string
+  provider_package_ref?: string
+  entitlement_warnings?: string[]
+  retry_state?: string
+  trust_status?: string
+  blocked?: boolean
+  block_reason?: string
 }
 
 export interface RulePackageImportResult {
@@ -496,6 +514,68 @@ export interface RuleCatalogPackage {
   updated_at_text: string
   manifest_url: string
   source_identity: string
+  sync_status: string
+  stale: boolean
+  last_synced_at?: string
+}
+
+export interface RuleProviderRetryPolicy {
+  max_attempts: number
+  backoff_sec: number
+}
+
+export interface RuleProviderAdapter {
+  id: number
+  name: string
+  provider_type: string
+  endpoint: string
+  auth_mode: string
+  enabled: boolean
+  timeout_sec: number
+  retry_policy: RuleProviderRetryPolicy
+  credential: RuleAccountCredential
+  health_status: string
+  sync_status: string
+  last_sync_at?: string
+  last_failed_sync_at?: string
+  last_error?: string
+  attempt_count: number
+  next_retry_at?: string
+  retry_exhausted: boolean
+  package_count: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface RuleProviderAdapterInput {
+  name: string
+  provider_type: string
+  endpoint: string
+  auth_mode: string
+  enabled: boolean
+  timeout_sec: number
+  retry_policy: RuleProviderRetryPolicy
+  credential: Partial<RuleAccountCredential>
+  credential_secret?: string
+}
+
+export interface RuleProviderPackage {
+  id: number
+  provider_id: number
+  provider_name: string
+  provider_type: string
+  provider_package_ref: string
+  package_id: string
+  name: string
+  version: string
+  compatibility: string
+  checksum: string
+  signature?: RulePackageSignature
+  signature_status: string
+  updated_at_text: string
+  manifest_url: string
+  source_identity: string
+  entitlement_state: string
   sync_status: string
   stale: boolean
   last_synced_at?: string
@@ -582,6 +662,10 @@ export interface RuleCommunityAccountSource {
   id: number
   name: string
   provider_type: string
+  provider_adapter_id?: number
+  provider_adapter_name?: string
+  provider_health?: string
+  provider_retry_state?: string
   endpoint: string
   enabled: boolean
   timeout_sec: number
@@ -598,6 +682,7 @@ export interface RuleCommunityAccountSource {
 export interface RuleCommunityAccountSourceInput {
   name: string
   provider_type: string
+  provider_adapter_id?: number
   endpoint: string
   enabled: boolean
   timeout_sec: number
@@ -1037,6 +1122,76 @@ export function getRuleTrustKeys() {
 export function createRuleTrustKey(payload: RuleTrustKeyInput) {
   return apiClient
     .post<ItemResponse<RuleTrustKey>>("/api/v1/rule-community/trust-keys", payload)
+    .then((response) => response.data.item)
+}
+
+export function getRuleProviders() {
+  return apiClient
+    .get<ListResponse<RuleProviderAdapter>>("/api/v1/rule-community/providers")
+    .then((response) => response.data.items)
+}
+
+export function createRuleProvider(payload: RuleProviderAdapterInput) {
+  return apiClient
+    .post<ItemResponse<RuleProviderAdapter>>("/api/v1/rule-community/providers", payload)
+    .then((response) => response.data.item)
+}
+
+export function updateRuleProvider(id: number, payload: RuleProviderAdapterInput) {
+  return apiClient
+    .put<ItemResponse<RuleProviderAdapter>>(`/api/v1/rule-community/providers/${id}`, payload)
+    .then((response) => response.data.item)
+}
+
+export function deleteRuleProvider(id: number) {
+  return apiClient.delete(`/api/v1/rule-community/providers/${id}`)
+}
+
+export function validateRuleProvider(id: number) {
+  return apiClient
+    .post<ItemResponse<RuleProviderAdapter>>(`/api/v1/rule-community/providers/${id}/validate`, {})
+    .then((response) => response.data.item)
+}
+
+export function syncRuleProvider(id: number) {
+  return apiClient
+    .post<ListResponse<RuleProviderPackage> & ItemResponse<RuleProviderAdapter>>(
+      `/api/v1/rule-community/providers/${id}/sync`,
+      {}
+    )
+    .then((response) => response.data)
+}
+
+export function retryRuleProvider(id: number) {
+  return apiClient
+    .post<ListResponse<RuleProviderPackage> & ItemResponse<RuleProviderAdapter>>(
+      `/api/v1/rule-community/providers/${id}/retry`,
+      {}
+    )
+    .then((response) => response.data)
+}
+
+export function getRuleProviderPackages(providerId: number) {
+  return apiClient
+    .get<ListResponse<RuleProviderPackage>>(`/api/v1/rule-community/providers/${providerId}/packages`)
+    .then((response) => response.data.items)
+}
+
+export function previewRuleProviderPackage(providerId: number, packageId: string) {
+  return apiClient
+    .post<ItemResponse<RulePackagePreview>>(
+      `/api/v1/rule-community/providers/${providerId}/packages/${encodeURIComponent(packageId)}/preview`,
+      {}
+    )
+    .then((response) => response.data.item)
+}
+
+export function importRuleProviderPackage(providerId: number, packageId: string) {
+  return apiClient
+    .post<ItemResponse<RulePackageImportResult>>(
+      `/api/v1/rule-community/providers/${providerId}/packages/${encodeURIComponent(packageId)}/import`,
+      {}
+    )
     .then((response) => response.data.item)
 }
 

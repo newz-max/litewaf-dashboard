@@ -7,6 +7,7 @@ import {
   createRuleContributionTarget,
   createRuleFeedback,
   createRuleCatalog,
+  createRuleProvider,
   createRuleTrustKey,
   decideRuleFeedbackSuggestion,
   decideRuleReviewQueueItem,
@@ -20,19 +21,26 @@ import {
   getRuleFeedback,
   getRuleFeedbackSuggestions,
   getRulePackages,
+  getRuleProviderPackages,
+  getRuleProviders,
   getRuleReviewQueue,
   getRules,
   getRuleTrustKeys,
+  importRuleProviderPackage,
   importRulePackage,
+  previewRuleProviderPackage,
   previewRuleContributionPush,
   previewRemoteRulePackage,
   previewRulePackage,
   previewRulePackageExport,
   previewRulePackageUpdate,
   refreshRuleAccountSource,
+  retryRuleProvider,
+  syncRuleProvider,
   syncRuleCatalog,
   testRuleFeedbackSuggestion,
   testRule,
+  validateRuleProvider,
   type RuleCommunityAccountSource,
   type RuleContributionPushAttempt,
   type RuleContributionTarget,
@@ -46,6 +54,8 @@ import {
   type RulePackageMetadata,
   type RulePackagePreview,
   type RulePackageUpdatePreview,
+  type RuleProviderAdapter,
+  type RuleProviderPackage,
   type RuleTestResult,
   type RuleTrustKey
 } from "@/api/litewaf"
@@ -58,6 +68,7 @@ const packagesResource = useApiResource(getRulePackages)
 const rulesResource = useApiResource(getRules)
 const catalogsResource = useApiResource(getRuleCatalogs)
 const trustKeysResource = useApiResource(getRuleTrustKeys)
+const providersResource = useApiResource(getRuleProviders)
 const accountSourcesResource = useApiResource(getRuleAccountSources)
 const contributionTargetsResource = useApiResource(getRuleContributionTargets)
 const contributionPushesResource = useApiResource(getRuleContributionPushes)
@@ -68,9 +79,13 @@ const feedbackSuggestionsResource = useApiResource(getRuleFeedbackSuggestions)
 const activeCatalogID = shallowRef<number | null>(null)
 const catalogPackages = shallowRef<RuleCatalogPackage[]>([])
 const catalogLoading = shallowRef(false)
+const activeProviderID = shallowRef<number | null>(null)
+const providerPackages = shallowRef<RuleProviderPackage[]>([])
+const providerLoading = shallowRef(false)
 const packageJSON = shallowRef("")
 const preview = shallowRef<RulePackagePreview | null>(null)
 const remotePreview = shallowRef<RulePackagePreview | null>(null)
+const providerPreview = shallowRef<RulePackagePreview | null>(null)
 const updatePreview = shallowRef<RulePackageUpdatePreview | null>(null)
 const exportPreview = shallowRef<RulePackageExportPreview | null>(null)
 const exportArtifact = shallowRef<RulePackageExportArtifact | null>(null)
@@ -92,6 +107,19 @@ const trustForm = reactive({
   enabled: true,
   revoked: false,
   expiresAt: ""
+})
+
+const providerForm = reactive({
+  name: "",
+  providerType: "https-catalog",
+  endpoint: "",
+  authMode: "none",
+  credentialAlias: "default",
+  credentialSecret: "",
+  enabled: true,
+  timeoutSec: 5,
+  retryMaxAttempts: 3,
+  retryBackoffSec: 60
 })
 
 const exportForm = reactive({
@@ -119,6 +147,7 @@ const testForm = reactive({
 const accountForm = reactive({
   name: "",
   providerType: "https-catalog",
+  providerAdapterID: null as number | null,
   endpoint: "",
   credentialAlias: "default",
   credentialSecret: "",
@@ -157,6 +186,7 @@ const rules = computed<Rule[]>(() =>
 const importedRules = computed<Rule[]>(() => rules.value.filter((rule) => rule.package_id))
 const catalogs = computed<RuleCatalogSource[]>(() => [...(catalogsResource.data.value ?? [])])
 const trustKeys = computed<RuleTrustKey[]>(() => [...(trustKeysResource.data.value ?? [])])
+const providers = computed<RuleProviderAdapter[]>(() => [...(providersResource.data.value ?? [])])
 const accountSources = computed<RuleCommunityAccountSource[]>(() => [...(accountSourcesResource.data.value ?? [])])
 const contributionTargets = computed<RuleContributionTarget[]>(() => [...(contributionTargetsResource.data.value ?? [])])
 const contributionPushes = computed<RuleContributionPushAttempt[]>(() => [...(contributionPushesResource.data.value ?? [])])
@@ -198,6 +228,12 @@ const contributionTargetOptions = computed(() =>
   contributionTargets.value.map((target) => ({
     label: `${target.name} #${target.id}`,
     value: target.id
+  }))
+)
+const providerOptions = computed(() =>
+  providers.value.map((provider) => ({
+    label: `${provider.name} #${provider.id}`,
+    value: provider.id
   }))
 )
 
@@ -289,6 +325,92 @@ const catalogPackageColumns: DataTableColumns<RuleCatalogPackage> = [
   }
 ]
 
+const providerColumns: DataTableColumns<RuleProviderAdapter> = [
+  { title: "Provider", key: "name" },
+  { title: "类型", key: "provider_type" },
+  { title: "认证", key: "auth_mode", render: (row) => statusTag(row.auth_mode || "none") },
+  { title: "健康", key: "health_status", render: (row) => statusTag(row.health_status || "never-synced") },
+  { title: "同步", key: "sync_status", render: (row) => statusTag(row.sync_status || "never-synced") },
+  { title: "包数", key: "package_count" },
+  { title: "重试", key: "attempt_count", render: (row) => (row.retry_exhausted ? "exhausted" : String(row.attempt_count || 0)) },
+  { title: "凭据", key: "credential", render: (row) => `${row.credential?.alias || "-"} / ${row.credential?.last_four || "-"}` },
+  {
+    title: "操作",
+    key: "actions",
+    render: (row) =>
+      h(NSpace, null, {
+        default: () => [
+          h(
+            NButton,
+            {
+              size: "small",
+              disabled: !canWrite.value,
+              loading: busy.value === `validate-provider-${row.id}`,
+              onClick: () => runProviderValidate(row)
+            },
+            { default: () => "验证" }
+          ),
+          h(
+            NButton,
+            {
+              size: "small",
+              disabled: !canWrite.value || !row.enabled,
+              loading: busy.value === `sync-provider-${row.id}`,
+              onClick: () => runProviderSync(row)
+            },
+            { default: () => "同步" }
+          ),
+          h(
+            NButton,
+            {
+              size: "small",
+              disabled: !canWrite.value || !row.enabled,
+              loading: busy.value === `retry-provider-${row.id}`,
+              onClick: () => runProviderRetry(row)
+            },
+            { default: () => "重试" }
+          )
+        ]
+      })
+  }
+]
+
+const providerPackageColumns: DataTableColumns<RuleProviderPackage> = [
+  { title: "包 ID", key: "package_id" },
+  { title: "版本", key: "version" },
+  { title: "Provider", key: "provider_name" },
+  { title: "授权", key: "entitlement_state", render: (row) => statusTag(row.entitlement_state || "allowed") },
+  { title: "签名", key: "signature_status", render: (row) => statusTag(row.signature_status || "unsigned") },
+  { title: "状态", key: "sync_status", render: (row) => statusTag(row.stale ? "stale" : row.sync_status) },
+  {
+    title: "操作",
+    key: "actions",
+    render: (row) => {
+      const blocked = row.entitlement_state === "unauthorized" || row.entitlement_state === "denied" || row.stale
+      return h(NSpace, null, {
+        default: () => [
+          h(
+            NButton,
+            { size: "small", disabled: !canWrite.value || blocked, onClick: () => runProviderPreview(row) },
+            { default: () => "预览" }
+          ),
+          h(
+            NButton,
+            {
+              size: "small",
+              type: "primary",
+              disabled: !canWrite.value || blocked,
+              loading: busy.value === `import-provider-${row.provider_id}-${row.package_id}`,
+              onClick: () => runProviderImport(row)
+            },
+            { default: () => "导入" }
+          )
+        ]
+      })
+    }
+  }
+]
+
 const trustColumns: DataTableColumns<RuleTrustKey> = [
   { title: "Key ID", key: "key_id" },
   { title: "算法", key: "algorithm" },
@@ -301,6 +423,9 @@ const trustColumns: DataTableColumns<RuleTrustKey> = [
 const accountSourceColumns: DataTableColumns<RuleCommunityAccountSource> = [
   { title: "规则源", key: "name" },
   { title: "提供方", key: "provider_type" },
+  { title: "Provider", key: "provider_adapter_name", render: (row) => row.provider_adapter_name || "-" },
+  { title: "Provider 健康", key: "provider_health", render: (row) => statusTag(row.provider_health || "-") },
+  { title: "Provider 重试", key: "provider_retry_state", render: (row) => statusTag(row.provider_retry_state || "-") },
   { title: "订阅", key: "subscription_status", render: (row) => statusTag(row.subscription_status) },
   { title: "同步", key: "status", render: (row) => statusTag(row.status) },
   { title: "包数", key: "package_count" },
@@ -521,6 +646,100 @@ async function createTrustKey() {
   }
 }
 
+async function createProvider() {
+  busy.value = "create-provider"
+  try {
+    const item = await createRuleProvider({
+      name: providerForm.name,
+      provider_type: providerForm.providerType,
+      endpoint: providerForm.endpoint,
+      auth_mode: providerForm.authMode,
+      enabled: providerForm.enabled,
+      timeout_sec: providerForm.timeoutSec,
+      retry_policy: {
+        max_attempts: providerForm.retryMaxAttempts,
+        backoff_sec: providerForm.retryBackoffSec
+      },
+      credential: { alias: providerForm.credentialAlias },
+      credential_secret: providerForm.credentialSecret
+    })
+    activeProviderID.value = item.id
+    providerForm.credentialSecret = ""
+    message.success("Provider 已保存")
+    await providersResource.refresh()
+  } finally {
+    busy.value = ""
+  }
+}
+
+async function runProviderValidate(row: RuleProviderAdapter) {
+  busy.value = `validate-provider-${row.id}`
+  try {
+    await validateRuleProvider(row.id)
+    message.success("Provider 凭据验证完成")
+    await providersResource.refresh()
+  } finally {
+    busy.value = ""
+  }
+}
+
+async function runProviderSync(row: RuleProviderAdapter) {
+  busy.value = `sync-provider-${row.id}`
+  try {
+    const result = await syncRuleProvider(row.id)
+    providerPackages.value = result.items
+    activeProviderID.value = row.id
+    providerPreview.value = null
+    message.success("Provider 同步完成")
+    await providersResource.refresh()
+  } finally {
+    busy.value = ""
+  }
+}
+
+async function runProviderRetry(row: RuleProviderAdapter) {
+  busy.value = `retry-provider-${row.id}`
+  try {
+    const result = await retryRuleProvider(row.id)
+    providerPackages.value = result.items
+    activeProviderID.value = row.id
+    providerPreview.value = null
+    message.success("Provider 重试完成")
+    await providersResource.refresh()
+  } finally {
+    busy.value = ""
+  }
+}
+
+async function loadProviderPackages() {
+  if (!activeProviderID.value) {
+    providerPackages.value = []
+    return
+  }
+  providerLoading.value = true
+  try {
+    providerPackages.value = await getRuleProviderPackages(activeProviderID.value)
+  } finally {
+    providerLoading.value = false
+  }
+}
+
+async function runProviderPreview(row: RuleProviderPackage) {
+  providerPreview.value = await previewRuleProviderPackage(row.provider_id, row.package_id)
+  message.success("Provider 包预览完成")
+}
+
+async function runProviderImport(row: RuleProviderPackage) {
+  busy.value = `import-provider-${row.provider_id}-${row.package_id}`
+  try {
+    await importRuleProviderPackage(row.provider_id, row.package_id)
+    message.success("Provider 包已导入")
+    await refreshRuleData()
+  } finally {
+    busy.value = ""
+  }
+}
+
 async function runExportPreview() {
   busy.value = "export-preview"
   try {
@@ -575,6 +794,7 @@ async function createAccountSource() {
     await createRuleAccountSource({
       name: accountForm.name,
       provider_type: accountForm.providerType,
+      provider_adapter_id: accountForm.providerAdapterID ?? undefined,
       endpoint: accountForm.endpoint,
       enabled: accountForm.enabled,
       timeout_sec: accountForm.timeoutSec,
@@ -712,6 +932,7 @@ async function refreshRuleData() {
     packagesResource.refresh(),
     rulesResource.refresh(),
     catalogsResource.refresh(),
+    providersResource.refresh(),
     accountSourcesResource.refresh(),
     contributionTargetsResource.refresh(),
     contributionPushesResource.refresh(),
@@ -720,6 +941,7 @@ async function refreshRuleData() {
     feedbackSuggestionsResource.refresh()
   ])
   await loadCatalogPackages()
+  await loadProviderPackages()
 }
 
 function parseKeyValues(value: string) {
@@ -833,6 +1055,87 @@ function parseKeyValues(value: string) {
         </section>
       </NTabPane>
 
+      <NTabPane name="providers" tab="外部 Provider">
+        <section class="section section-pad">
+          <div class="section-title">Provider 配置</div>
+          <NGrid :cols="4" :x-gap="12" :y-gap="12" responsive="screen" class="mb">
+            <NGi><NInput v-model:value="providerForm.name" placeholder="Provider 名称" /></NGi>
+            <NGi>
+              <NSelect
+                v-model:value="providerForm.providerType"
+                :options="[{ label: 'https-catalog', value: 'https-catalog' }]"
+              />
+            </NGi>
+            <NGi>
+              <NSelect
+                v-model:value="providerForm.authMode"
+                :options="[
+                  { label: 'none', value: 'none' },
+                  { label: 'bearer-token', value: 'bearer-token' }
+                ]"
+              />
+            </NGi>
+            <NGi><NInputNumber v-model:value="providerForm.timeoutSec" :min="1" :max="30" /></NGi>
+            <NGi :span="2"><NInput v-model:value="providerForm.endpoint" placeholder="https://... 或本地 catalog.json" /></NGi>
+            <NGi><NInput v-model:value="providerForm.credentialAlias" placeholder="凭据别名" /></NGi>
+            <NGi>
+              <NInput
+                v-model:value="providerForm.credentialSecret"
+                type="password"
+                show-password-on="click"
+                placeholder="Bearer Token，仅写入"
+              />
+            </NGi>
+            <NGi><NInputNumber v-model:value="providerForm.retryMaxAttempts" :min="1" :max="10" /></NGi>
+            <NGi><NInputNumber v-model:value="providerForm.retryBackoffSec" :min="1" :max="3600" /></NGi>
+            <NGi>
+              <NSpace align="center">
+                <NSwitch v-model:value="providerForm.enabled" />
+                <NButton type="primary" :loading="busy === 'create-provider'" :disabled="!canWrite" @click="createProvider">
+                  新增 Provider
+                </NButton>
+              </NSpace>
+            </NGi>
+          </NGrid>
+          <NDataTable :loading="providersResource.loading.value" :columns="providerColumns" :data="providers" :bordered="false" />
+          <NEmpty v-if="!providersResource.loading.value && providers.length === 0" description="暂无外部 Provider" />
+        </section>
+
+        <section class="section section-pad">
+          <div class="section-title">Provider 包</div>
+          <NSpace class="mb">
+            <NSelect
+              v-model:value="activeProviderID"
+              class="catalog-select"
+              clearable
+              :options="providerOptions"
+              placeholder="选择 Provider"
+              @update:value="loadProviderPackages"
+            />
+            <NButton :disabled="!activeProviderID" :loading="providerLoading" @click="loadProviderPackages">刷新包列表</NButton>
+          </NSpace>
+          <NDataTable :loading="providerLoading" :columns="providerPackageColumns" :data="providerPackages" :bordered="false" />
+          <NEmpty v-if="!providerLoading && providerPackages.length === 0" description="暂无 Provider 包" />
+          <div v-if="providerPreview" class="preview-grid">
+            <NStatistic label="新增" :value="providerPreview.added.length" />
+            <NStatistic label="变更" :value="providerPreview.changed.length" />
+            <NStatistic label="重试状态" :value="providerPreview.retry_state || 'ready'" />
+            <NStatistic label="信任状态" :value="providerPreview.trust_status || providerPreview.package.signature_status" />
+          </div>
+          <NAlert v-if="providerPreview?.blocked" type="error" class="mt">
+            {{ providerPreview.block_reason }}
+          </NAlert>
+          <NAlert
+            v-for="warning in [...(providerPreview?.warnings ?? []), ...(providerPreview?.entitlement_warnings ?? [])]"
+            :key="warning"
+            type="warning"
+            class="mt"
+          >
+            {{ warning }}
+          </NAlert>
+        </section>
+      </NTabPane>
+
       <NTabPane name="trust" tab="信任密钥">
         <section class="section section-pad">
           <div class="section-title">信任密钥</div>
@@ -867,7 +1170,8 @@ function parseKeyValues(value: string) {
                 :options="['https-catalog', 'litewaf-cloud', 'git', 'generic'].map((value) => ({ label: value, value }))"
               />
             </NGi>
-            <NGi :span="2"><NInput v-model:value="accountForm.endpoint" placeholder="https://... 或本地路径" /></NGi>
+            <NGi><NSelect v-model:value="accountForm.providerAdapterID" clearable :options="providerOptions" placeholder="绑定 Provider，可空" /></NGi>
+            <NGi><NInput v-model:value="accountForm.endpoint" placeholder="https://... 或本地路径" /></NGi>
             <NGi><NInput v-model:value="accountForm.credentialAlias" placeholder="凭据别名" /></NGi>
             <NGi><NInput v-model:value="accountForm.credentialSecret" type="password" show-password-on="click" placeholder="凭据密钥，仅写入" /></NGi>
             <NGi><NInputNumber v-model:value="accountForm.timeoutSec" :min="1" :max="30" /></NGi>
