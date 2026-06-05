@@ -2,6 +2,7 @@
 import { computed } from "vue"
 import { getVersion } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
+import ThemeSettingsPanel from "@/components/theme/ThemeSettingsPanel.vue"
 
 const versionResource = useApiResource(getVersion)
 const settings = computed(() => {
@@ -24,11 +25,14 @@ const settings = computed(() => {
     <div class="page-header">
       <div>
         <h1 class="page-title">系统设置</h1>
-        <p class="page-subtitle">维护运行参数、用户权限和系统集成。</p>
+        <p class="page-subtitle">维护运行参数、用户权限、系统集成和本地外观偏好。</p>
       </div>
     </div>
 
+    <ThemeSettingsPanel />
+
     <section class="section section-pad">
+      <div class="section-title">运行信息</div>
       <NSpin :show="versionResource.loading.value">
         <NEmpty v-if="settings.length === 0 && !versionResource.loading.value" description="暂无系统配置数据" />
         <NDescriptions v-else bordered :column="1" label-placement="left">
@@ -47,3 +51,11 @@ const settings = computed(() => {
     </section>
   </main>
 </template>
+
+<style scoped>
+.section-title {
+  margin-bottom: 14px;
+  font-size: 18px;
+  font-weight: 760;
+}
+</style>

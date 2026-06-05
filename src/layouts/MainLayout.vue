@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, h } from "vue"
-import { RouterLink, RouterView, useRoute } from "vue-router"
+import { RouterLink, RouterView, useRoute, useRouter } from "vue-router"
 import { NIcon, type MenuOption } from "naive-ui"
 import {
   AnalyticsOutline,
@@ -14,7 +14,6 @@ import {
   OptionsOutline,
   PersonCircleOutline,
   PulseOutline,
-  ShieldOutline,
   ReaderOutline,
   RepeatOutline,
   RocketOutline,
@@ -22,6 +21,7 @@ import {
   LockClosedOutline,
   MedkitOutline,
   PricetagsOutline,
+  ShieldOutline,
   ShieldCheckmarkOutline,
   SunnyOutline,
   WarningOutline
@@ -30,6 +30,7 @@ import { useThemeStore } from "@/stores/theme"
 import { useAuthStore } from "@/stores/auth"
 
 const route = useRoute()
+const router = useRouter()
 const themeStore = useThemeStore()
 const authStore = useAuthStore()
 
@@ -43,124 +44,160 @@ function renderLabel(label: string, to: string) {
 
 const menuOptions = computed<MenuOption[]>(() => [
   {
-    key: "dashboard",
-    label: renderLabel("仪表盘", "/"),
-    icon: renderIcon(AnalyticsOutline)
-  },
-  {
-    key: "sites",
-    label: renderLabel("站点管理", "/sites"),
-    icon: renderIcon(GlobeOutline)
-  },
-  {
-    key: "protectionOverview",
-    label: renderLabel("防护概览", "/protection-overview"),
-    icon: renderIcon(ShieldOutline)
-  },
-  {
-    key: "ccProtection",
-    label: renderLabel("CC 防护", "/cc-protection"),
-    icon: renderIcon(RocketOutline)
-  },
-  {
-    key: "attackProtection",
-    label: renderLabel("攻击防护", "/attack-protection"),
-    icon: renderIcon(SkullOutline)
-  },
-  {
-    key: "ipAccessLists",
-    label: renderLabel("IP 黑白名单", "/ip-access-lists"),
-    icon: renderIcon(ShieldCheckmarkOutline)
-  },
-  {
-    key: "accessControl",
-    label: renderLabel("访问控制", "/access-control"),
-    icon: renderIcon(LockClosedOutline)
-  },
-  {
-    key: "uploadProtection",
-    label: renderLabel("上传防护", "/upload-protection"),
-    icon: renderIcon(CloudUploadOutline)
-  },
-  {
-    key: "botProtection",
-    label: renderLabel("Bot / 人机验证", "/bot-protection"),
-    icon: renderIcon(PersonCircleOutline)
-  },
-  {
-    key: "dynamicProtection",
-    label: renderLabel("动态防护 / 等候室", "/dynamic-protection"),
-    icon: renderIcon(RepeatOutline)
-  },
-  {
-    key: "rules",
-    label: renderLabel("规则管理", "/rules"),
-    icon: renderIcon(ShieldCheckmarkOutline)
-  },
-  {
-    key: "ruleEcosystem",
-    label: renderLabel("高级规则生态", "/rule-ecosystem"),
-    icon: renderIcon(PricetagsOutline)
-  },
-  {
-    key: "policies",
-    label: renderLabel("防护策略", "/policies"),
-    icon: renderIcon(LayersOutline)
-  },
-  {
-    key: "attackLogs",
-    label: renderLabel("攻击日志", "/attack-logs"),
-    icon: renderIcon(WarningOutline)
-  },
-  {
-    key: "dynamicBans",
-    label: renderLabel("动态封禁", "/dynamic-bans"),
-    icon: renderIcon(WarningOutline)
-  },
-  {
-    key: "accessLogs",
-    label: renderLabel("访问日志", "/access-logs"),
-    icon: renderIcon(PulseOutline)
-  },
-  {
-    key: "releases",
-    label: renderLabel("发布记录", "/releases"),
-    icon: renderIcon(CloudUploadOutline)
-  },
-  {
-    key: "protectionMigrationHealth",
-    label: renderLabel("迁移健康检查", "/protection-migration-health"),
-    icon: renderIcon(MedkitOutline)
-  },
-  ...(authStore.canAudit
-    ? [
-        {
-          key: "auditLogs",
-          label: renderLabel("审计日志", "/audit-logs"),
-          icon: renderIcon(ReaderOutline)
-        }
-      ]
-    : []),
-  {
-    key: "legacyCompatibility",
-    label: "兼容入口",
-    icon: renderIcon(ListOutline),
+    type: "group",
+    key: "nav-overview",
+    label: "态势",
     children: [
       {
-        key: "rateLimits",
-        label: renderLabel("限流配置（已废弃）", "/rate-limits")
+        key: "dashboard",
+        label: renderLabel("安全态势", "/"),
+        icon: renderIcon(AnalyticsOutline)
+      },
+      {
+        key: "protectionOverview",
+        label: renderLabel("防护概览", "/protection-overview"),
+        icon: renderIcon(ShieldOutline)
+      },
+      {
+        key: "sites",
+        label: renderLabel("站点管理", "/sites"),
+        icon: renderIcon(GlobeOutline)
       }
     ]
   },
   {
-    key: "settings",
-    label: renderLabel("系统设置", "/settings"),
-    icon: renderIcon(OptionsOutline)
+    type: "group",
+    key: "nav-protection",
+    label: "防护模块",
+    children: [
+      {
+        key: "ccProtection",
+        label: renderLabel("CC 防护", "/cc-protection"),
+        icon: renderIcon(RocketOutline)
+      },
+      {
+        key: "attackProtection",
+        label: renderLabel("攻击防护", "/attack-protection"),
+        icon: renderIcon(SkullOutline)
+      },
+      {
+        key: "ipAccessLists",
+        label: renderLabel("IP 黑白名单", "/ip-access-lists"),
+        icon: renderIcon(ShieldCheckmarkOutline)
+      },
+      {
+        key: "accessControl",
+        label: renderLabel("访问控制", "/access-control"),
+        icon: renderIcon(LockClosedOutline)
+      },
+      {
+        key: "uploadProtection",
+        label: renderLabel("上传防护", "/upload-protection"),
+        icon: renderIcon(CloudUploadOutline)
+      },
+      {
+        key: "botProtection",
+        label: renderLabel("Bot / 人机验证", "/bot-protection"),
+        icon: renderIcon(PersonCircleOutline)
+      },
+      {
+        key: "dynamicProtection",
+        label: renderLabel("动态防护 / 等候室", "/dynamic-protection"),
+        icon: renderIcon(RepeatOutline)
+      }
+    ]
+  },
+  {
+    type: "group",
+    key: "nav-rule-ops",
+    label: "规则与发布",
+    children: [
+      {
+        key: "rules",
+        label: renderLabel("规则管理", "/rules"),
+        icon: renderIcon(ShieldCheckmarkOutline)
+      },
+      {
+        key: "ruleEcosystem",
+        label: renderLabel("高级规则生态", "/rule-ecosystem"),
+        icon: renderIcon(PricetagsOutline)
+      },
+      {
+        key: "policies",
+        label: renderLabel("防护策略", "/policies"),
+        icon: renderIcon(LayersOutline)
+      },
+      {
+        key: "releases",
+        label: renderLabel("发布记录", "/releases"),
+        icon: renderIcon(CloudUploadOutline)
+      }
+    ]
+  },
+  {
+    type: "group",
+    key: "nav-logs",
+    label: "日志审计",
+    children: [
+      {
+        key: "attackLogs",
+        label: renderLabel("攻击日志", "/attack-logs"),
+        icon: renderIcon(WarningOutline)
+      },
+      {
+        key: "dynamicBans",
+        label: renderLabel("动态封禁", "/dynamic-bans"),
+        icon: renderIcon(WarningOutline)
+      },
+      {
+        key: "accessLogs",
+        label: renderLabel("访问日志", "/access-logs"),
+        icon: renderIcon(PulseOutline)
+      },
+      ...(authStore.canAudit
+        ? [
+            {
+              key: "auditLogs",
+              label: renderLabel("审计日志", "/audit-logs"),
+              icon: renderIcon(ReaderOutline)
+            }
+          ]
+        : [])
+    ]
+  },
+  {
+    type: "group",
+    key: "nav-system",
+    label: "系统",
+    children: [
+      {
+        key: "protectionMigrationHealth",
+        label: renderLabel("迁移健康检查", "/protection-migration-health"),
+        icon: renderIcon(MedkitOutline)
+      },
+      {
+        key: "legacyCompatibility",
+        label: "兼容入口",
+        icon: renderIcon(ListOutline),
+        children: [
+          {
+            key: "rateLimits",
+            label: renderLabel("限流配置（已废弃）", "/rate-limits")
+          }
+        ]
+      },
+      {
+        key: "settings",
+        label: renderLabel("系统设置", "/settings"),
+        icon: renderIcon(OptionsOutline)
+      }
+    ]
   }
 ])
 
 const activeKey = computed(() => String(route.name || "dashboard"))
 const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline))
+const densityLabel = computed(() => (themeStore.settings.density === "compact" ? "紧凑" : "舒适"))
 </script>
 
 <template>
@@ -168,8 +205,8 @@ const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline
     <NLayoutSider
       bordered
       collapse-mode="width"
-      :collapsed-width="68"
-      :width="232"
+      :collapsed-width="72"
+      :width="256"
       show-trigger
       class="app-sider"
     >
@@ -185,7 +222,12 @@ const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline
         </div>
       </div>
 
-      <NMenu :value="activeKey" :options="menuOptions" />
+      <div class="sider-status">
+        <span class="status-dot" />
+        <span>控制面在线</span>
+      </div>
+
+      <NMenu :value="activeKey" :options="menuOptions" :indent="18" />
     </NLayoutSider>
 
     <NLayout>
@@ -194,19 +236,51 @@ const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline
           <NIcon size="22">
             <DocumentTextOutline />
           </NIcon>
-          <span>{{ route.meta.title || "控制台" }}</span>
+          <div>
+            <span>{{ route.meta.title || "控制台" }}</span>
+            <small>{{ themeStore.activePreset.label }} · {{ densityLabel }}</small>
+          </div>
         </div>
 
         <div class="header-actions">
           <NTag type="success" size="small" round>Debian 12</NTag>
           <NTag type="info" size="small" round>{{ authStore.user?.role || "未登录" }}</NTag>
-          <NButton circle quaternary @click="themeStore.toggleTheme">
-            <template #icon>
-              <NIcon>
-                <component :is="themeIcon" />
-              </NIcon>
+          <NTooltip trigger="hover">
+            <template #trigger>
+              <NButton circle quaternary @click="themeStore.toggleDensity">
+                <template #icon>
+                  <NIcon>
+                    <LayersOutline />
+                  </NIcon>
+                </template>
+              </NButton>
             </template>
-          </NButton>
+            切换操作密度
+          </NTooltip>
+          <NTooltip trigger="hover">
+            <template #trigger>
+              <NButton circle quaternary @click="themeStore.toggleTheme">
+                <template #icon>
+                  <NIcon>
+                    <component :is="themeIcon" />
+                  </NIcon>
+                </template>
+              </NButton>
+            </template>
+            切换深浅色
+          </NTooltip>
+          <NTooltip trigger="hover">
+            <template #trigger>
+              <NButton circle quaternary @click="router.push('/settings')">
+                <template #icon>
+                  <NIcon>
+                    <OptionsOutline />
+                  </NIcon>
+                </template>
+              </NButton>
+            </template>
+            外观设置
+          </NTooltip>
           <NButton quaternary @click="authStore.signOut">退出</NButton>
         </div>
       </NLayoutHeader>
@@ -221,30 +295,33 @@ const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline
 <style scoped>
 .app-shell {
   height: 100vh;
+  background: var(--lw-bg);
 }
 
 .app-sider {
   background:
-    linear-gradient(180deg, rgba(15, 118, 110, 0.08), transparent 220px),
-    var(--lw-panel);
+    linear-gradient(180deg, color-mix(in srgb, var(--lw-accent) 12%, transparent), transparent 240px),
+    var(--lw-sider);
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 64px;
+  height: 66px;
   padding: 0 16px;
 }
 
 .brand-mark {
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   place-items: center;
-  border-radius: 8px;
-  background: #0f766e;
-  color: #ffffff;
+  border: 1px solid color-mix(in srgb, var(--lw-accent) 55%, var(--lw-border));
+  border-radius: var(--lw-radius);
+  background: color-mix(in srgb, var(--lw-accent) 18%, var(--lw-panel));
+  color: var(--lw-accent-strong);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--lw-accent) 20%, transparent);
 }
 
 .brand-text {
@@ -253,6 +330,7 @@ const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline
 }
 
 .brand-text strong {
+  color: var(--lw-text);
   font-size: 16px;
 }
 
@@ -261,14 +339,36 @@ const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline
   font-size: 12px;
 }
 
+.sider-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin: 0 12px 10px;
+  padding: 0 12px;
+  border: 1px solid var(--lw-border);
+  border-radius: var(--lw-radius);
+  background: var(--lw-panel-muted);
+  color: var(--lw-text-muted);
+  font-size: 12px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--lw-success);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--lw-success) 18%, transparent);
+}
+
 .app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  min-height: 66px;
   padding: 0 20px;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(14px);
+  background: var(--lw-header);
+  backdrop-filter: blur(16px);
 }
 
 .header-title,
@@ -279,13 +379,60 @@ const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline
 }
 
 .header-title {
+  min-width: 0;
+  color: var(--lw-text);
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 740;
+}
+
+.header-title div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.header-title span,
+.header-title small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-title small {
+  color: var(--lw-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.header-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .app-content {
-  height: calc(100vh - 64px);
-  padding: 20px;
+  height: calc(100vh - 66px);
+  padding: var(--lw-content-padding);
   overflow: auto;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--lw-accent) 7%, transparent), transparent 280px),
+    var(--lw-bg);
+}
+
+@media (max-width: 860px) {
+  .app-header {
+    align-items: flex-start;
+    flex-direction: column;
+    height: auto;
+    padding: 12px 14px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .app-content {
+    height: calc(100vh - 112px);
+  }
 }
 </style>

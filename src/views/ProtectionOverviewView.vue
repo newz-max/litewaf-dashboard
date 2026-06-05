@@ -97,10 +97,13 @@ function moduleLogQuery(moduleKey: string) {
   flex-direction: column;
   gap: 12px;
   min-height: 220px;
-  padding: 16px;
+  padding: var(--lw-density-y);
   border: 1px solid var(--lw-border);
-  border-radius: 8px;
-  background: var(--lw-panel);
+  border-radius: var(--lw-radius);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--lw-accent) 9%, transparent), transparent 45%),
+    var(--lw-panel);
+  box-shadow: var(--lw-shadow);
 }
 
 .module-head,
@@ -112,6 +115,7 @@ function moduleLogQuery(moduleKey: string) {
 }
 
 .module-title {
+  color: var(--lw-text);
   font-size: 16px;
   font-weight: 700;
 }
@@ -134,10 +138,12 @@ function moduleLogQuery(moduleKey: string) {
 
 .risk-text {
   margin-left: 10px;
+  color: var(--lw-text);
 }
 
 .panel-title {
   margin-bottom: 12px;
+  color: var(--lw-text);
   font-weight: 700;
 }
 </style>

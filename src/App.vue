@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { computed } from "vue"
-import { darkTheme, dateZhCN, zhCN } from "naive-ui"
+import { dateZhCN, zhCN } from "naive-ui"
 import { useThemeStore } from "@/stores/theme"
 
 const themeStore = useThemeStore()
-
-const theme = computed(() => (themeStore.isDark ? darkTheme : null))
 </script>
 
 <template>
-  <NConfigProvider :theme="theme" :locale="zhCN" :date-locale="dateZhCN">
+  <NConfigProvider
+    :theme="themeStore.activeNaiveTheme"
+    :theme-overrides="themeStore.themeOverrides"
+    :locale="zhCN"
+    :date-locale="dateZhCN"
+  >
+    <NGlobalStyle />
     <NLoadingBarProvider>
       <NDialogProvider>
         <NNotificationProvider>

@@ -1,16 +1,38 @@
 :root {
   color-scheme: light;
   --lw-bg: #eef2f3;
+  --lw-bg-elevated: #f8fbfb;
   --lw-panel: #ffffff;
   --lw-panel-muted: #f6f8f8;
   --lw-border: #d9e1df;
+  --lw-border-strong: #aec0bc;
   --lw-text: #10201d;
   --lw-text-muted: #63736f;
+  --lw-text-subtle: #879591;
   --lw-accent: #0f766e;
   --lw-accent-strong: #0b4f4a;
+  --lw-success: #16a34a;
   --lw-danger: #b42318;
   --lw-warning: #b7791f;
+  --lw-info: #2563eb;
+  --lw-header: rgba(255, 255, 255, 0.86);
+  --lw-sider: #ffffff;
   --lw-radius: 8px;
+  --lw-shadow: 0 18px 42px rgba(15, 35, 31, 0.08);
+  --lw-density-y: 16px;
+  --lw-content-padding: 20px;
+  --lw-chart-text: #10201d;
+  --lw-chart-grid: #d9e1df;
+  --lw-chart-1: #0f766e;
+  --lw-chart-2: #2563eb;
+  --lw-chart-3: #b7791f;
+  --lw-chart-4: #b42318;
+  --lw-chart-5: #6d5dfc;
+  --lw-chart-6: #0891b2;
+}
+
+:root[data-theme-mode="dark"] {
+  color-scheme: dark;
 }
 
 html,
@@ -31,6 +53,9 @@ body {
     "Noto Sans CJK SC",
     system-ui,
     sans-serif;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
 }
 
 * {
@@ -39,7 +64,7 @@ body {
 
 .page {
   display: grid;
-  gap: 16px;
+  gap: var(--lw-density-y);
 }
 
 .page-header {
@@ -65,10 +90,11 @@ body {
   border: 1px solid var(--lw-border);
   border-radius: var(--lw-radius);
   background: var(--lw-panel);
+  box-shadow: var(--lw-shadow);
 }
 
 .section-pad {
-  padding: 16px;
+  padding: var(--lw-density-y);
 }
 
 .metric-grid {
@@ -81,8 +107,11 @@ body {
   min-height: 112px;
   border: 1px solid var(--lw-border);
   border-radius: var(--lw-radius);
-  background: var(--lw-panel);
-  padding: 16px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--lw-accent) 10%, transparent), transparent 44%),
+    var(--lw-panel);
+  padding: var(--lw-density-y);
+  box-shadow: var(--lw-shadow);
 }
 
 .metric-label {
@@ -92,6 +121,7 @@ body {
 
 .metric-value {
   margin-top: 10px;
+  color: var(--lw-accent);
   font-size: 30px;
   font-weight: 750;
   line-height: 1;
@@ -109,6 +139,26 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+:root[data-density="compact"] .page-title {
+  font-size: 20px;
+}
+
+:root[data-density="compact"] .metric-card {
+  min-height: 96px;
+}
+
+:root[data-density="compact"] .metric-value {
+  font-size: 26px;
+}
+
+:root[data-motion="reduced"] *,
+:root[data-motion="reduced"] *::before,
+:root[data-motion="reduced"] *::after {
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
+  animation-duration: 0.01ms !important;
 }
 
 @media (max-width: 1080px) {

@@ -64,7 +64,7 @@ async function submit() {
   place-items: center;
   padding: 24px;
   background:
-    linear-gradient(135deg, rgba(15, 118, 110, 0.14), transparent 35%),
+    linear-gradient(135deg, color-mix(in srgb, var(--lw-accent) 18%, transparent), transparent 36%),
     var(--lw-bg);
 }
 
@@ -72,7 +72,7 @@ async function submit() {
   width: min(420px, 100%);
   padding: 28px;
   border: 1px solid var(--lw-border);
-  border-radius: 8px;
+  border-radius: var(--lw-radius);
   background: var(--lw-panel);
   box-shadow: var(--lw-shadow);
 }
@@ -89,9 +89,9 @@ async function submit() {
   width: 44px;
   height: 44px;
   place-items: center;
-  border-radius: 8px;
-  background: #0f766e;
-  color: #ffffff;
+  border-radius: var(--lw-radius);
+  background: color-mix(in srgb, var(--lw-accent) 18%, var(--lw-panel));
+  color: var(--lw-accent-strong);
   font-weight: 800;
 }
 

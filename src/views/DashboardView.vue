@@ -7,9 +7,11 @@ import { BarChart, PieChart } from "echarts/charts"
 import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components"
 import { getObservabilitySummary, getRules, getSites } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
+import { useThemeStore } from "@/stores/theme"
 
 use([CanvasRenderer, BarChart, PieChart, GridComponent, LegendComponent, TooltipComponent])
 
+const themeStore = useThemeStore()
 const sitesResource = useApiResource(getSites)
 const rulesResource = useApiResource(getRules)
 const summaryResource = useApiResource(getObservabilitySummary)
@@ -19,6 +21,8 @@ const topIps = computed(() => summary.value?.top_ips ?? [])
 const attackTypes = computed(() => summary.value?.attack_types ?? [])
 const topUris = computed(() => summary.value?.top_uris ?? [])
 const topRules = computed(() => summary.value?.top_rules ?? [])
+const chartTextColor = computed(() => themeStore.chartTextColor)
+const chartGridColor = computed(() => themeStore.chartGridColor)
 
 const metrics = computed(() => [
   { label: "防护站点", value: String(sitesResource.data.value?.length ?? 0), note: "来自控制面接口" },
@@ -56,24 +60,40 @@ const metrics = computed(() => [
 const topIpOption = computed(() => {
   const rows = topIps.value
   return {
+    color: themeStore.chartPalette,
+    textStyle: { color: chartTextColor.value },
     tooltip: { trigger: "axis" },
     grid: { left: 40, right: 16, top: 20, bottom: 32 },
-    xAxis: { type: "category", data: rows.map((item) => item.key) },
-    yAxis: { type: "value" },
+    xAxis: {
+      type: "category",
+      data: rows.map((item) => item.key),
+      axisLine: { lineStyle: { color: chartGridColor.value } },
+      axisLabel: { color: chartTextColor.value }
+    },
+    yAxis: {
+      type: "value",
+      splitLine: { lineStyle: { color: chartGridColor.value } },
+      axisLabel: { color: chartTextColor.value }
+    },
     series: [
       {
         name: "请求",
         type: "bar",
         data: rows.map((item) => item.count),
-        itemStyle: { color: "#0f766e" }
+        itemStyle: { color: themeStore.chartPalette[0] }
       }
     ]
   }
 })
 
 const attackTypeOption = computed(() => ({
+  color: themeStore.chartPalette,
+  textStyle: { color: chartTextColor.value },
   tooltip: { trigger: "item" },
-  legend: { bottom: 0 },
+  legend: {
+    bottom: 0,
+    textStyle: { color: chartTextColor.value }
+  },
   series: [
     {
       type: "pie",
@@ -159,11 +179,15 @@ const attackTypeOption = computed(() => ({
 
 .panel-title {
   margin-bottom: 12px;
+  color: var(--lw-text);
   font-weight: 700;
 }
 
 .chart-panel {
   min-height: 340px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--lw-chart-2) 9%, transparent), transparent 44%),
+    var(--lw-panel);
 }
 
 .chart {
