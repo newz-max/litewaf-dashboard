@@ -194,6 +194,9 @@ export interface AttackLog {
   ban_remaining_sec: number
   challenge_mode: string
   challenge_result: string
+  bot_result: string
+  bot_reason: string
+  device_signal: string
   package_id?: string
   package_version?: string
   package_rule_id?: string
@@ -906,6 +909,12 @@ export interface ProtectionRuleChallenge {
   mode: string
   verify_ttl_sec: number
   failure_action: string
+  behavior_enabled?: boolean
+  behavior_threshold?: number
+  device_binding?: boolean
+  search_engine_bypass?: boolean
+  failure_message?: string
+  privacy_notice?: string
 }
 
 export interface ProtectionRuleDynamic {

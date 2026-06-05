@@ -19,6 +19,7 @@ const filterKeys = [
   "attack_type",
   "advanced_target",
   "challenge_result",
+  "bot_result",
   "dynamic_result",
   "min_score"
 ] as const
@@ -44,6 +45,9 @@ const columns = [
   { title: "窗口", key: "window_sec" },
   { title: "挑战方式", key: "challenge_mode" },
   { title: "挑战结果", key: "challenge_result" },
+  { title: "Bot 结果", key: "bot_result" },
+  { title: "Bot 原因", key: "bot_reason" },
+  { title: "设备信号", key: "device_signal" },
   { title: "动态结果", key: "advanced_target" },
   { title: "高级目标", key: "advanced_target" },
   { title: "分数", key: "score" },
@@ -176,6 +180,19 @@ function moduleRoute(module: string) {
             { label: '已发起', value: 'issued' },
             { label: '已通过', value: 'passed' },
             { label: '失败', value: 'failed' }
+          ]"
+        />
+        <NSelect
+          v-model:value="filters.bot_result"
+          clearable
+          placeholder="Bot 结果"
+          :options="[
+            { label: 'Captcha 发放', value: 'captcha-issued' },
+            { label: 'Captcha 通过', value: 'captcha-passed' },
+            { label: 'Captcha 失败', value: 'captcha-failed' },
+            { label: '行为评分通过', value: 'behavior-pass' },
+            { label: '搜索引擎绕过', value: 'search-engine-bypass' },
+            { label: '设备不匹配', value: 'device-mismatch' }
           ]"
         />
         <NSelect

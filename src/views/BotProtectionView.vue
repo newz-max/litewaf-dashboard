@@ -25,6 +25,8 @@ const form = reactive<ProtectionRuleInput>(emptyForm())
 const templateOptions = [
   { label: "后台路径挑战", value: "admin" },
   { label: "登录路径挑战", value: "login" },
+  { label: "本地 Captcha", value: "captcha" },
+  { label: "搜索引擎绕过", value: "crawler" },
   { label: "观察 Bot 行为", value: "observe" }
 ]
 
@@ -41,6 +43,11 @@ const methodOptions = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS
 const failureActionOptions = [
   { label: "观察", value: "log-only" },
   { label: "阻断", value: "block" }
+]
+
+const challengeModeOptions = [
+  { label: "JS Challenge", value: "js-challenge" },
+  { label: "本地 Captcha", value: "captcha" }
 ]
 
 const columns: DataTableColumns<ProtectionRule> = [
@@ -83,6 +90,14 @@ const columns: DataTableColumns<ProtectionRule> = [
     width: 126,
     render(row) {
       return formatChallengeMode(row.challenge?.mode)
+    }
+  },
+  {
+    title: "增强项",
+    key: "challenge.enhancements",
+    minWidth: 210,
+    render(row) {
+      return formatEnhancements(row.challenge)
     }
   },
   {
@@ -180,7 +195,13 @@ function emptyForm(): ProtectionRuleInput {
     challenge: {
       mode: "js-challenge",
       verify_ttl_sec: 300,
-      failure_action: "block"
+      failure_action: "block",
+      behavior_enabled: false,
+      behavior_threshold: 60,
+      device_binding: false,
+      search_engine_bypass: false,
+      failure_message: "",
+      privacy_notice: ""
     },
     action: {
       type: "block"
@@ -222,7 +243,13 @@ function startEdit(item: ProtectionRule) {
     challenge: {
       mode: item.challenge?.mode ?? "js-challenge",
       verify_ttl_sec: item.challenge?.verify_ttl_sec ?? 300,
-      failure_action: item.challenge?.failure_action ?? item.action.type
+      failure_action: item.challenge?.failure_action ?? item.action.type,
+      behavior_enabled: item.challenge?.behavior_enabled ?? false,
+      behavior_threshold: item.challenge?.behavior_threshold ?? 60,
+      device_binding: item.challenge?.device_binding ?? false,
+      search_engine_bypass: item.challenge?.search_engine_bypass ?? false,
+      failure_message: item.challenge?.failure_message ?? "",
+      privacy_notice: item.challenge?.privacy_notice ?? ""
     },
     action: item.action
   })
@@ -235,21 +262,45 @@ function applyTemplate(value: string) {
       ...emptyForm(),
       name: "后台路径 JS Challenge",
       match: { path: "/admin", path_match: "prefix", methods: [] },
-      challenge: { mode: "js-challenge", verify_ttl_sec: 600, failure_action: "block" },
+      challenge: { ...emptyForm().challenge!, mode: "js-challenge", verify_ttl_sec: 600, failure_action: "block" },
       action: { type: "block" }
     },
     login: {
       ...emptyForm(),
       name: "登录路径 JS Challenge",
       match: { path: "/login", path_match: "exact", methods: ["GET", "POST"] },
-      challenge: { mode: "js-challenge", verify_ttl_sec: 300, failure_action: "block" },
+      challenge: { ...emptyForm().challenge!, mode: "js-challenge", verify_ttl_sec: 300, failure_action: "block" },
       action: { type: "block" }
+    },
+    captcha: {
+      ...emptyForm(),
+      name: "敏感路径本地 Captcha",
+      match: { path: "/checkout", path_match: "prefix", methods: ["GET", "POST"] },
+      challenge: {
+        ...emptyForm().challenge!,
+        mode: "captcha",
+        verify_ttl_sec: 300,
+        failure_action: "block",
+        behavior_enabled: true,
+        behavior_threshold: 60,
+        device_binding: true,
+        failure_message: "验证失败，请稍后重试。",
+        privacy_notice: "LiteWaf 仅使用本地挑战和粗粒度浏览器信号完成验证。"
+      },
+      action: { type: "block" }
+    },
+    crawler: {
+      ...emptyForm(),
+      name: "搜索引擎访问绕过",
+      match: { path: "/", path_match: "prefix", methods: [] },
+      challenge: { ...emptyForm().challenge!, search_engine_bypass: true, failure_action: "log-only" },
+      action: { type: "log-only" }
     },
     observe: {
       ...emptyForm(),
       name: "Bot 行为观察",
       match: { path: "/", path_match: "prefix", methods: [] },
-      challenge: { mode: "js-challenge", verify_ttl_sec: 300, failure_action: "log-only" },
+      challenge: { ...emptyForm().challenge!, mode: "js-challenge", verify_ttl_sec: 300, failure_action: "log-only" },
       action: { type: "log-only" }
     }
   }
@@ -266,11 +317,20 @@ function validateForm() {
   if (Number(form.priority ?? 0) < 0) {
     return "优先级不能小于 0"
   }
-  if ((form.challenge?.mode ?? "") !== "js-challenge") {
-    return "第一版仅支持 JS Challenge"
+  if (!["js-challenge", "captcha"].includes(form.challenge?.mode ?? "")) {
+    return "挑战方式必须是 JS Challenge 或本地 Captcha"
   }
   if (Number(form.challenge?.verify_ttl_sec ?? 0) <= 0 || Number(form.challenge?.verify_ttl_sec ?? 0) > 86400) {
     return "验证有效期必须在 1 到 86400 秒之间"
+  }
+  if (form.challenge?.behavior_enabled && (Number(form.challenge.behavior_threshold ?? 0) <= 0 || Number(form.challenge.behavior_threshold ?? 0) > 100)) {
+    return "行为评分阈值必须在 1 到 100 之间"
+  }
+  if ((form.challenge?.failure_message?.length ?? 0) > 240) {
+    return "失败说明不能超过 240 个字符"
+  }
+  if ((form.challenge?.privacy_notice?.length ?? 0) > 360) {
+    return "隐私提示不能超过 360 个字符"
   }
   return ""
 }
@@ -324,7 +384,30 @@ function formatChallengeMode(value?: string) {
   if (value === "js-challenge") {
     return "JS Challenge"
   }
+  if (value === "captcha") {
+    return "本地 Captcha"
+  }
   return value || "-"
+}
+
+function formatEnhancements(challenge?: ProtectionRule["challenge"]) {
+  const items: string[] = []
+  if (challenge?.behavior_enabled) {
+    items.push(`行为评分>=${challenge.behavior_threshold ?? 0}`)
+  }
+  if (challenge?.device_binding) {
+    items.push("设备绑定")
+  }
+  if (challenge?.search_engine_bypass) {
+    items.push("搜索引擎绕过")
+  }
+  if (challenge?.failure_message) {
+    items.push("失败说明")
+  }
+  if (challenge?.privacy_notice) {
+    items.push("隐私提示")
+  }
+  return items.length > 0 ? items.join(" / ") : "未启用"
 }
 
 function formatAction(value: string) {
@@ -348,7 +431,7 @@ function formatTime(value?: string) {
     <div class="page-header">
       <div>
         <h1 class="page-title">Bot / 人机验证</h1>
-        <p class="page-subtitle">按路径启用轻量 JS Challenge，拦截或观察未通过验证的自动化访问。</p>
+        <p class="page-subtitle">按路径启用 JS Challenge、本地 Captcha 和可解释 Bot 信号，拦截或观察自动化访问。</p>
       </div>
       <NSpace>
         <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
@@ -398,7 +481,7 @@ function formatTime(value?: string) {
           <NFormItem label="挑战方式">
             <NSelect
               v-model:value="form.challenge!.mode"
-              :options="[{ label: 'JS Challenge', value: 'js-challenge' }]"
+              :options="challengeModeOptions"
             />
           </NFormItem>
           <NFormItem label="验证有效期秒">
@@ -406,6 +489,41 @@ function formatTime(value?: string) {
           </NFormItem>
           <NFormItem label="失败动作">
             <NSelect v-model:value="form.challenge!.failure_action" :options="failureActionOptions" />
+          </NFormItem>
+          <NFormItem label="行为评分">
+            <NSpace align="center">
+              <NSwitch v-model:value="form.challenge!.behavior_enabled" />
+              <NInputNumber
+                v-model:value="form.challenge!.behavior_threshold"
+                :min="1"
+                :max="100"
+                :disabled="!form.challenge!.behavior_enabled"
+              />
+            </NSpace>
+          </NFormItem>
+          <NFormItem label="设备信号绑定">
+            <NSwitch v-model:value="form.challenge!.device_binding" />
+          </NFormItem>
+          <NFormItem label="搜索引擎绕过">
+            <NSwitch v-model:value="form.challenge!.search_engine_bypass" />
+          </NFormItem>
+          <NFormItem label="失败说明">
+            <NInput
+              v-model:value="form.challenge!.failure_message"
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 3 }"
+              maxlength="240"
+              show-count
+            />
+          </NFormItem>
+          <NFormItem label="隐私提示">
+            <NInput
+              v-model:value="form.challenge!.privacy_notice"
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 3 }"
+              maxlength="360"
+              show-count
+            />
           </NFormItem>
           <NFormItem label="优先级">
             <NInputNumber v-model:value="form.priority" :min="0" />
