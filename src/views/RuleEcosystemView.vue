@@ -127,7 +127,7 @@ const exportForm = reactive({
   name: "",
   version: "v1",
   author: "",
-  license: "MIT",
+  license: "PolyForm-Noncommercial-1.0.0",
   signingKeyID: "",
   ruleIDs: [] as number[]
 })

@@ -55,3 +55,7 @@ docker run --rm -p 8081:80 litewaf-dashboard
 ```
 
 镜像构建阶段使用 `node:22-bookworm`，运行阶段使用 `nginx:1.27-alpine`，以减少前端静态服务运行时体积。宿主机推荐 Debian 12 minimal，同时兼容主流 Linux + Docker Compose 环境。
+
+## 许可证
+
+本仓库采用 [PolyForm Noncommercial License 1.0.0](LICENSE)。非商业用途可按许可证使用、复制、分发和修改；任何商业使用都需要提前获得版权持有人的单独书面许可或商业授权。
