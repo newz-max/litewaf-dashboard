@@ -247,6 +247,11 @@ export interface SummaryCount {
 export interface ProtectionModuleRisk {
   module: string
   label: string
+  rule_name?: string
+  scope?: string
+  action?: string
+  impact?: string
+  recommendation?: string
   message: string
 }
 
@@ -263,6 +268,7 @@ export interface ProtectionModuleOverview {
   allow?: number
   compatibility_source?: string
   warnings: string[]
+  risk_details?: ProtectionModuleRisk[]
   evidence: SummaryCount[]
 }
 
@@ -1003,6 +1009,7 @@ export interface CCProtectionPreviewMatch {
   explanation: string
   partial: boolean
   warnings: string[]
+  risk_details?: ProtectionModuleRisk[]
 }
 
 export interface CCProtectionPreview {

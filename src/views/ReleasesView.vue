@@ -116,7 +116,13 @@ function renderPublishPreview(summary: string, modules: ProtectionModuleOverview
           risks.slice(0, 5).map((risk) =>
             h("div", { class: "publish-risk", key: `${risk.module}-${risk.message}` }, [
               h(NTag, { size: "small", type: "warning" }, { default: () => risk.label }),
-              h("span", risk.message)
+              h("div", { class: "publish-risk-body" }, [
+                h("strong", risk.rule_name ? `${risk.rule_name}：${risk.message}` : risk.message),
+                risk.scope ? h("span", `范围：${risk.scope}`) : null,
+                risk.action ? h("span", `动作：${risk.action}`) : null,
+                risk.impact ? h("span", `影响：${risk.impact}`) : null,
+                risk.recommendation ? h("span", `建议：${risk.recommendation}`) : null
+              ])
             ])
           )
         )
@@ -171,7 +177,12 @@ async function rollback(version: string) {
 
 .publish-risk {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
+}
+
+.publish-risk-body {
+  display: grid;
+  gap: 2px;
 }
 </style>

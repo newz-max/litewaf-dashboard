@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, h, reactive, shallowRef } from "vue"
-import { NButton, NSpace, NTag, useMessage, type DataTableColumns } from "naive-ui"
+import { NButton, NSpace, NTag, useDialog, useMessage, type DataTableColumns } from "naive-ui"
 import {
   createBotProtectionRule,
   deleteBotProtectionRule,
@@ -11,8 +11,10 @@ import {
 } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
+import { protectionGuides, protectionRiskPrompts, riskPromptText } from "@/utils/protectionGuidance"
 
 const message = useMessage()
+const dialog = useDialog()
 const authStore = useAuthStore()
 const resource = useApiResource(getBotProtectionRules)
 
@@ -21,6 +23,8 @@ const editing = shallowRef<ProtectionRule | null>(null)
 const formVisible = shallowRef(false)
 const saving = shallowRef(false)
 const form = reactive<ProtectionRuleInput>(emptyForm())
+const guidanceItems = protectionGuides["bot-protection"]
+const formRiskPrompts = computed(() => protectionRiskPrompts(form))
 
 const templateOptions = [
   { label: "后台路径挑战", value: "admin" },
@@ -343,6 +347,9 @@ async function save() {
   }
   const failureAction = form.challenge?.failure_action ?? "block"
   form.action.type = failureAction
+  if (!(await confirmRiskIfNeeded())) {
+    return
+  }
   saving.value = true
   try {
     if (editing.value) {
@@ -357,6 +364,24 @@ async function save() {
   } finally {
     saving.value = false
   }
+}
+
+function confirmRiskIfNeeded() {
+  const risks = formRiskPrompts.value
+  if (risks.length === 0) {
+    return Promise.resolve(true)
+  }
+  return new Promise<boolean>((resolve) => {
+    dialog.warning({
+      title: "确认高风险 Bot 防护配置",
+      content: () => h("div", { class: "risk-confirm" }, risks.map((risk) => h("p", { key: risk.message }, riskPromptText(risk)))),
+      positiveText: "确认保存",
+      negativeText: "取消",
+      onPositiveClick: () => resolve(true),
+      onNegativeClick: () => resolve(false),
+      onClose: () => resolve(false)
+    })
+  })
 }
 
 async function remove(item: ProtectionRule) {
@@ -442,6 +467,15 @@ function formatTime(value?: string) {
     <NAlert v-if="resource.error.value" class="view-alert" type="error">
       {{ resource.error.value }}
     </NAlert>
+
+    <section class="section section-pad guidance-section">
+      <div class="guidance-grid">
+        <NAlert v-for="item in guidanceItems" :key="item.title" type="info">
+          <template #header>{{ item.title }}</template>
+          {{ item.description }}
+        </NAlert>
+      </div>
+    </section>
 
     <section class="section section-pad">
       <NDataTable
@@ -531,6 +565,12 @@ function formatTime(value?: string) {
           <NFormItem label="启用">
             <NSwitch v-model:value="form.enabled" />
           </NFormItem>
+          <div v-if="formRiskPrompts.length > 0" class="risk-prompt-list">
+            <NAlert v-for="risk in formRiskPrompts" :key="risk.message" type="warning">
+              <template #header>{{ risk.message }}</template>
+              {{ riskPromptText(risk) }}
+            </NAlert>
+          </div>
         </NForm>
         <template #footer>
           <NSpace justify="end">
@@ -546,6 +586,16 @@ function formatTime(value?: string) {
 <style scoped>
 .view-alert {
   margin-bottom: 16px;
+}
+
+.guidance-section {
+  margin-bottom: 16px;
+}
+
+.guidance-grid,
+.risk-prompt-list {
+  display: grid;
+  gap: 8px;
 }
 
 .rule-form {
