@@ -15,6 +15,10 @@ const rulesResource = useApiResource(getRules)
 const summaryResource = useApiResource(getObservabilitySummary)
 
 const summary = computed(() => summaryResource.data.value)
+const topIps = computed(() => summary.value?.top_ips ?? [])
+const attackTypes = computed(() => summary.value?.attack_types ?? [])
+const topUris = computed(() => summary.value?.top_uris ?? [])
+const topRules = computed(() => summary.value?.top_rules ?? [])
 
 const metrics = computed(() => [
   { label: "防护站点", value: String(sitesResource.data.value?.length ?? 0), note: "来自控制面接口" },
@@ -45,7 +49,7 @@ const metrics = computed(() => [
 ])
 
 const topIpOption = computed(() => {
-  const rows = summary.value?.top_ips ?? []
+  const rows = topIps.value
   return {
     tooltip: { trigger: "axis" },
     grid: { left: 40, right: 16, top: 20, bottom: 32 },
@@ -69,7 +73,7 @@ const attackTypeOption = computed(() => ({
     {
       type: "pie",
       radius: ["46%", "70%"],
-      data: (summary.value?.attack_types ?? []).map((item) => ({ name: item.key, value: item.count }))
+      data: attackTypes.value.map((item) => ({ name: item.key, value: item.count }))
     }
   ]
 }))
@@ -103,14 +107,14 @@ const attackTypeOption = computed(() => ({
     <div class="dashboard-grid">
       <section class="section section-pad chart-panel">
         <div class="panel-title">Top 来源 IP</div>
-        <VChart v-if="(summary?.top_ips.length ?? 0) > 0" class="chart" :option="topIpOption" autoresize />
+        <VChart v-if="topIps.length > 0" class="chart" :option="topIpOption" autoresize />
         <NEmpty v-else description="暂无来源统计" />
       </section>
 
       <section class="section section-pad chart-panel">
         <div class="panel-title">攻击类型分布</div>
         <VChart
-          v-if="(summary?.attack_types.length ?? 0) > 0"
+          v-if="attackTypes.length > 0"
           class="chart"
           :option="attackTypeOption"
           autoresize
@@ -123,18 +127,18 @@ const attackTypeOption = computed(() => ({
       <div class="panel-title">Top URI / 规则</div>
       <div class="rank-grid">
         <NList>
-          <NListItem v-for="item in summary?.top_uris ?? []" :key="item.key">
+          <NListItem v-for="item in topUris" :key="item.key">
             <span>{{ item.key }}</span>
             <template #suffix>{{ item.count }}</template>
           </NListItem>
-          <NEmpty v-if="(summary?.top_uris.length ?? 0) === 0" description="暂无 URI 统计" />
+          <NEmpty v-if="topUris.length === 0" description="暂无 URI 统计" />
         </NList>
         <NList>
-          <NListItem v-for="item in summary?.top_rules ?? []" :key="item.key">
+          <NListItem v-for="item in topRules" :key="item.key">
             <span>规则 {{ item.key }}</span>
             <template #suffix>{{ item.count }}</template>
           </NListItem>
-          <NEmpty v-if="(summary?.top_rules.length ?? 0) === 0" description="暂无规则统计" />
+          <NEmpty v-if="topRules.length === 0" description="暂无规则统计" />
         </NList>
       </div>
     </section>

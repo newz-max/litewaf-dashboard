@@ -277,6 +277,37 @@ export interface ProtectionOverview {
   risks: ProtectionModuleRisk[]
 }
 
+function asArray<T>(value: T[] | null | undefined): T[] {
+  return Array.isArray(value) ? value : []
+}
+
+function normalizeObservabilitySummary(item: ObservabilitySummary): ObservabilitySummary {
+  return {
+    ...item,
+    access_control: asArray(item.access_control),
+    top_ips: asArray(item.top_ips),
+    top_uris: asArray(item.top_uris),
+    top_rules: asArray(item.top_rules),
+    attack_types: asArray(item.attack_types),
+    attack_protection: asArray(item.attack_protection),
+    upload_protection: asArray(item.upload_protection),
+    bot_protection: asArray(item.bot_protection),
+    dynamic_protection: asArray(item.dynamic_protection)
+  }
+}
+
+function normalizeProtectionOverview(item: ProtectionOverview): ProtectionOverview {
+  return {
+    modules: asArray(item.modules).map((module) => ({
+      ...module,
+      warnings: asArray(module.warnings),
+      risk_details: asArray(module.risk_details),
+      evidence: asArray(module.evidence)
+    })),
+    risks: asArray(item.risks)
+  }
+}
+
 export interface ReleaseRecord {
   id?: number
   version: string
@@ -1391,13 +1422,13 @@ export function getAccessLogs(params: Record<string, string | number> = {}) {
 export function getObservabilitySummary(params: Record<string, string | number> = {}) {
   return apiClient
     .get<ItemResponse<ObservabilitySummary>>("/api/v1/observability/summary", { params })
-    .then((response) => response.data.item)
+    .then((response) => normalizeObservabilitySummary(response.data.item))
 }
 
 export function getProtectionOverview(params: Record<string, string | number> = {}) {
   return apiClient
     .get<ItemResponse<ProtectionOverview>>("/api/v1/protection/overview", { params })
-    .then((response) => response.data.item)
+    .then((response) => normalizeProtectionOverview(response.data.item))
 }
 
 export function getProtectionMigrationHealth() {
