@@ -12,6 +12,7 @@ import MigrationHealthView from "@/views/MigrationHealthView.vue"
 import SettingsView from "@/views/SettingsView.vue"
 import LoginView from "@/views/LoginView.vue"
 import AuditLogsView from "@/views/AuditLogsView.vue"
+import ActiveDynamicBansView from "@/views/ActiveDynamicBansView.vue"
 import AccessListsView from "@/views/AccessListsView.vue"
 import RateLimitsView from "@/views/RateLimitsView.vue"
 import ProtectionOverviewView from "@/views/ProtectionOverviewView.vue"
@@ -78,6 +79,12 @@ const router = createRouter({
           name: "attackLogs",
           component: AttackLogsView,
           meta: { title: "攻击日志" }
+        },
+        {
+          path: "dynamic-bans",
+          name: "dynamicBans",
+          component: ActiveDynamicBansView,
+          meta: { title: "动态封禁" }
         },
         {
           path: "access-logs",

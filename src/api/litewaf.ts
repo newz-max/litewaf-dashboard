@@ -863,6 +863,33 @@ export interface AuditLog {
   time?: string
 }
 
+export interface DynamicBan {
+  id: number
+  site_id: number
+  client_ip: string
+  ban_reason: string
+  source: string
+  source_event_id: number
+  ban_duration_sec: number
+  ban_remaining_sec: number
+  status: string
+  revision: number
+  created_at: string
+  expires_at: string
+  cleared_at?: string
+  updated_at: string
+  time?: string
+}
+
+export interface DynamicBanClearResult {
+  site_id: number
+  client_ip: string
+  status: string
+  revision: number
+  cleared_at: string
+  message: string
+}
+
 export interface AccessListEntry {
   id: number
   name: string
@@ -1463,6 +1490,18 @@ export function getAuditLogs(params: Record<string, string> = {}) {
   return apiClient
     .get<ListResponse<AuditLog>>("/api/v1/audit-logs", { params })
     .then((response) => response.data.items)
+}
+
+export function getDynamicBans(params: Record<string, string | number> = {}) {
+  return apiClient
+    .get<ListResponse<DynamicBan>>("/api/v1/dynamic-bans", { params })
+    .then((response) => response.data.items)
+}
+
+export function clearDynamicBan(payload: { site_id: number; client_ip: string }) {
+  return apiClient
+    .post<ItemResponse<DynamicBanClearResult>>("/api/v1/dynamic-bans/unban", payload)
+    .then((response) => response.data.item)
 }
 
 export function getAccessLists() {

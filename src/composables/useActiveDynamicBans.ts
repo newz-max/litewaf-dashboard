@@ -1,0 +1,82 @@
+import { computed, reactive, readonly, shallowRef } from "vue"
+import { clearDynamicBan, getDynamicBans, type DynamicBan, type DynamicBanClearResult } from "@/api/litewaf"
+
+export interface DynamicBanFilters {
+  site_id: string
+  client_ip: string
+  status: string
+}
+
+const defaultFilters: DynamicBanFilters = {
+  site_id: "",
+  client_ip: "",
+  status: "active"
+}
+
+export function useActiveDynamicBans() {
+  const filters = reactive<DynamicBanFilters>({ ...defaultFilters })
+  const items = shallowRef<DynamicBan[]>([])
+  const loading = shallowRef(false)
+  const error = shallowRef("")
+  const clearingKey = shallowRef("")
+  const lastClear = shallowRef<DynamicBanClearResult | null>(null)
+
+  const activeCount = computed(() => items.value.filter((item) => item.status === "active").length)
+  const hasRows = computed(() => items.value.length > 0)
+
+  function params() {
+    return Object.fromEntries(
+      Object.entries(filters)
+        .map(([key, value]) => [key, value.trim()])
+        .filter(([, value]) => value !== "")
+    )
+  }
+
+  async function refresh() {
+    loading.value = true
+    error.value = ""
+    try {
+      items.value = await getDynamicBans(params())
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : "请求失败"
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function clearBan(item: DynamicBan) {
+    clearingKey.value = rowKey(item)
+    error.value = ""
+    try {
+      lastClear.value = await clearDynamicBan({ site_id: item.site_id, client_ip: item.client_ip })
+      await refresh()
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : "解封失败"
+    } finally {
+      clearingKey.value = ""
+    }
+  }
+
+  function resetFilters() {
+    Object.assign(filters, defaultFilters)
+  }
+
+  return {
+    filters,
+    items: readonly(items),
+    loading: readonly(loading),
+    error: readonly(error),
+    clearingKey: readonly(clearingKey),
+    lastClear: readonly(lastClear),
+    activeCount,
+    hasRows,
+    refresh,
+    clearBan,
+    resetFilters,
+    rowKey
+  }
+}
+
+function rowKey(item: Pick<DynamicBan, "site_id" | "client_ip">) {
+  return `${item.site_id}:${item.client_ip}`
+}

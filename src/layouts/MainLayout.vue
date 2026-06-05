@@ -108,6 +108,11 @@ const menuOptions = computed<MenuOption[]>(() => [
     icon: renderIcon(WarningOutline)
   },
   {
+    key: "dynamicBans",
+    label: renderLabel("动态封禁", "/dynamic-bans"),
+    icon: renderIcon(WarningOutline)
+  },
+  {
     key: "accessLogs",
     label: renderLabel("访问日志", "/access-logs"),
     icon: renderIcon(PulseOutline)
