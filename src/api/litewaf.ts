@@ -288,6 +288,7 @@ function normalizeObservabilitySummary(item: ObservabilitySummary): Observabilit
   return {
     ...item,
     access_control: asArray(item.access_control),
+    ip_access_list: asArray(item.ip_access_list),
     top_ips: asArray(item.top_ips),
     top_uris: asArray(item.top_uris),
     top_rules: asArray(item.top_rules),
