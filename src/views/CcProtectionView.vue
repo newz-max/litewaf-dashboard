@@ -5,7 +5,9 @@ import {
   createCCProtectionRule,
   deleteCCProtectionRule,
   getCCProtectionRules,
+  previewCCProtection,
   updateCCProtectionRule,
+  type CCProtectionPreviewMatch,
   type ProtectionRule,
   type ProtectionRuleInput
 } from "@/api/litewaf"
@@ -21,16 +23,32 @@ const editing = shallowRef<ProtectionRule | null>(null)
 const formVisible = shallowRef(false)
 const saving = shallowRef(false)
 const form = reactive<ProtectionRuleInput>(emptyForm())
+const previewing = shallowRef(false)
+const previewResult = shallowRef<CCProtectionPreviewMatch[] | null>(null)
+const previewForm = reactive({
+  site_id: 0,
+  path: "/api/v1/login",
+  method: "GET",
+  client_ip: "198.51.100.10",
+  session_id: "",
+  device_id: "",
+  status: 0,
+  attack_matched: false,
+  include_disabled: false
+})
 
 const templateOptions = [
   { label: "登录接口防爆破", value: "login" },
   { label: "API 调用频率限制", value: "api" },
-  { label: "全站基础 CC 防护", value: "site" }
+  { label: "全站基础 CC 防护", value: "site" },
+  { label: "404 扫描频率", value: "glob404" },
+  { label: "会话级限制", value: "session" }
 ]
 
 const pathMatchOptions = [
   { label: "精确", value: "exact" },
-  { label: "前缀", value: "prefix" }
+  { label: "前缀", value: "prefix" },
+  { label: "Glob", value: "glob" }
 ]
 
 const methodOptions = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].map((method) => ({
@@ -41,7 +59,20 @@ const methodOptions = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS
 const counterOptions = [
   { label: "客户端 IP", value: "client_ip" },
   { label: "IP + 路径", value: "client_ip_path" },
-  { label: "全局", value: "global" }
+  { label: "全局", value: "global" },
+  { label: "404 频率", value: "not_found_frequency" },
+  { label: "攻击命中频率", value: "attack_frequency" },
+  { label: "会话", value: "session" },
+  { label: "粗粒度设备", value: "device" }
+]
+
+const sessionSourceOptions = [
+  { label: "Cookie", value: "cookie" },
+  { label: "Header", value: "header" }
+]
+
+const deviceStrategyOptions = [
+  { label: "粗粒度信号", value: "coarse" }
 ]
 
 const actionOptions = [
@@ -50,6 +81,14 @@ const actionOptions = [
   { label: "限流", value: "rate-limit" },
   { label: "临时封禁", value: "ban" }
 ]
+
+type CCRiskRule = {
+  readonly name: string
+  readonly enabled: boolean
+  readonly action: { readonly type: string }
+  readonly limit: { readonly threshold: number; readonly window_sec: number }
+  readonly match: { readonly path?: string; readonly path_match?: string }
+}
 
 const columns: DataTableColumns<ProtectionRule> = [
   { title: "名称", key: "name", minWidth: 160 },
@@ -166,6 +205,55 @@ const columns: DataTableColumns<ProtectionRule> = [
   }
 ]
 
+const previewColumns: DataTableColumns<CCProtectionPreviewMatch> = [
+  { title: "规则", key: "rule_name", minWidth: 160 },
+  {
+    title: "统计对象",
+    key: "counter",
+    width: 128,
+    render(row) {
+      return formatCounter(row.counter)
+    }
+  },
+  {
+    title: "阈值窗口",
+    key: "threshold",
+    width: 120,
+    render(row) {
+      return `${row.threshold} / ${row.window_sec}s`
+    }
+  },
+  {
+    title: "动作",
+    key: "action",
+    width: 92,
+    render(row) {
+      return formatAction(row.action)
+    }
+  },
+  {
+    title: "预览状态",
+    key: "partial",
+    width: 108,
+    render(row) {
+      return h(
+        NTag,
+        { size: "small", type: row.partial ? "warning" : "success" },
+        { default: () => (row.partial ? "部分" : "完整") }
+      )
+    }
+  },
+  { title: "计数键", key: "counter_key", minWidth: 220 }
+]
+
+const activeRiskWarnings = computed(() => {
+  const warnings: string[] = []
+  for (const item of items.value) {
+    warnings.push(...ruleWarnings(item))
+  }
+  return warnings
+})
+
 function emptyForm(): ProtectionRuleInput {
   return {
     name: "",
@@ -183,7 +271,10 @@ function emptyForm(): ProtectionRuleInput {
       counter: "client_ip",
       threshold: 300,
       window_sec: 60,
-      ban_duration_sec: 300
+      ban_duration_sec: 300,
+      session_source: "",
+      session_name: "",
+      device_strategy: ""
     },
     action: {
       type: "rate-limit"
@@ -244,6 +335,20 @@ function applyTemplate(value: string) {
       match: { path: "/", path_match: "prefix", methods: [] },
       limit: { counter: "client_ip", threshold: 300, window_sec: 60, ban_duration_sec: 300 },
       action: { type: "rate-limit" }
+    },
+    glob404: {
+      ...emptyForm(),
+      name: "404 扫描频率限制",
+      match: { path: "/api/*", path_match: "glob", methods: [] },
+      limit: { counter: "not_found_frequency", threshold: 20, window_sec: 60, ban_duration_sec: 300 },
+      action: { type: "rate-limit" }
+    },
+    session: {
+      ...emptyForm(),
+      name: "会话级登录频率限制",
+      match: { path: "/api/login", path_match: "exact", methods: ["POST"] },
+      limit: { counter: "session", session_source: "cookie", session_name: "sid", threshold: 8, window_sec: 60, ban_duration_sec: 300 },
+      action: { type: "block" }
     }
   }
   assignForm(templates[value] ?? emptyForm())
@@ -256,6 +361,12 @@ function validateForm() {
   if (!String(form.match.path || "").startsWith("/")) {
     return "路径必须以 / 开头"
   }
+  if (form.match.path_match === "glob" && String(form.match.path || "").includes("**")) {
+    return "Glob 路径不支持 **"
+  }
+  if (form.limit.counter === "session" && !form.limit.session_name?.trim()) {
+    return "会话统计需要 Cookie 或 Header 名称"
+  }
   if (form.limit.threshold <= 0 || form.limit.window_sec <= 0) {
     return "阈值和窗口必须大于 0"
   }
@@ -263,6 +374,30 @@ function validateForm() {
     return "封禁时间不能小于 0"
   }
   return ""
+}
+
+async function runPreview() {
+  if (!previewForm.path.startsWith("/")) {
+    message.error("预览路径必须以 / 开头")
+    return
+  }
+  previewing.value = true
+  try {
+    const result = await previewCCProtection({
+      site_id: previewForm.site_id,
+      path: previewForm.path,
+      method: previewForm.method,
+      client_ip: previewForm.client_ip,
+      session_id: previewForm.session_id,
+      device_id: previewForm.device_id,
+      status: previewForm.status || undefined,
+      attack_matched: previewForm.attack_matched,
+      include_disabled: previewForm.include_disabled
+    })
+    previewResult.value = result.matches
+  } finally {
+    previewing.value = false
+  }
 }
 
 async function save() {
@@ -311,7 +446,8 @@ function hSource(row: ProtectionRule) {
 function formatPathMatch(value: string) {
   const labels: Record<string, string> = {
     exact: "精确",
-    prefix: "前缀"
+    prefix: "前缀",
+    glob: "Glob"
   }
   return labels[value] ?? value
 }
@@ -320,9 +456,29 @@ function formatCounter(value: string) {
   const labels: Record<string, string> = {
     client_ip: "客户端 IP",
     client_ip_path: "IP + 路径",
-    global: "全局"
+    global: "全局",
+    not_found_frequency: "404 频率",
+    attack_frequency: "攻击命中频率",
+    session: "会话",
+    device: "粗粒度设备"
   }
   return labels[value] ?? value
+}
+
+function ruleWarnings(item: CCRiskRule) {
+  if (!item.enabled) {
+    return []
+  }
+  const warnings: string[] = []
+  const blocking = ["block", "ban", "rate-limit"].includes(item.action.type)
+  const lowThreshold = item.limit.threshold > 0 && item.limit.threshold < 60 && item.limit.window_sec <= 60
+  if (blocking && lowThreshold && item.match.path === "/" && ["prefix", "glob"].includes(item.match.path_match ?? "exact")) {
+    warnings.push(`规则 ${item.name} 对全站路径使用较低阈值`)
+  }
+  if (blocking && lowThreshold && item.match.path_match === "glob" && String(item.match.path).startsWith("/*")) {
+    warnings.push(`规则 ${item.name} 使用较宽泛 Glob 匹配`)
+  }
+  return warnings
 }
 
 function formatAction(value: string) {
@@ -360,6 +516,10 @@ function formatTime(value?: string) {
       {{ resource.error.value }}
     </NAlert>
 
+    <NAlert v-for="warning in activeRiskWarnings" :key="warning" class="view-alert" type="warning">
+      {{ warning }}
+    </NAlert>
+
     <section class="section section-pad">
       <NDataTable
         :loading="resource.loading.value"
@@ -369,6 +529,58 @@ function formatTime(value?: string) {
         :scroll-x="1390"
       />
       <NEmpty v-if="!resource.loading.value && !resource.error.value && items.length === 0" description="暂无 CC 防护规则" />
+    </section>
+
+    <section class="section section-pad preview-section">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">模拟预览</h2>
+        </div>
+        <NButton :loading="previewing" @click="runPreview">运行预览</NButton>
+      </div>
+      <NForm class="preview-form" label-placement="top">
+        <NFormItem label="站点 ID">
+          <NInputNumber v-model:value="previewForm.site_id" :min="0" />
+        </NFormItem>
+        <NFormItem label="路径">
+          <NInput v-model:value="previewForm.path" />
+        </NFormItem>
+        <NFormItem label="方法">
+          <NSelect v-model:value="previewForm.method" :options="methodOptions" />
+        </NFormItem>
+        <NFormItem label="客户端 IP">
+          <NInput v-model:value="previewForm.client_ip" />
+        </NFormItem>
+        <NFormItem label="会话样本">
+          <NInput v-model:value="previewForm.session_id" />
+        </NFormItem>
+        <NFormItem label="设备样本">
+          <NInput v-model:value="previewForm.device_id" />
+        </NFormItem>
+        <NFormItem label="响应状态">
+          <NInputNumber v-model:value="previewForm.status" :min="0" />
+        </NFormItem>
+        <NFormItem label="攻击命中">
+          <NSwitch v-model:value="previewForm.attack_matched" />
+        </NFormItem>
+      </NForm>
+      <NDataTable
+        v-if="previewResult && previewResult.length > 0"
+        :columns="previewColumns"
+        :data="previewResult"
+        :bordered="false"
+        :scroll-x="820"
+      />
+      <NEmpty v-else-if="previewResult" description="没有匹配的 CC 规则" />
+      <div v-if="previewResult?.some((item) => item.partial)" class="preview-warnings">
+        <NAlert
+          v-for="item in previewResult.filter((row) => row.partial)"
+          :key="`${item.rule_id}-${item.counter}`"
+          type="warning"
+        >
+          {{ item.rule_name }} 的 {{ formatCounter(item.counter) }} 预览缺少完整样本字段
+        </NAlert>
+      </div>
     </section>
 
     <NDrawer v-model:show="formVisible" :width="520">
@@ -394,6 +606,15 @@ function formatTime(value?: string) {
           </NFormItem>
           <NFormItem label="统计对象">
             <NSelect v-model:value="form.limit.counter" :options="counterOptions" />
+          </NFormItem>
+          <NFormItem v-if="form.limit.counter === 'session'" label="会话来源">
+            <NSelect v-model:value="form.limit.session_source" :options="sessionSourceOptions" />
+          </NFormItem>
+          <NFormItem v-if="form.limit.counter === 'session'" label="Cookie / Header 名称">
+            <NInput v-model:value="form.limit.session_name" />
+          </NFormItem>
+          <NFormItem v-if="form.limit.counter === 'device'" label="设备策略">
+            <NSelect v-model:value="form.limit.device_strategy" :options="deviceStrategyOptions" />
           </NFormItem>
           <NFormItem label="频率阈值">
             <NInputNumber v-model:value="form.limit.threshold" :min="1" />
@@ -430,5 +651,36 @@ function formatTime(value?: string) {
 .rule-form {
   display: grid;
   gap: 4px;
+}
+
+.preview-section {
+  margin-top: 16px;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.preview-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.preview-warnings {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
 }
 </style>

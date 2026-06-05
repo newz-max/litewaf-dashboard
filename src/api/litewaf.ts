@@ -300,6 +300,10 @@ export interface PublishPreview {
     cc_protection?: {
       rules: number
       enabled: number
+      block?: number
+      log_only?: number
+      advanced_counters?: number
+      glob_rules?: number
       warnings: string[]
     }
     upload_protection?: {
@@ -898,6 +902,9 @@ export interface ProtectionRuleLimit {
   threshold: number
   window_sec: number
   ban_duration_sec: number
+  session_source?: string
+  session_name?: string
+  device_strategy?: string
 }
 
 export interface ProtectionRuleUpload {
@@ -968,6 +975,38 @@ export interface ProtectionRuleInput {
   challenge?: ProtectionRuleChallenge
   dynamic?: ProtectionRuleDynamic
   action: ProtectionRuleAction
+}
+
+export interface CCProtectionPreviewRequest {
+  site_id: number
+  path: string
+  method: string
+  client_ip?: string
+  session_id?: string
+  device_id?: string
+  status?: number
+  attack_matched?: boolean
+  rule_ids?: number[]
+  include_disabled?: boolean
+}
+
+export interface CCProtectionPreviewMatch {
+  rule_id: number
+  rule_name: string
+  matched: boolean
+  enabled: boolean
+  counter: string
+  counter_key: string
+  threshold: number
+  window_sec: number
+  action: string
+  explanation: string
+  partial: boolean
+  warnings: string[]
+}
+
+export interface CCProtectionPreview {
+  matches: CCProtectionPreviewMatch[]
 }
 
 export interface AttackProtectionRuleRef {
@@ -1452,6 +1491,12 @@ export function updateCCProtectionRule(id: number, payload: ProtectionRuleInput)
 
 export function deleteCCProtectionRule(id: number) {
   return apiClient.delete(`/api/v1/cc-protection/rules/${id}`)
+}
+
+export function previewCCProtection(payload: CCProtectionPreviewRequest) {
+  return apiClient
+    .post<ItemResponse<CCProtectionPreview>>("/api/v1/cc-protection/preview", payload)
+    .then((response) => response.data.item)
 }
 
 export function getAccessControlRules(params: Record<string, string | number | boolean> = {}) {
