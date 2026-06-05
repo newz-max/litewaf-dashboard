@@ -28,13 +28,10 @@ const formRiskPrompts = computed(() => protectionRiskPrompts(form))
 
 const templateOptions = [
   { label: "管理后台路径阻断", value: "admin" },
-  { label: "可信来源放行", value: "trusted" },
   { label: "Host 限制", value: "host" }
 ]
 
 const targetOptions = [
-  { label: "IP", value: "ip" },
-  { label: "CIDR", value: "cidr" },
   { label: "路径", value: "path" },
   { label: "Header", value: "header" },
   { label: "Host", value: "host" }
@@ -247,12 +244,6 @@ function applyTemplate(value: string) {
       match: { target: "path", path: "/admin", path_match: "prefix", operator: "prefix", methods: [] },
       action: { type: "block" }
     },
-    trusted: {
-      ...emptyForm(),
-      name: "可信来源放行",
-      match: { target: "cidr", value: "10.0.0.0/8", methods: [] },
-      action: { type: "allow" }
-    },
     host: {
       ...emptyForm(),
       name: "Host 限制",
@@ -294,8 +285,8 @@ function validateForm() {
   if (target === "path" && !String(form.match.path || "").startsWith("/")) {
     return "路径必须以 / 开头"
   }
-  if ((target === "ip" || target === "cidr") && !form.match.value?.trim()) {
-    return "来源不能为空"
+  if (target === "ip" || target === "cidr") {
+    return "IP/CIDR 黑白名单请使用独立 IP 黑白名单模块"
   }
   if (target === "header" && (!form.match.header_name?.trim() || !form.match.value?.trim())) {
     return "Header 名称和值不能为空"
@@ -374,10 +365,7 @@ function formatMatch(row: ProtectionRule) {
   if (target === "host") {
     return `Host ${row.match.operator === "suffix" ? "后缀" : "等于"} ${row.match.host || row.match.value}`
   }
-  if (target === "cidr") {
-    return `CIDR ${row.match.value}`
-  }
-  return `IP ${row.match.value}`
+  return "不支持的访问控制对象"
 }
 
 function hSource(row: ProtectionRule) {
@@ -409,7 +397,7 @@ function formatTime(value?: string) {
     <div class="page-header">
       <div>
         <h1 class="page-title">访问控制</h1>
-        <p class="page-subtitle">按来源、路径、Header 和 Host 管理放行、观察与阻断规则。</p>
+        <p class="page-subtitle">按路径、Header 和 Host 管理放行、观察与阻断规则；来源 IP/CIDR 使用独立 IP 黑白名单。</p>
       </div>
       <NSpace>
         <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
@@ -489,9 +477,6 @@ function formatTime(value?: string) {
               <NInput v-model:value="form.match.host" />
             </NFormItem>
           </template>
-          <NFormItem v-else label="来源">
-            <NInput v-model:value="form.match.value" />
-          </NFormItem>
           <NFormItem label="动作">
             <NSelect v-model:value="form.action.type" :options="actionOptions" />
           </NFormItem>

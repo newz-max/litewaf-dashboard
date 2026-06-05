@@ -57,8 +57,12 @@ async function publishNow() {
   const moduleText = moduleSummary.length > 0
     ? `模块化防护包含 ${moduleSummary.map((item) => `${item.label} ${item.enabled}/${item.rules}`).join("、")}。`
     : ""
-  const compatibilityText = preview.summary.access_lists > 0 || preview.summary.rate_limits > 0
-    ? `兼容字段保留 ${preview.summary.access_lists} 条旧名单、${preview.summary.rate_limits} 条旧限流配置。`
+  const ipList = preview.summary.ip_access_list
+  const ipListText = ipList
+    ? `IP 黑白名单启用 ${ipList.enabled}/${ipList.total}，Exact ${ipList.exact_ip} 条、CIDR ${ipList.cidr} 条。`
+    : ""
+  const compatibilityText = preview.summary.rate_limits > 0
+    ? `兼容字段保留 ${preview.summary.rate_limits} 条旧限流配置。`
     : ""
   const diagnostics = preview.summary.compatibility_diagnostics
   const diagnosticsText = diagnostics
@@ -67,7 +71,7 @@ async function publishNow() {
   dialog.warning({
     title: "确认发布",
     content: () => renderPublishPreview(
-      `将发布 ${preview.summary.sites} 个站点、${preview.summary.rules} 条规则、${preview.summary.policies} 个策略、${preview.summary.advanced_protection ?? 0} 项高级防护配置。${moduleText}${compatibilityText}${diagnosticsText}`,
+      `将发布 ${preview.summary.sites} 个站点、${preview.summary.rules} 条规则、${preview.summary.policies} 个策略、${preview.summary.advanced_protection ?? 0} 项高级防护配置。${moduleText}${ipListText}${compatibilityText}${diagnosticsText}`,
       moduleSummary,
       preview.summary.risk_warnings ?? []
     ),

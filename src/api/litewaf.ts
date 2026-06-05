@@ -173,8 +173,10 @@ export interface AttackLog {
   action: string
   disposition: string
   summary: string
-  access_list_id: number
   rate_limit_id: number
+  ip_access_list_id: number
+  ip_list_kind: string
+  ip_list_target: string
   module: string
   category: string
   rule_name: string
@@ -229,6 +231,7 @@ export interface ObservabilitySummary {
   upload_detections: number
   dynamic_bans: number
   access_control: SummaryCount[]
+  ip_access_list: SummaryCount[]
   top_ips: SummaryCount[]
   top_uris: SummaryCount[]
   top_rules: SummaryCount[]
@@ -325,7 +328,7 @@ export interface PublishPreview {
     sites: number
     rules: number
     policies: number
-    access_lists: number
+    ip_access_list?: IPAccessListSummary
     access_control?: {
       rules: number
       enabled: number
@@ -409,7 +412,6 @@ export interface CompatibilityCounts {
 export interface PublishCompatibilityDiagnostics {
   protection_rules: number
   rate_limits: number
-  access_lists: number
   legacy_modules: Record<string, number>
   by_module: Record<string, CompatibilityCounts>
   deduplicated: number
@@ -890,33 +892,46 @@ export interface DynamicBanClearResult {
   message: string
 }
 
-export interface AccessListEntry {
+export interface IPAccessListSummary {
+  rules: number
+  total: number
+  enabled: number
+  allow: number
+  block: number
+  exact_ip: number
+  cidr: number
+  global: number
+  site_scoped: number
+  warnings: string[]
+}
+
+export interface IPAccessListEntry {
   id: number
   name: string
   kind: string
   target: string
   value: string
-  match_operator?: string
-  header_name?: string
-  action: string
+  normalized_value: string
+  ip_family: string
+  prefix_length: number
   site_id: number
   enabled: boolean
   priority?: number
+  conflict_key?: string
+  description?: string
   created_at?: string
   updated_at?: string
 }
 
-export interface AccessListInput {
+export interface IPAccessListInput {
   name: string
   kind: string
   target: string
   value: string
-  match_operator?: string
-  header_name?: string
-  action: string
   site_id: number
   enabled: boolean
   priority?: number
+  description?: string
 }
 
 export interface RateLimitRule {
@@ -1504,26 +1519,26 @@ export function clearDynamicBan(payload: { site_id: number; client_ip: string })
     .then((response) => response.data.item)
 }
 
-export function getAccessLists() {
+export function getIPAccessLists() {
   return apiClient
-    .get<ListResponse<AccessListEntry>>("/api/v1/access-lists")
+    .get<ListResponse<IPAccessListEntry>>("/api/v1/ip-access-lists")
     .then((response) => response.data.items)
 }
 
-export function createAccessList(payload: AccessListInput) {
+export function createIPAccessList(payload: IPAccessListInput) {
   return apiClient
-    .post<ItemResponse<AccessListEntry>>("/api/v1/access-lists", payload)
+    .post<ItemResponse<IPAccessListEntry>>("/api/v1/ip-access-lists", payload)
     .then((response) => response.data.item)
 }
 
-export function updateAccessList(id: number, payload: AccessListInput) {
+export function updateIPAccessList(id: number, payload: IPAccessListInput) {
   return apiClient
-    .put<ItemResponse<AccessListEntry>>(`/api/v1/access-lists/${id}`, payload)
+    .put<ItemResponse<IPAccessListEntry>>(`/api/v1/ip-access-lists/${id}`, payload)
     .then((response) => response.data.item)
 }
 
-export function deleteAccessList(id: number) {
-  return apiClient.delete(`/api/v1/access-lists/${id}`)
+export function deleteIPAccessList(id: number) {
+  return apiClient.delete(`/api/v1/ip-access-lists/${id}`)
 }
 
 export function getRateLimits() {

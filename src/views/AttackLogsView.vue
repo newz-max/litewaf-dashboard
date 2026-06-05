@@ -97,6 +97,7 @@ function moduleRoute(module: string) {
   const routes: Record<string, string> = {
     "cc-protection": "/cc-protection",
     "attack-protection": "/attack-protection",
+    "ip-access-list": "/ip-access-lists",
     "access-control": "/access-control",
     "upload-protection": "/upload-protection",
     "bot-protection": "/bot-protection",
@@ -111,7 +112,7 @@ function moduleRoute(module: string) {
     <div class="page-header">
       <div>
         <h1 class="page-title">攻击日志</h1>
-        <p class="page-subtitle">按防护模块检索命中记录，兼容查看旧黑白名单和限流事件类型。</p>
+        <p class="page-subtitle">按防护模块检索命中记录，单独查看 IP 黑白名单、访问控制和限流事件。</p>
       </div>
       <NButton @click="logsResource.refresh">刷新</NButton>
     </div>
@@ -127,7 +128,7 @@ function moduleRoute(module: string) {
           placeholder="事件类型"
           :options="[
             { label: '规则', value: 'rule' },
-            { label: '访问控制兼容事件', value: 'access-list' },
+            { label: 'IP 黑白名单', value: 'ip-access-list' },
             { label: 'CC 防护兼容事件', value: 'rate-limit' },
             { label: '评分阈值', value: 'score-threshold' },
             { label: '请求体检测', value: 'body-inspection' },
@@ -141,6 +142,7 @@ function moduleRoute(module: string) {
           placeholder="模块"
           :options="[
             { label: '攻击防护', value: 'attack-protection' },
+            { label: 'IP 黑白名单', value: 'ip-access-list' },
             { label: 'CC 防护', value: 'cc-protection' },
             { label: '访问控制', value: 'access-control' },
             { label: '上传防护', value: 'upload-protection' },

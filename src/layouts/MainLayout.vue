@@ -68,6 +68,11 @@ const menuOptions = computed<MenuOption[]>(() => [
     icon: renderIcon(SkullOutline)
   },
   {
+    key: "ipAccessLists",
+    label: renderLabel("IP 黑白名单", "/ip-access-lists"),
+    icon: renderIcon(ShieldCheckmarkOutline)
+  },
+  {
     key: "accessControl",
     label: renderLabel("访问控制", "/access-control"),
     icon: renderIcon(LockClosedOutline)
@@ -141,10 +146,6 @@ const menuOptions = computed<MenuOption[]>(() => [
     label: "兼容入口",
     icon: renderIcon(ListOutline),
     children: [
-      {
-        key: "accessLists",
-        label: renderLabel("黑白名单（已废弃）", "/access-lists")
-      },
       {
         key: "rateLimits",
         label: renderLabel("限流配置（已废弃）", "/rate-limits")

@@ -13,7 +13,7 @@ import SettingsView from "@/views/SettingsView.vue"
 import LoginView from "@/views/LoginView.vue"
 import AuditLogsView from "@/views/AuditLogsView.vue"
 import ActiveDynamicBansView from "@/views/ActiveDynamicBansView.vue"
-import AccessListsView from "@/views/AccessListsView.vue"
+import IPAccessListsView from "@/views/IPAccessListsView.vue"
 import RateLimitsView from "@/views/RateLimitsView.vue"
 import ProtectionOverviewView from "@/views/ProtectionOverviewView.vue"
 import CcProtectionView from "@/views/CcProtectionView.vue"
@@ -111,10 +111,10 @@ const router = createRouter({
           meta: { title: "审计日志" }
         },
         {
-          path: "access-lists",
-          name: "accessLists",
-          component: AccessListsView,
-          meta: { title: "黑白名单（已废弃）" }
+          path: "ip-access-lists",
+          name: "ipAccessLists",
+          component: IPAccessListsView,
+          meta: { title: "IP 黑白名单" }
         },
         {
           path: "cc-protection",

@@ -32,6 +32,11 @@ const metrics = computed(() => [
   { label: "上传检测", value: String(summary.value?.upload_detections ?? 0), note: "上传元数据" },
   { label: "动态封禁", value: String(summary.value?.dynamic_bans ?? 0), note: "临时来源封禁" },
   {
+    label: "IP 黑白名单",
+    value: String((summary.value?.ip_access_list ?? []).reduce((total, item) => total + item.count, 0)),
+    note: "白名单/黑名单处置"
+  },
+  {
     label: "访问控制",
     value: String((summary.value?.access_control ?? []).reduce((total, item) => total + item.count, 0)),
     note: "放行/观察/阻断"

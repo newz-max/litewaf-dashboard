@@ -20,7 +20,7 @@ export const protectionGuides: Record<string, ProtectionGuideItem[]> = {
     { title: "高级计数", description: "404、攻击频率、会话和设备计数需要配合模拟预览确认样本字段是否完整。" }
   ],
   "access-control": [
-    { title: "可信来源放行", description: "放行规则应限定 IP/CIDR、Host 或路径，避免全站终止性放行。" },
+    { title: "路径放行收窄", description: "放行规则应限定 Host、路径或 Header 条件，来源 IP/CIDR 请进入 IP 黑白名单。" },
     { title: "后台路径保护", description: "管理路径建议先用观察或窄范围阻断，确认不会影响健康检查和回调。" },
     { title: "Header / Host 条件", description: "Header 与 Host 规则适合灰度验证，发布前确认匹配值来自可信入口。" }
   ],
@@ -155,7 +155,7 @@ function isBroadPath(path = "", pathMatch = "") {
 
 function isBroadAccessSource(rule: ProtectionRuleInput) {
   const value = rule.match.value || rule.match.host || ""
-  return value === "0.0.0.0" || value === "::" || value === "0.0.0.0/0" || value === "*" || value === ""
+  return value === "*" || value === ""
 }
 
 function isBroadAccessScope(rule: ProtectionRuleInput) {
@@ -176,9 +176,6 @@ function accessScope(rule: ProtectionRuleInput) {
   }
   if (rule.match.target === "header") {
     return `Header ${rule.match.header_name || "*"} ${rule.match.operator || "contains"} ${rule.match.value || "*"}，方法 ${methodScope(rule.match.methods)}`
-  }
-  if (rule.match.target === "ip" || rule.match.target === "cidr") {
-    return `${rule.match.target} ${rule.match.value || "*"}，方法 ${methodScope(rule.match.methods)}`
   }
   return pathScope(rule)
 }
