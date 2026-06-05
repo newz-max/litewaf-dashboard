@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, h } from "vue"
+import { computed, h, onBeforeUnmount, onMounted, shallowRef, type Component } from "vue"
 import { RouterLink, RouterView, useRoute, useRouter } from "vue-router"
 import { NIcon, type MenuOption } from "naive-ui"
 import {
@@ -34,7 +34,10 @@ const router = useRouter()
 const themeStore = useThemeStore()
 const authStore = useAuthStore()
 
-function renderIcon(icon: typeof AnalyticsOutline) {
+const siderCollapsed = shallowRef(false)
+let removeViewportListener: (() => void) | undefined
+
+function renderIcon(icon: Component) {
   return () => h(NIcon, null, { default: () => h(icon) })
 }
 
@@ -198,6 +201,36 @@ const menuOptions = computed<MenuOption[]>(() => [
 const activeKey = computed(() => String(route.name || "dashboard"))
 const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline))
 const densityLabel = computed(() => (themeStore.settings.density === "compact" ? "紧凑" : "舒适"))
+
+function updateSiderCollapsed(value: boolean) {
+  siderCollapsed.value = value
+}
+
+function openAppearanceSettings() {
+  router.push("/settings")
+}
+
+function signOut() {
+  authStore.signOut()
+  router.replace({ name: "login" })
+}
+
+onMounted(() => {
+  const mediaQuery = window.matchMedia("(max-width: 860px)")
+  const updateFromViewport = (event: MediaQueryList | MediaQueryListEvent) => {
+    siderCollapsed.value = event.matches
+  }
+
+  updateFromViewport(mediaQuery)
+  mediaQuery.addEventListener("change", updateFromViewport)
+  removeViewportListener = () => {
+    mediaQuery.removeEventListener("change", updateFromViewport)
+  }
+})
+
+onBeforeUnmount(() => {
+  removeViewportListener?.()
+})
 </script>
 
 <template>
@@ -205,10 +238,13 @@ const densityLabel = computed(() => (themeStore.settings.density === "compact" ?
     <NLayoutSider
       bordered
       collapse-mode="width"
+      :collapsed="siderCollapsed"
       :collapsed-width="72"
       :width="256"
       show-trigger
       class="app-sider"
+      :class="{ 'app-sider--collapsed': siderCollapsed }"
+      @update:collapsed="updateSiderCollapsed"
     >
       <div class="brand">
         <div class="brand-mark">
@@ -271,7 +307,7 @@ const densityLabel = computed(() => (themeStore.settings.density === "compact" ?
           </NTooltip>
           <NTooltip trigger="hover">
             <template #trigger>
-              <NButton circle quaternary @click="router.push('/settings')">
+              <NButton circle quaternary @click="openAppearanceSettings">
                 <template #icon>
                   <NIcon>
                     <OptionsOutline />
@@ -281,7 +317,7 @@ const densityLabel = computed(() => (themeStore.settings.density === "compact" ?
             </template>
             外观设置
           </NTooltip>
-          <NButton quaternary @click="authStore.signOut">退出</NButton>
+          <NButton quaternary @click="signOut">退出</NButton>
         </div>
       </NLayoutHeader>
 
@@ -351,6 +387,16 @@ const densityLabel = computed(() => (themeStore.settings.density === "compact" ?
   background: var(--lw-panel-muted);
   color: var(--lw-text-muted);
   font-size: 12px;
+}
+
+.app-sider--collapsed .brand {
+  justify-content: center;
+  padding: 0;
+}
+
+.app-sider--collapsed .brand-text,
+.app-sider--collapsed .sider-status {
+  display: none;
 }
 
 .status-dot {
