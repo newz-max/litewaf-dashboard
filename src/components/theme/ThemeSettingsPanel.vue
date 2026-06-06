@@ -309,7 +309,7 @@ function updateRadius(value: number | null) {
   width: 28px;
   height: 14px;
   border-radius: 999px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lw-panel) 72%, var(--lw-border));
 }
 
 @media (max-width: 980px) {

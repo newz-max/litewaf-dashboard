@@ -459,9 +459,7 @@ onBeforeUnmount(() => {
   height: calc(100vh - 66px);
   padding: var(--lw-content-padding);
   overflow: auto;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--lw-accent) 7%, transparent), transparent 280px),
-    var(--lw-bg);
+  background: var(--lw-bg);
 }
 
 @media (max-width: 860px) {
