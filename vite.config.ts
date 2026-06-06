@@ -50,7 +50,7 @@ export default defineConfig({
         manualChunks: {
           vue: ["vue", "vue-router", "pinia"],
           naive: ["naive-ui", "@vicons/ionicons5"],
-          charts: ["echarts", "vue-echarts"]
+          charts: ["echarts", "vue-echarts", "echarts-gl", "@geo-maps/countries-land-10km"]
         }
       }
     },

@@ -267,6 +267,12 @@ export interface AccessLog {
   duration_ms: number
   client_ip: string
   user_agent: string
+  referer?: string
+  geo_country?: string
+  geo_region?: string
+  geo_city?: string
+  geo_longitude?: number
+  geo_latitude?: number
   disposition: string
   created_at?: string
   time?: string
@@ -296,6 +302,72 @@ export interface ObservabilitySummary {
 export interface SummaryCount {
   key: string
   count: number
+}
+
+export interface TimeSeriesPoint {
+  time: string
+  value: number
+}
+
+export interface StatisticsReportCards {
+  requests: number
+  pv: number
+  uv: number
+  unique_ips: number
+  blocked: number
+  attack_ips: number
+  errors_4xx: number
+  error_rate_4xx: number
+  blocked_4xx: number
+  block_rate_4xx: number
+  errors_5xx: number
+  error_rate_5xx: number
+}
+
+export interface GeoRank {
+  code: string
+  name: string
+  count: number
+  blocked: number
+}
+
+export interface GeoPoint {
+  name: string
+  value: number
+  longitude: number
+  latitude: number
+}
+
+export interface StatisticsGeoReport {
+  scope: "world" | "china"
+  map_view: "3d" | "2d"
+  metric: "requests" | "blocked"
+  ranking: GeoRank[]
+  points: GeoPoint[]
+  diagnostics?: string[]
+}
+
+export interface StatisticsClientReport {
+  os: SummaryCount[]
+  browsers: SummaryCount[]
+  user_agents: SummaryCount[]
+}
+
+export interface StatisticsRefererReport {
+  domains: SummaryCount[]
+  pages: SummaryCount[]
+}
+
+export interface StatisticsReport {
+  cards: StatisticsReportCards
+  qps: TimeSeriesPoint[]
+  visits: TimeSeriesPoint[]
+  blocks: TimeSeriesPoint[]
+  geo: StatisticsGeoReport
+  clients: StatisticsClientReport
+  statuses: SummaryCount[]
+  referers: StatisticsRefererReport
+  diagnostics?: string[]
 }
 
 export interface ProtectionModuleRisk {
@@ -360,6 +432,35 @@ function normalizeProtectionOverview(item: ProtectionOverview): ProtectionOvervi
       evidence: asArray(module.evidence)
     })),
     risks: asArray(item.risks)
+  }
+}
+
+function normalizeStatisticsReport(item: StatisticsReport): StatisticsReport {
+  const geo = item.geo ?? { scope: "world", map_view: "3d", metric: "requests", ranking: [], points: [] }
+  const clients = item.clients ?? { os: [], browsers: [], user_agents: [] }
+  const referers = item.referers ?? { domains: [], pages: [] }
+  return {
+    ...item,
+    qps: asArray(item.qps),
+    visits: asArray(item.visits),
+    blocks: asArray(item.blocks),
+    statuses: asArray(item.statuses),
+    diagnostics: asArray(item.diagnostics),
+    geo: {
+      ...geo,
+      ranking: asArray(geo.ranking),
+      points: asArray(geo.points),
+      diagnostics: asArray(geo.diagnostics)
+    },
+    clients: {
+      os: asArray(clients.os),
+      browsers: asArray(clients.browsers),
+      user_agents: asArray(clients.user_agents)
+    },
+    referers: {
+      domains: asArray(referers.domains),
+      pages: asArray(referers.pages)
+    }
   }
 }
 
@@ -1565,6 +1666,12 @@ export function getObservabilitySummary(params: Record<string, string | number> 
   return apiClient
     .get<ItemResponse<ObservabilitySummary>>("/api/v1/observability/summary", { params })
     .then((response) => normalizeObservabilitySummary(response.data.item))
+}
+
+export function getStatisticsReport(params: Record<string, string | number> = {}) {
+  return apiClient
+    .get<ItemResponse<StatisticsReport>>("/api/v1/reports/statistics", { params })
+    .then((response) => normalizeStatisticsReport(response.data.item))
 }
 
 export function getProtectionOverview(params: Record<string, string | number> = {}) {

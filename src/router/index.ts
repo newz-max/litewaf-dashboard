@@ -45,6 +45,12 @@ const router = createRouter({
           meta: { title: "仪表盘" }
         },
         {
+          path: "statistics-report",
+          name: "statisticsReport",
+          component: () => import("@/views/StatisticsReportView.vue"),
+          meta: { title: "统计报表" }
+        },
+        {
           path: "applications",
           name: "applications",
           component: ApplicationsView,

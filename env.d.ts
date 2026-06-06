@@ -1,5 +1,12 @@
 /// <reference types="vite/client" />
 
+declare module "echarts-gl"
+
+declare module "@geo-maps/countries-land-10km/map.geo.json" {
+  const value: unknown
+  export default value
+}
+
 declare module "*.vue" {
   import type { DefineComponent } from "vue"
 

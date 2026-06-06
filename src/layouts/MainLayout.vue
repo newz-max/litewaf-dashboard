@@ -57,6 +57,11 @@ const menuOptions = computed<MenuOption[]>(() => [
         icon: renderIcon(AnalyticsOutline)
       },
       {
+        key: "statisticsReport",
+        label: renderLabel("统计报表", "/statistics-report"),
+        icon: renderIcon(DocumentTextOutline)
+      },
+      {
         key: "protectionOverview",
         label: renderLabel("防护概览", "/protection-overview"),
         icon: renderIcon(ShieldOutline)
