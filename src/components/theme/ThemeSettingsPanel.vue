@@ -12,6 +12,12 @@ const presetOptions = computed(() =>
   }))
 )
 
+const previewRows = [
+  { label: "SQL 注入", value: "已阻断", tone: "danger" },
+  { label: "高频访问", value: "观察中", tone: "warning" },
+  { label: "规则发布", value: "就绪", tone: "success" }
+]
+
 function updateMode(value: string | number) {
   themeStore.setMode(value as ThemeMode)
 }
@@ -120,6 +126,17 @@ function updateRadius(value: number | null) {
           <NAlert type="warning" :bordered="false">
             当前预设会影响菜单、表格、图表和规则页面的视觉密度。
           </NAlert>
+          <div class="preview-rows" aria-label="主题预览扫描行">
+            <div
+              v-for="row in previewRows"
+              :key="row.label"
+              class="preview-row"
+              :class="`preview-row-${row.tone}`"
+            >
+              <span>{{ row.label }}</span>
+              <strong>{{ row.value }}</strong>
+            </div>
+          </div>
           <div class="preview-actions">
             <NButton type="primary">主操作</NButton>
             <NButton secondary>次操作</NButton>
@@ -199,6 +216,7 @@ function updateRadius(value: number | null) {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .preview-topline {
@@ -243,7 +261,51 @@ function updateRadius(value: number | null) {
   color: var(--lw-danger);
 }
 
+.preview-rows {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.preview-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--lw-border);
+  border-radius: var(--lw-radius);
+  background: color-mix(in srgb, var(--lw-panel) 86%, var(--lw-bg));
+}
+
+.preview-row span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--lw-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-row strong {
+  color: var(--lw-text);
+  font-size: 12px;
+}
+
+.preview-row-danger strong {
+  color: var(--lw-danger);
+}
+
+.preview-row-warning strong {
+  color: var(--lw-warning);
+}
+
+.preview-row-success strong {
+  color: var(--lw-success);
+}
+
 .palette-chip {
+  flex: 0 0 auto;
   width: 28px;
   height: 14px;
   border-radius: 999px;
@@ -261,6 +323,10 @@ function updateRadius(value: number | null) {
   .preview-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .palette-row {
+    flex-wrap: wrap;
   }
 
   .inline-controls,
