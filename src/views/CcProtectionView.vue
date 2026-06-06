@@ -11,6 +11,10 @@ import {
   type ProtectionRule,
   type ProtectionRuleInput
 } from "@/api/litewaf"
+import ModulePageHeader from "@/components/operations/ModulePageHeader.vue"
+import ModuleRiskGuidance from "@/components/operations/ModuleRiskGuidance.vue"
+import ModuleStateBlock from "@/components/operations/ModuleStateBlock.vue"
+import ModuleStatusSummary from "@/components/operations/ModuleStatusSummary.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
 import { protectionGuides, protectionRiskPrompts, riskPromptText } from "@/utils/protectionGuidance"
@@ -257,6 +261,23 @@ const activeRiskWarnings = computed(() => {
   }
   return warnings
 })
+
+const enabledCount = computed(() => items.value.filter((item) => item.enabled).length)
+const blockingCount = computed(() => items.value.filter((item) => ["block", "ban", "rate-limit"].includes(item.action.type)).length)
+const headerTags = computed(() => [
+  { label: "规则", value: items.value.length, tone: "info" as const },
+  { label: "启用", value: enabledCount.value, tone: "success" as const },
+  { label: "风险", value: activeRiskWarnings.value.length, tone: activeRiskWarnings.value.length > 0 ? "warning" as const : "default" as const }
+])
+const statusItems = computed(() => [
+  { label: "规则总数", value: items.value.length, note: "来自 CC 防护 API", tone: "info" as const },
+  { label: "启用规则", value: enabledCount.value, note: "参与当前发布配置", tone: "success" as const },
+  { label: "阻断/限流", value: blockingCount.value, note: "包含阻断、限流和临时封禁", tone: blockingCount.value > 0 ? "warning" as const : "neutral" as const },
+  { label: "高风险提示", value: activeRiskWarnings.value.length, note: "由当前规则配置派生", tone: activeRiskWarnings.value.length > 0 ? "danger" as const : "neutral" as const }
+])
+const guidanceAlerts = computed(() => guidanceItems.map((item) => ({ title: item.title, message: item.description, tone: "info" as const })))
+const activeRiskAlerts = computed(() => activeRiskWarnings.value.map((warning) => ({ title: warning, tone: "warning" as const })))
+const formRiskAlerts = computed(() => formRiskPrompts.value.map((risk) => ({ title: risk.message, message: riskPromptText(risk), tone: "warning" as const })))
 
 function emptyForm(): ProtectionRuleInput {
   return {
@@ -526,32 +547,37 @@ function formatTime(value?: string) {
 
 <template>
   <main class="page">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">CC 防护</h1>
-        <p class="page-subtitle">查看 URL 访问频率限制、登录防爆破和 API 调用限流规则。</p>
-      </div>
+    <ModulePageHeader
+      title="CC 防护"
+      subtitle="查看 URL 访问频率限制、登录防爆破和 API 调用限流规则。"
+      eyebrow="Protection Module"
+      :tags="headerTags"
+    >
+      <template #actions>
       <NSpace>
         <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
         <NButton type="primary" :disabled="!authStore.canWrite" @click="openCreate">新增规则</NButton>
       </NSpace>
-    </div>
+      </template>
+    </ModulePageHeader>
 
-    <NAlert v-if="resource.error.value" class="view-alert" type="error">
-      {{ resource.error.value }}
-    </NAlert>
+    <ModuleStateBlock
+      v-if="resource.error.value"
+      state="error"
+      title="CC 防护加载失败"
+      :description="resource.error.value"
+      action-label="重试"
+      @retry="resource.refresh"
+    />
 
-    <NAlert v-for="warning in activeRiskWarnings" :key="warning" class="view-alert" type="warning">
-      {{ warning }}
-    </NAlert>
+    <ModuleStatusSummary :items="statusItems" />
+
+    <section v-if="activeRiskAlerts.length" class="section section-pad guidance-section">
+      <ModuleRiskGuidance title="当前配置风险" :items="activeRiskAlerts" />
+    </section>
 
     <section class="section section-pad guidance-section">
-      <div class="guidance-grid">
-        <NAlert v-for="item in guidanceItems" :key="item.title" type="info">
-          <template #header>{{ item.title }}</template>
-          {{ item.description }}
-        </NAlert>
-      </div>
+      <ModuleRiskGuidance title="运营指引" :items="guidanceAlerts" empty-description="暂无 CC 防护运营指引" />
     </section>
 
     <section class="section section-pad">
@@ -562,7 +588,11 @@ function formatTime(value?: string) {
         :bordered="false"
         :scroll-x="1390"
       />
-      <NEmpty v-if="!resource.loading.value && !resource.error.value && items.length === 0" description="暂无 CC 防护规则" />
+      <ModuleStateBlock
+        v-if="!resource.loading.value && !resource.error.value && items.length === 0"
+        state="empty"
+        description="暂无 CC 防护规则"
+      />
     </section>
 
     <section class="section section-pad preview-section">
@@ -665,12 +695,12 @@ function formatTime(value?: string) {
           <NFormItem label="启用">
             <NSwitch v-model:value="form.enabled" />
           </NFormItem>
-          <div v-if="formRiskPrompts.length > 0" class="risk-prompt-list">
-            <NAlert v-for="risk in formRiskPrompts" :key="risk.message" type="warning">
-              <template #header>{{ risk.message }}</template>
-              {{ riskPromptText(risk) }}
-            </NAlert>
-          </div>
+          <ModuleRiskGuidance
+            v-if="formRiskAlerts.length > 0"
+            class="risk-prompt-list"
+            title="保存前风险确认"
+            :items="formRiskAlerts"
+          />
         </NForm>
         <template #footer>
           <NSpace justify="end">

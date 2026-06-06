@@ -9,6 +9,10 @@ import {
   type IPAccessListEntry,
   type IPAccessListInput
 } from "@/api/litewaf"
+import ModulePageHeader from "@/components/operations/ModulePageHeader.vue"
+import ModuleRiskGuidance from "@/components/operations/ModuleRiskGuidance.vue"
+import ModuleStateBlock from "@/components/operations/ModuleStateBlock.vue"
+import ModuleStatusSummary from "@/components/operations/ModuleStatusSummary.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
 
@@ -22,6 +26,25 @@ const editing = shallowRef<IPAccessListEntry | null>(null)
 const formVisible = shallowRef(false)
 const saving = shallowRef(false)
 const form = reactive<IPAccessListInput>(emptyForm())
+const enabledCount = computed(() => items.value.filter((item) => item.enabled).length)
+const allowCount = computed(() => items.value.filter((item) => item.kind === "allow").length)
+const blockCount = computed(() => items.value.filter((item) => item.kind === "block").length)
+const cidrCount = computed(() => items.value.filter((item) => item.target === "cidr").length)
+const headerTags = computed(() => [
+  { label: "名单", value: items.value.length, tone: "info" as const },
+  { label: "启用", value: enabledCount.value, tone: "success" as const },
+  { label: "白名单", value: allowCount.value, tone: allowCount.value > 0 ? "warning" as const : "default" as const }
+])
+const statusItems = computed(() => [
+  { label: "名单总数", value: items.value.length, note: "来自 IP 黑白名单 API", tone: "info" as const },
+  { label: "启用名单", value: enabledCount.value, note: "参与独立 IP 模块判断", tone: "success" as const },
+  { label: "白名单放行", value: allowCount.value, note: "优先复核宽泛放行", tone: allowCount.value > 0 ? "danger" as const : "neutral" as const },
+  { label: "CIDR 网段", value: cidrCount.value, note: "按前缀长度有界匹配", tone: cidrCount.value > 0 ? "warning" as const : "neutral" as const }
+])
+const guidanceAlerts = computed(() => [
+  { title: "独立模块", message: "IP 黑白名单保持与访问控制分离，日志和发布预览按 ip-access-list 模块归因。", tone: "info" as const },
+  { title: "宽泛放行复核", message: "白名单和大网段 CIDR 会影响拦截判断，保存前应确认站点作用域和优先级。", tone: "warning" as const }
+])
 
 const kindOptions = [
   { label: "白名单放行", value: "allow" },
@@ -244,21 +267,35 @@ function isIPv6(value: string) {
 
 <template>
   <main class="page">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">IP 黑白名单</h1>
-        <p class="page-subtitle">Exact IP 使用预处理哈希索引 O(1) 查询；CIDR 使用按前缀长度分组的有界索引。</p>
-      </div>
+    <ModulePageHeader
+      title="IP 黑白名单"
+      subtitle="Exact IP 使用预处理哈希索引 O(1) 查询；CIDR 使用按前缀长度分组的有界索引。"
+      eyebrow="Protection Module"
+      :tags="headerTags"
+    >
+      <template #actions>
       <NSpace>
-        <NButton @click="resource.refresh">刷新</NButton>
+        <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
         <NButton v-if="authStore.canWrite" type="primary" @click="openCreate">新增名单</NButton>
       </NSpace>
-    </div>
+      </template>
+    </ModulePageHeader>
+
+    <ModuleStatusSummary :items="statusItems" />
+
+    <section class="section section-pad guidance-section">
+      <ModuleRiskGuidance title="运营指引" :items="guidanceAlerts" />
+    </section>
 
     <section class="section section-pad">
-      <NAlert v-if="resource.error.value" class="view-alert" type="error">
-        {{ resource.error.value }}
-      </NAlert>
+      <ModuleStateBlock
+        v-if="resource.error.value"
+        state="error"
+        title="IP 黑白名单加载失败"
+        :description="resource.error.value"
+        action-label="重试"
+        @retry="resource.refresh"
+      />
       <NDataTable
         :loading="resource.loading.value"
         :columns="columns"
@@ -266,8 +303,9 @@ function isIPv6(value: string) {
         :bordered="false"
         :scroll-x="1280"
       />
-      <NEmpty
+      <ModuleStateBlock
         v-if="!resource.loading.value && !resource.error.value && items.length === 0"
+        state="empty"
         description="暂无 IP 黑白名单"
       />
     </section>
@@ -313,6 +351,10 @@ function isIPv6(value: string) {
 
 <style scoped>
 .view-alert {
+  margin-bottom: 16px;
+}
+
+.guidance-section {
   margin-bottom: 16px;
 }
 

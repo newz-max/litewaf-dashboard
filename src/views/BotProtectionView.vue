@@ -9,6 +9,10 @@ import {
   type ProtectionRule,
   type ProtectionRuleInput
 } from "@/api/litewaf"
+import ModulePageHeader from "@/components/operations/ModulePageHeader.vue"
+import ModuleRiskGuidance from "@/components/operations/ModuleRiskGuidance.vue"
+import ModuleStateBlock from "@/components/operations/ModuleStateBlock.vue"
+import ModuleStatusSummary from "@/components/operations/ModuleStatusSummary.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
 import { protectionGuides, protectionRiskPrompts, riskPromptText } from "@/utils/protectionGuidance"
@@ -25,6 +29,22 @@ const saving = shallowRef(false)
 const form = reactive<ProtectionRuleInput>(emptyForm())
 const guidanceItems = protectionGuides["bot-protection"]
 const formRiskPrompts = computed(() => protectionRiskPrompts(form))
+const enabledCount = computed(() => items.value.filter((item) => item.enabled).length)
+const captchaCount = computed(() => items.value.filter((item) => item.challenge?.mode === "captcha").length)
+const behaviorCount = computed(() => items.value.filter((item) => item.challenge?.behavior_enabled).length)
+const headerTags = computed(() => [
+  { label: "规则", value: items.value.length, tone: "info" as const },
+  { label: "启用", value: enabledCount.value, tone: "success" as const },
+  { label: "Captcha", value: captchaCount.value, tone: "warning" as const }
+])
+const statusItems = computed(() => [
+  { label: "规则总数", value: items.value.length, note: "来自 Bot 防护 API", tone: "info" as const },
+  { label: "启用规则", value: enabledCount.value, note: "参与挑战或观察", tone: "success" as const },
+  { label: "本地 Captcha", value: captchaCount.value, note: "启用交互式验证", tone: captchaCount.value > 0 ? "warning" as const : "neutral" as const },
+  { label: "行为评分", value: behaviorCount.value, note: "使用可解释 Bot 信号", tone: behaviorCount.value > 0 ? "warning" as const : "neutral" as const }
+])
+const guidanceAlerts = computed(() => guidanceItems.map((item) => ({ title: item.title, message: item.description, tone: "info" as const })))
+const formRiskAlerts = computed(() => formRiskPrompts.value.map((risk) => ({ title: risk.message, message: riskPromptText(risk), tone: "warning" as const })))
 
 const templateOptions = [
   { label: "后台路径挑战", value: "admin" },
@@ -453,28 +473,33 @@ function formatTime(value?: string) {
 
 <template>
   <main class="page">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Bot / 人机验证</h1>
-        <p class="page-subtitle">按路径启用 JS Challenge、本地 Captcha 和可解释 Bot 信号，拦截或观察自动化访问。</p>
-      </div>
+    <ModulePageHeader
+      title="Bot / 人机验证"
+      subtitle="按路径启用 JS Challenge、本地 Captcha 和可解释 Bot 信号，拦截或观察自动化访问。"
+      eyebrow="Protection Module"
+      :tags="headerTags"
+    >
+      <template #actions>
       <NSpace>
         <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
         <NButton type="primary" :disabled="!authStore.canWrite" @click="openCreate">新增规则</NButton>
       </NSpace>
-    </div>
+      </template>
+    </ModulePageHeader>
 
-    <NAlert v-if="resource.error.value" class="view-alert" type="error">
-      {{ resource.error.value }}
-    </NAlert>
+    <ModuleStateBlock
+      v-if="resource.error.value"
+      state="error"
+      title="Bot 防护加载失败"
+      :description="resource.error.value"
+      action-label="重试"
+      @retry="resource.refresh"
+    />
+
+    <ModuleStatusSummary :items="statusItems" />
 
     <section class="section section-pad guidance-section">
-      <div class="guidance-grid">
-        <NAlert v-for="item in guidanceItems" :key="item.title" type="info">
-          <template #header>{{ item.title }}</template>
-          {{ item.description }}
-        </NAlert>
-      </div>
+      <ModuleRiskGuidance title="运营指引" :items="guidanceAlerts" empty-description="暂无 Bot 防护运营指引" />
     </section>
 
     <section class="section section-pad">
@@ -485,8 +510,9 @@ function formatTime(value?: string) {
         :bordered="false"
         :scroll-x="1320"
       />
-      <NEmpty
+      <ModuleStateBlock
         v-if="!resource.loading.value && !resource.error.value && items.length === 0"
+        state="empty"
         description="暂无 Bot 防护规则"
       />
     </section>
@@ -565,12 +591,12 @@ function formatTime(value?: string) {
           <NFormItem label="启用">
             <NSwitch v-model:value="form.enabled" />
           </NFormItem>
-          <div v-if="formRiskPrompts.length > 0" class="risk-prompt-list">
-            <NAlert v-for="risk in formRiskPrompts" :key="risk.message" type="warning">
-              <template #header>{{ risk.message }}</template>
-              {{ riskPromptText(risk) }}
-            </NAlert>
-          </div>
+          <ModuleRiskGuidance
+            v-if="formRiskAlerts.length > 0"
+            class="risk-prompt-list"
+            title="保存前风险确认"
+            :items="formRiskAlerts"
+          />
         </NForm>
         <template #footer>
           <NSpace justify="end">

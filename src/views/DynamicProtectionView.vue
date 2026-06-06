@@ -10,6 +10,10 @@ import {
   type ProtectionRuleDynamic,
   type ProtectionRuleInput
 } from "@/api/litewaf"
+import ModulePageHeader from "@/components/operations/ModulePageHeader.vue"
+import ModuleRiskGuidance from "@/components/operations/ModuleRiskGuidance.vue"
+import ModuleStateBlock from "@/components/operations/ModuleStateBlock.vue"
+import ModuleStatusSummary from "@/components/operations/ModuleStatusSummary.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
 import { protectionGuides, protectionRiskPrompts, riskPromptText } from "@/utils/protectionGuidance"
@@ -26,6 +30,22 @@ const saving = shallowRef(false)
 const form = reactive<ProtectionRuleInput>(emptyForm())
 const guidanceItems = protectionGuides["dynamic-protection"]
 const formRiskPrompts = computed(() => protectionRiskPrompts(form))
+const enabledCount = computed(() => items.value.filter((item) => item.enabled).length)
+const tokenCount = computed(() => items.value.filter((item) => item.category === "dynamic-token").length)
+const waitingRoomCount = computed(() => items.value.filter((item) => item.category === "waiting-room").length)
+const headerTags = computed(() => [
+  { label: "规则", value: items.value.length, tone: "info" as const },
+  { label: "启用", value: enabledCount.value, tone: "success" as const },
+  { label: "等候室", value: waitingRoomCount.value, tone: "warning" as const }
+])
+const statusItems = computed(() => [
+  { label: "规则总数", value: items.value.length, note: "来自动态防护 API", tone: "info" as const },
+  { label: "启用规则", value: enabledCount.value, note: "参与动态令牌或等候室策略", tone: "success" as const },
+  { label: "动态令牌", value: tokenCount.value, note: "验证浏览器请求有效性", tone: tokenCount.value > 0 ? "warning" as const : "neutral" as const },
+  { label: "等候室", value: waitingRoomCount.value, note: "容量和准入节流", tone: waitingRoomCount.value > 0 ? "danger" as const : "neutral" as const }
+])
+const guidanceAlerts = computed(() => guidanceItems.map((item) => ({ title: item.title, message: item.description, tone: "info" as const })))
+const formRiskAlerts = computed(() => formRiskPrompts.value.map((risk) => ({ title: risk.message, message: riskPromptText(risk), tone: "warning" as const })))
 
 const templateOptions = [
   { label: "后台动态令牌", value: "admin-token" },
@@ -452,28 +472,33 @@ function formatTime(value?: string) {
 
 <template>
   <main class="page">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">动态防护 / 等候室</h1>
-        <p class="page-subtitle">为浏览器路径启用动态令牌、页面动态化和轻量等候室。</p>
-      </div>
+    <ModulePageHeader
+      title="动态防护 / 等候室"
+      subtitle="为浏览器路径启用动态令牌、页面动态化和轻量等候室。"
+      eyebrow="Protection Module"
+      :tags="headerTags"
+    >
+      <template #actions>
       <NSpace>
         <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
         <NButton type="primary" :disabled="!authStore.canWrite" @click="openCreate">新增规则</NButton>
       </NSpace>
-    </div>
+      </template>
+    </ModulePageHeader>
 
-    <NAlert v-if="resource.error.value" class="view-alert" type="error">
-      {{ resource.error.value }}
-    </NAlert>
+    <ModuleStateBlock
+      v-if="resource.error.value"
+      state="error"
+      title="动态防护加载失败"
+      :description="resource.error.value"
+      action-label="重试"
+      @retry="resource.refresh"
+    />
+
+    <ModuleStatusSummary :items="statusItems" />
 
     <section class="section section-pad guidance-section">
-      <div class="guidance-grid">
-        <NAlert v-for="item in guidanceItems" :key="item.title" type="info">
-          <template #header>{{ item.title }}</template>
-          {{ item.description }}
-        </NAlert>
-      </div>
+      <ModuleRiskGuidance title="运营指引" :items="guidanceAlerts" empty-description="暂无动态防护运营指引" />
     </section>
 
     <section class="section section-pad">
@@ -484,8 +509,9 @@ function formatTime(value?: string) {
         :bordered="false"
         :scroll-x="1440"
       />
-      <NEmpty
+      <ModuleStateBlock
         v-if="!resource.loading.value && !resource.error.value && items.length === 0"
+        state="empty"
         description="暂无动态防护规则"
       />
     </section>
@@ -565,12 +591,12 @@ function formatTime(value?: string) {
           <NFormItem label="启用">
             <NSwitch v-model:value="form.enabled" />
           </NFormItem>
-          <div v-if="formRiskPrompts.length > 0" class="risk-prompt-list">
-            <NAlert v-for="risk in formRiskPrompts" :key="risk.message" type="warning">
-              <template #header>{{ risk.message }}</template>
-              {{ riskPromptText(risk) }}
-            </NAlert>
-          </div>
+          <ModuleRiskGuidance
+            v-if="formRiskAlerts.length > 0"
+            class="risk-prompt-list"
+            title="保存前风险确认"
+            :items="formRiskAlerts"
+          />
         </NForm>
         <template #footer>
           <NSpace justify="end">

@@ -7,6 +7,10 @@ import {
   type AttackProtectionGroup,
   type AttackProtectionGroupInput
 } from "@/api/litewaf"
+import ModulePageHeader from "@/components/operations/ModulePageHeader.vue"
+import ModuleRiskGuidance from "@/components/operations/ModuleRiskGuidance.vue"
+import ModuleStateBlock from "@/components/operations/ModuleStateBlock.vue"
+import ModuleStatusSummary from "@/components/operations/ModuleStatusSummary.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
 
@@ -27,6 +31,25 @@ const actionOptions = [
   { label: "观察", value: "log-only" },
   { label: "阻断", value: "block" }
 ]
+
+const enabledCount = computed(() => groups.value.filter((group) => group.enabled).length)
+const blockingCount = computed(() => groups.value.filter((group) => group.action === "block").length)
+const enabledRuleCount = computed(() => groups.value.reduce((total, group) => total + group.enabled_rule_count, 0))
+const headerTags = computed(() => [
+  { label: "防护组", value: groups.value.length, tone: "info" as const },
+  { label: "启用", value: enabledCount.value, tone: "success" as const },
+  { label: "阻断", value: blockingCount.value, tone: "warning" as const }
+])
+const statusItems = computed(() => [
+  { label: "防护组", value: groups.value.length, note: "来自攻击防护 API", tone: "info" as const },
+  { label: "启用组", value: enabledCount.value, note: "参与托管规则组处置", tone: "success" as const },
+  { label: "启用规则", value: enabledRuleCount.value, note: "托管规则组中的启用规则", tone: enabledRuleCount.value > 0 ? "warning" as const : "neutral" as const },
+  { label: "阻断组", value: blockingCount.value, note: "动作设置为阻断", tone: blockingCount.value > 0 ? "danger" as const : "neutral" as const }
+])
+const guidanceAlerts = computed(() => [
+  { title: "托管规则组", message: "攻击防护按攻击类型配置托管规则组动作和优先级，不改变具体规则签名内容。", tone: "info" as const },
+  { title: "阻断前复核", message: "将防护组切换为阻断会影响该攻击类型下的启用规则，应结合攻击日志确认误报风险。", tone: "warning" as const }
+])
 
 const columns: DataTableColumns<AttackProtectionGroup> = [
   {
@@ -168,17 +191,31 @@ function formatTime(value?: string) {
 
 <template>
   <main class="page">
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">攻击防护</h1>
-        <p class="page-subtitle">按攻击类型管理托管规则组的观察、阻断和启用状态。</p>
-      </div>
+    <ModulePageHeader
+      title="攻击防护"
+      subtitle="按攻击类型管理托管规则组的观察、阻断和启用状态。"
+      eyebrow="Protection Module"
+      :tags="headerTags"
+    >
+      <template #actions>
       <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
-    </div>
+      </template>
+    </ModulePageHeader>
 
-    <NAlert v-if="resource.error.value" class="view-alert" type="error">
-      {{ resource.error.value }}
-    </NAlert>
+    <ModuleStateBlock
+      v-if="resource.error.value"
+      state="error"
+      title="攻击防护加载失败"
+      :description="resource.error.value"
+      action-label="重试"
+      @retry="resource.refresh"
+    />
+
+    <ModuleStatusSummary :items="statusItems" />
+
+    <section class="section section-pad guidance-section">
+      <ModuleRiskGuidance title="运营指引" :items="guidanceAlerts" />
+    </section>
 
     <section class="section section-pad">
       <NDataTable
@@ -188,8 +225,9 @@ function formatTime(value?: string) {
         :bordered="false"
         :scroll-x="920"
       />
-      <NEmpty
+      <ModuleStateBlock
         v-if="!resource.loading.value && !resource.error.value && groups.length === 0"
+        state="empty"
         description="暂无攻击防护规则组"
       />
     </section>
@@ -223,6 +261,10 @@ function formatTime(value?: string) {
 
 <style scoped>
 .view-alert {
+  margin-bottom: 16px;
+}
+
+.guidance-section {
   margin-bottom: 16px;
 }
 
