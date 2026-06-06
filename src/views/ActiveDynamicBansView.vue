@@ -18,7 +18,7 @@ const statusOptions = [
 ]
 
 const columns = computed(() => [
-  { title: "站点", key: "site_id", width: 90 },
+  { title: "站点", key: "application_id", width: 90 },
   { title: "来源 IP", key: "client_ip", minWidth: 150 },
   { title: "状态", key: "status", width: 100, render: renderStatus },
   { title: "原因", key: "ban_reason", minWidth: 180 },
@@ -87,7 +87,7 @@ function formatTime(value: string) {
 function confirmClear(row: DynamicBan) {
   dialog.warning({
     title: "确认解封",
-    content: `站点 ${row.site_id} / ${row.client_ip}`,
+    content: `站点 ${row.application_id} / ${row.client_ip}`,
     positiveText: "解封",
     negativeText: "取消",
     onPositiveClick: async () => {
@@ -124,7 +124,7 @@ async function resetFilters() {
 
     <section class="section section-pad">
       <NSpace class="toolbar">
-        <NInput v-model:value="bans.filters.site_id" placeholder="站点 ID" clearable />
+        <NInput v-model:value="bans.filters.application_id" placeholder="应用 ID" clearable />
         <NInput v-model:value="bans.filters.client_ip" placeholder="来源 IP" clearable />
         <NSelect v-model:value="bans.filters.status" :options="statusOptions" clearable placeholder="状态" />
         <NButton type="primary" @click="applyFilters">查询</NButton>

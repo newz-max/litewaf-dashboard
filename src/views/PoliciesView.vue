@@ -4,9 +4,9 @@ import { NButton, NSpace, useMessage } from "naive-ui"
 import {
   createPolicy,
   deletePolicy,
+  getApplications,
   getPolicies,
   getRules,
-  getSites,
   updatePolicy,
   type Policy,
   type PolicyInput
@@ -15,7 +15,7 @@ import { useApiResource } from "@/composables/useApiResource"
 
 const message = useMessage()
 const policiesResource = useApiResource(getPolicies)
-const sitesResource = useApiResource(getSites)
+const applicationsResource = useApiResource(getApplications)
 const rulesResource = useApiResource(getRules)
 const policies = computed(() => [...(policiesResource.data.value ?? [])])
 const showForm = ref(false)
@@ -43,12 +43,15 @@ const form = reactive<PolicyInput>({
   dynamic_ban_trigger_count: 3,
   dynamic_ban_window_sec: 60,
   enabled: true,
-  site_ids: [],
+  application_ids: [],
   rule_ids: []
 })
 
-const siteOptions = computed(() =>
-  (sitesResource.data.value ?? []).map((site) => ({ label: `${site.name} (${site.host})`, value: site.id }))
+const applicationOptions = computed(() =>
+  (applicationsResource.data.value ?? []).map((application) => ({
+    label: `${application.name} (${application.hosts.map((host) => host.host).join(", ")})`,
+    value: application.id
+  }))
 )
 const ruleOptions = computed(() =>
   (rulesResource.data.value ?? []).map((rule) => ({ label: `${rule.name} #${rule.id}`, value: rule.id }))
@@ -76,7 +79,7 @@ const columns = computed(() => [
   { title: "Body", key: "body_inspection_enabled", render: (row: Policy) => (row.body_inspection_enabled ? "启用" : "停用") },
   { title: "上传", key: "upload_inspection_enabled", render: (row: Policy) => (row.upload_inspection_enabled ? "启用" : "停用") },
   { title: "动态封禁", key: "dynamic_ban_enabled", render: (row: Policy) => (row.dynamic_ban_enabled ? "启用" : "停用") },
-  { title: "站点数", key: "site_ids", render: (row: Policy) => row.site_ids.length },
+  { title: "应用数", key: "application_ids", render: (row: Policy) => row.application_ids.length },
   { title: "规则数", key: "rule_ids", render: (row: Policy) => row.rule_ids.length },
   { title: "状态", key: "enabled", render: (row: Policy) => (row.enabled ? "启用" : "停用") },
   {
@@ -119,7 +122,7 @@ function resetForm() {
     dynamic_ban_trigger_count: 3,
     dynamic_ban_window_sec: 60,
     enabled: true,
-    site_ids: [],
+    application_ids: [],
     rule_ids: []
   })
 }
@@ -152,7 +155,7 @@ function editPolicy(policy: Policy) {
     dynamic_ban_trigger_count: policy.dynamic_ban_trigger_count,
     dynamic_ban_window_sec: policy.dynamic_ban_window_sec,
     enabled: policy.enabled,
-    site_ids: [...policy.site_ids],
+    application_ids: [...policy.application_ids],
     rule_ids: [...policy.rule_ids]
   })
   showForm.value = true
@@ -186,7 +189,7 @@ async function removePolicy(id: number) {
     <div class="page-header">
       <div>
         <h1 class="page-title">防护策略</h1>
-        <p class="page-subtitle">按站点绑定规则集、动作和风险阈值。</p>
+        <p class="page-subtitle">按防护应用绑定规则集、动作和风险阈值。</p>
       </div>
       <NButton type="primary" @click="openCreate">新增策略</NButton>
     </div>
@@ -210,8 +213,8 @@ async function removePolicy(id: number) {
           <NFormItem label="策略名称">
             <NInput v-model:value="form.name" />
           </NFormItem>
-          <NFormItem label="绑定站点">
-            <NSelect v-model:value="form.site_ids" multiple :options="siteOptions" />
+          <NFormItem label="绑定应用">
+            <NSelect v-model:value="form.application_ids" multiple :options="applicationOptions" />
           </NFormItem>
           <NFormItem label="绑定规则">
             <NSelect v-model:value="form.rule_ids" multiple :options="ruleOptions" />

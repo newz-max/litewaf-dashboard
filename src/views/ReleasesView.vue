@@ -68,12 +68,22 @@ async function publishNow() {
   const diagnosticsText = diagnostics
     ? `兼容诊断：protection_rules ${diagnostics.protection_rules} 条，legacy_ref 去重 ${diagnostics.deduplicated} 条。`
     : ""
+  const validation = preview.summary.application_validation
+  const validationText = validation
+    ? `应用校验 ${validation.errors} 个错误、${validation.warnings} 个警告。`
+    : ""
+  const deployment = preview.summary.listener_deployment_mode
+  const deploymentText = deployment
+    ? `监听模式 ${deployment.mode}${deployment.bridge_range_config ? `，端口范围 ${deployment.raw_port_range || "未配置"}` : ""}。`
+    : ""
   dialog.warning({
     title: "确认发布",
     content: () => renderPublishPreview(
-      `将发布 ${preview.summary.sites} 个站点、${preview.summary.rules} 条规则、${preview.summary.policies} 个策略、${preview.summary.advanced_protection ?? 0} 项高级防护配置。${moduleText}${ipListText}${compatibilityText}${diagnosticsText}`,
+      `将发布 ${preview.summary.applications} 个防护应用、${preview.summary.application_listeners} 个监听、${preview.summary.certificates} 个证书、${preview.summary.rules} 条规则、${preview.summary.policies} 个策略、${preview.summary.advanced_protection ?? 0} 项高级防护配置。${deploymentText}${validationText}${moduleText}${ipListText}${compatibilityText}${diagnosticsText}`,
       moduleSummary,
-      preview.summary.risk_warnings ?? []
+      preview.summary.risk_warnings ?? [],
+      validation?.issues ?? [],
+      deployment?.warnings ?? []
     ),
     positiveText: "发布",
     negativeText: "取消",
@@ -90,9 +100,39 @@ async function publishNow() {
   })
 }
 
-function renderPublishPreview(summary: string, modules: ProtectionModuleOverview[], risks: ProtectionModuleRisk[]) {
+function renderPublishPreview(
+  summary: string,
+  modules: ProtectionModuleOverview[],
+  risks: ProtectionModuleRisk[],
+  applicationIssues: Array<{ severity: string; category: string; message: string }>,
+  deploymentWarnings: string[]
+) {
   return h("div", { class: "publish-preview" }, [
     h("p", summary),
+    applicationIssues.length > 0
+      ? h(
+          "div",
+          { class: "publish-risk-list" },
+          applicationIssues.slice(0, 6).map((issue) =>
+            h("div", { class: "publish-risk", key: `${issue.category}-${issue.message}` }, [
+              h(NTag, { size: "small", type: issue.severity === "error" ? "error" : "warning" }, { default: () => issue.category }),
+              h("div", { class: "publish-risk-body" }, [h("strong", issue.message)])
+            ])
+          )
+        )
+      : null,
+    deploymentWarnings.length > 0
+      ? h(
+          "div",
+          { class: "publish-risk-list" },
+          deploymentWarnings.map((warning) =>
+            h("div", { class: "publish-risk", key: warning }, [
+              h(NTag, { size: "small", type: "warning" }, { default: () => "部署" }),
+              h("div", { class: "publish-risk-body" }, [h("strong", warning)])
+            ])
+          )
+        )
+      : null,
     modules.length > 0
       ? h(
           NList,
@@ -146,7 +186,7 @@ async function rollback(version: string) {
     <div class="page-header">
       <div>
         <h1 class="page-title">发布记录</h1>
-        <p class="page-subtitle">将当前站点、策略和规则发布为网关可加载配置。</p>
+        <p class="page-subtitle">将当前防护应用、监听、证书、策略和规则发布为网关可加载配置。</p>
       </div>
       <NButton v-if="authStore.canWrite" type="primary" :loading="publishing" @click="publishNow">
         发布新版本

@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router"
 import MainLayout from "@/layouts/MainLayout.vue"
 import DashboardView from "@/views/DashboardView.vue"
-import SitesView from "@/views/SitesView.vue"
+import ApplicationsView from "@/views/ApplicationsView.vue"
 import RulesView from "@/views/RulesView.vue"
 import RuleEcosystemView from "@/views/RuleEcosystemView.vue"
 import PoliciesView from "@/views/PoliciesView.vue"
@@ -45,10 +45,14 @@ const router = createRouter({
           meta: { title: "仪表盘" }
         },
         {
+          path: "applications",
+          name: "applications",
+          component: ApplicationsView,
+          meta: { title: "防护应用" }
+        },
+        {
           path: "sites",
-          name: "sites",
-          component: SitesView,
-          meta: { title: "站点管理" }
+          redirect: "/applications"
         },
         {
           path: "protection-overview",

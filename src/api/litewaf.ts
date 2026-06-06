@@ -20,23 +20,74 @@ export interface LoginResponse {
   user: LoginUser
 }
 
-export interface Site {
+export interface ApplicationHost {
+  id: number
+  application_id?: number
+  host: string
+  is_primary: boolean
+}
+
+export interface ApplicationListener {
+  id: number
+  application_id?: number
+  port: number
+  protocol: "http" | "https"
+  certificate_id?: number
+  enabled: boolean
+}
+
+export interface ApplicationUpstream {
+  id: number
+  application_id?: number
+  name: string
+  url: string
+  weight: number
+  enabled: boolean
+}
+
+export interface Application {
   id: number
   name: string
-  host: string
-  upstream: string
   mode: string
   enabled: boolean
+  description?: string
+  hosts: ApplicationHost[]
+  listeners: ApplicationListener[]
+  upstreams: ApplicationUpstream[]
   created_at?: string
   updated_at?: string
 }
 
-export interface SiteInput {
+export interface ApplicationInput {
   name: string
-  host: string
-  upstream: string
   mode: string
   enabled: boolean
+  description?: string
+  hosts: Array<Omit<ApplicationHost, "id" | "application_id">>
+  listeners: Array<Omit<ApplicationListener, "id" | "application_id">>
+  upstreams: Array<Omit<ApplicationUpstream, "id" | "application_id">>
+}
+
+export interface Certificate {
+  id: number
+  name: string
+  domains: string[]
+  fingerprint: string
+  not_before?: string
+  not_after?: string
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CertificateInput {
+  name: string
+  cert_pem: string
+  key_pem: string
+}
+
+export interface CertificateValidationInput {
+  cert_pem: string
+  key_pem: string
 }
 
 export interface Rule {
@@ -126,7 +177,7 @@ export interface Policy {
   dynamic_ban_trigger_count: number
   dynamic_ban_window_sec: number
   enabled: boolean
-  site_ids: number[]
+  application_ids: number[]
   rule_ids: number[]
   created_at?: string
   updated_at?: string
@@ -153,7 +204,7 @@ export interface PolicyInput {
   dynamic_ban_trigger_count: number
   dynamic_ban_window_sec: number
   enabled: boolean
-  site_ids: number[]
+  application_ids: number[]
   rule_ids: number[]
 }
 
@@ -162,7 +213,7 @@ export interface AttackLog {
   request_id: string
   created_at?: string
   time?: string
-  site_id: number
+  application_id: number
   event_type: string
   client_ip: string
   method: string
@@ -207,7 +258,7 @@ export interface AttackLog {
 export interface AccessLog {
   id: number
   request_id: string
-  site_id: number
+  application_id: number
   host: string
   method: string
   uri: string
@@ -326,7 +377,39 @@ export interface ReleaseRecord {
 
 export interface PublishPreview {
   summary: {
-    sites: number
+    applications: number
+    application_hosts: number
+    application_listeners: number
+    listener_ports: number[]
+    listener_protocols: Record<string, number>
+    http_listeners: number
+    https_listeners: number
+    certificates: number
+    upstreams: number
+    enabled_upstreams: number
+    application_validation?: {
+      errors: number
+      warnings: number
+      issues: Array<{
+        severity: string
+        category: string
+        application_id?: number
+        application_name?: string
+        host?: string
+        port?: number
+        protocol?: string
+        certificate_id?: number
+        message: string
+      }>
+      blocking_messages: string[]
+    }
+    listener_deployment_mode?: {
+      mode: string
+      bridge_range_config: boolean
+      port_range: number[]
+      raw_port_range: string
+      warnings: string[]
+    }
     rules: number
     policies: number
     ip_access_list?: IPAccessListSummary
@@ -868,7 +951,7 @@ export interface AuditLog {
 
 export interface DynamicBan {
   id: number
-  site_id: number
+  application_id: number
   client_ip: string
   ban_reason: string
   source: string
@@ -885,7 +968,7 @@ export interface DynamicBan {
 }
 
 export interface DynamicBanClearResult {
-  site_id: number
+  application_id: number
   client_ip: string
   status: string
   revision: number
@@ -915,7 +998,7 @@ export interface IPAccessListEntry {
   normalized_value: string
   ip_family: string
   prefix_length: number
-  site_id: number
+  application_id: number
   enabled: boolean
   priority?: number
   conflict_key?: string
@@ -929,7 +1012,7 @@ export interface IPAccessListInput {
   kind: string
   target: string
   value: string
-  site_id: number
+  application_id: number
   enabled: boolean
   priority?: number
   description?: string
@@ -946,7 +1029,7 @@ export interface RateLimitRule {
   ban_duration_sec: number
   violation_threshold: number
   violation_window_sec: number
-  site_id: number
+  application_id: number
   enabled: boolean
   created_at?: string
   updated_at?: string
@@ -962,7 +1045,7 @@ export interface RateLimitInput {
   ban_duration_sec: number
   violation_threshold: number
   violation_window_sec: number
-  site_id: number
+  application_id: number
   enabled: boolean
 }
 
@@ -1026,7 +1109,7 @@ export interface ProtectionRule {
   name: string
   module: string
   category: string
-  site_id: number
+  application_id: number
   enabled: boolean
   priority: number
   match: ProtectionRuleMatch
@@ -1046,7 +1129,7 @@ export interface ProtectionRuleInput {
   name: string
   module?: string
   category?: string
-  site_id: number
+  application_id: number
   enabled: boolean
   priority?: number
   match: ProtectionRuleMatch
@@ -1058,7 +1141,7 @@ export interface ProtectionRuleInput {
 }
 
 export interface CCProtectionPreviewRequest {
-  site_id: number
+  application_id: number
   path: string
   method: string
   client_ip?: string
@@ -1137,20 +1220,36 @@ export function login(payload: { username: string; password: string }) {
   return apiClient.post<LoginResponse>("/api/v1/auth/login", payload).then((response) => response.data)
 }
 
-export function getSites() {
-  return apiClient.get<ListResponse<Site>>("/api/v1/sites").then((response) => response.data.items)
+export function getApplications() {
+  return apiClient.get<ListResponse<Application>>("/api/v1/applications").then((response) => response.data.items)
 }
 
-export function createSite(payload: SiteInput) {
-  return apiClient.post<ItemResponse<Site>>("/api/v1/sites", payload).then((response) => response.data.item)
+export function createApplication(payload: ApplicationInput) {
+  return apiClient.post<ItemResponse<Application>>("/api/v1/applications", payload).then((response) => response.data.item)
 }
 
-export function updateSite(id: number, payload: SiteInput) {
-  return apiClient.put<ItemResponse<Site>>(`/api/v1/sites/${id}`, payload).then((response) => response.data.item)
+export function updateApplication(id: number, payload: ApplicationInput) {
+  return apiClient.put<ItemResponse<Application>>(`/api/v1/applications/${id}`, payload).then((response) => response.data.item)
 }
 
-export function deleteSite(id: number) {
-  return apiClient.delete(`/api/v1/sites/${id}`)
+export function deleteApplication(id: number) {
+  return apiClient.delete(`/api/v1/applications/${id}`)
+}
+
+export function getCertificates() {
+  return apiClient.get<ListResponse<Certificate>>("/api/v1/certificates").then((response) => response.data.items)
+}
+
+export function createCertificate(payload: CertificateInput) {
+  return apiClient.post<ItemResponse<Certificate>>("/api/v1/certificates", payload).then((response) => response.data.item)
+}
+
+export function validateCertificate(payload: CertificateValidationInput) {
+  return apiClient.post<ItemResponse<Certificate>>("/api/v1/certificates/validate", payload).then((response) => response.data.item)
+}
+
+export function deleteCertificate(id: number) {
+  return apiClient.delete(`/api/v1/certificates/${id}`)
 }
 
 export function getRules() {
@@ -1514,7 +1613,7 @@ export function getDynamicBans(params: Record<string, string | number> = {}) {
     .then((response) => response.data.items)
 }
 
-export function clearDynamicBan(payload: { site_id: number; client_ip: string }) {
+export function clearDynamicBan(payload: { application_id: number; client_ip: string }) {
   return apiClient
     .post<ItemResponse<DynamicBanClearResult>>("/api/v1/dynamic-bans/unban", payload)
     .then((response) => response.data.item)

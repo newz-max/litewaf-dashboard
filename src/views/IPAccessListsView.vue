@@ -43,7 +43,7 @@ const statusItems = computed(() => [
 ])
 const guidanceAlerts = computed(() => [
   { title: "独立模块", message: "IP 黑白名单保持与访问控制分离，日志和发布预览按 ip-access-list 模块归因。", tone: "info" as const },
-  { title: "宽泛放行复核", message: "白名单和大网段 CIDR 会影响拦截判断，保存前应确认站点作用域和优先级。", tone: "warning" as const }
+  { title: "宽泛放行复核", message: "白名单和大网段 CIDR 会影响拦截判断，保存前应确认应用作用域和优先级。", tone: "warning" as const }
 ])
 
 const kindOptions = [
@@ -78,10 +78,10 @@ const columns: DataTableColumns<IPAccessListEntry> = [
   { title: "运行键", key: "normalized_value", minWidth: 190 },
   {
     title: "作用域",
-    key: "site_id",
+    key: "application_id",
     width: 100,
     render(row) {
-      return row.site_id > 0 ? `站点 ${row.site_id}` : "全局"
+      return row.application_id > 0 ? `站点 ${row.application_id}` : "全局"
     }
   },
   { title: "族", key: "ip_family", width: 86 },
@@ -129,7 +129,7 @@ function emptyForm(): IPAccessListInput {
     kind: "block",
     target: "ip",
     value: "",
-    site_id: 0,
+    application_id: 0,
     enabled: true,
     priority: 100,
     description: ""
@@ -146,7 +146,7 @@ function toInput(item: IPAccessListEntry): IPAccessListInput {
     kind: item.kind,
     target: item.target,
     value: item.value,
-    site_id: item.site_id,
+    application_id: item.application_id,
     enabled: item.enabled,
     priority: item.priority ?? 100,
     description: item.description ?? ""
@@ -172,8 +172,8 @@ function validateForm() {
   if (!form.value.trim()) {
     return "IP 或 CIDR 不能为空"
   }
-  if (Number(form.site_id ?? 0) < 0) {
-    return "站点 ID 不能小于 0"
+  if (Number(form.application_id ?? 0) < 0) {
+    return "应用 ID 不能小于 0"
   }
   if (Number(form.priority ?? 0) < 0) {
     return "优先级不能小于 0"
@@ -325,8 +325,8 @@ function isIPv6(value: string) {
           <NFormItem :label="form.target === 'cidr' ? 'CIDR' : 'IP 地址'">
             <NInput v-model:value="form.value" />
           </NFormItem>
-          <NFormItem label="站点 ID">
-            <NInputNumber v-model:value="form.site_id" :min="0" />
+          <NFormItem label="应用 ID">
+            <NInputNumber v-model:value="form.application_id" :min="0" />
           </NFormItem>
           <NFormItem label="优先级">
             <NInputNumber v-model:value="form.priority" :min="0" />

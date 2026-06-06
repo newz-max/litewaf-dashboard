@@ -5,7 +5,7 @@ import { use } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import { BarChart, PieChart } from "echarts/charts"
 import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components"
-import { getObservabilitySummary, getRules, getSites, type SummaryCount } from "@/api/litewaf"
+import { getApplications, getObservabilitySummary, getRules, type SummaryCount } from "@/api/litewaf"
 import OperationsCountList from "@/components/operations/OperationsCountList.vue"
 import PostureMetricCard, { type PostureMetric } from "@/components/operations/PostureMetricCard.vue"
 import { useApiResource } from "@/composables/useApiResource"
@@ -21,7 +21,7 @@ interface EvidencePanel {
 }
 
 const themeStore = useThemeStore()
-const sitesResource = useApiResource(getSites)
+const applicationsResource = useApiResource(getApplications)
 const rulesResource = useApiResource(getRules)
 const summaryResource = useApiResource(getObservabilitySummary)
 
@@ -36,11 +36,11 @@ const chartSurfaceColor = computed(() => themeStore.cssVars["--lw-panel"])
 const chartMutedSurfaceColor = computed(() => themeStore.cssVars["--lw-panel-muted"])
 
 const isLoading = computed(
-  () => sitesResource.loading.value || rulesResource.loading.value || summaryResource.loading.value
+  () => applicationsResource.loading.value || rulesResource.loading.value || summaryResource.loading.value
 )
 const apiErrors = computed(() =>
   [
-    { label: "站点", message: sitesResource.error.value },
+    { label: "防护应用", message: applicationsResource.error.value },
     { label: "规则", message: rulesResource.error.value },
     { label: "观测汇总", message: summaryResource.error.value }
   ].filter((item) => item.message)
@@ -51,7 +51,7 @@ function sumCounts(items: readonly SummaryCount[]) {
   return items.reduce((total, item) => total + item.count, 0)
 }
 
-const siteCount = computed(() => sitesResource.data.value?.length ?? 0)
+const applicationCount = computed(() => applicationsResource.data.value?.length ?? 0)
 const ruleCount = computed(() => rulesResource.data.value?.length ?? 0)
 const blockedRequests = computed(() => summary.value?.blocked_requests ?? 0)
 const wafMatches = computed(() => summary.value?.waf_matches ?? 0)
@@ -90,7 +90,7 @@ const hasSummaryData = computed(
     topRules.value.length > 0
 )
 const showGlobalEmptyState = computed(
-  () => !isLoading.value && !hasApiError.value && !hasSummaryData.value && siteCount.value === 0 && ruleCount.value === 0
+  () => !isLoading.value && !hasApiError.value && !hasSummaryData.value && applicationCount.value === 0 && ruleCount.value === 0
 )
 
 const primaryMetrics = computed<PostureMetric[]>(() => [
@@ -116,10 +116,10 @@ const primaryMetrics = computed<PostureMetric[]>(() => [
     featured: true
   },
   {
-    label: "防护站点",
-    value: siteCount.value,
-    note: "来自控制面站点接口",
-    tone: siteCount.value > 0 ? "success" : "neutral",
+    label: "防护应用",
+    value: applicationCount.value,
+    note: "来自控制面应用接口",
+    tone: applicationCount.value > 0 ? "success" : "neutral",
     featured: true
   }
 ])
@@ -208,7 +208,7 @@ const attackTypeOption = computed(() => ({
 }))
 
 function refreshDashboard() {
-  void Promise.all([sitesResource.refresh(), rulesResource.refresh(), summaryResource.refresh()])
+  void Promise.all([applicationsResource.refresh(), rulesResource.refresh(), summaryResource.refresh()])
 }
 </script>
 
@@ -243,7 +243,7 @@ function refreshDashboard() {
     </NAlert>
 
     <NAlert v-if="showGlobalEmptyState" type="info">
-      当前没有站点、规则或观测汇总数据。页面保持空态展示，等待真实配置或网关流量进入。
+      当前没有防护应用、规则或观测汇总数据。页面保持空态展示，等待真实配置或网关流量进入。
     </NAlert>
 
     <section class="primary-metric-grid">

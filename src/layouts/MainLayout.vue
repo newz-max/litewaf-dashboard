@@ -62,8 +62,8 @@ const menuOptions = computed<MenuOption[]>(() => [
         icon: renderIcon(ShieldOutline)
       },
       {
-        key: "sites",
-        label: renderLabel("站点管理", "/sites"),
+        key: "applications",
+        label: renderLabel("防护应用", "/applications"),
         icon: renderIcon(GlobeOutline)
       }
     ]

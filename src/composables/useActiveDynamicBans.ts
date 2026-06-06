@@ -2,13 +2,13 @@ import { computed, reactive, readonly, shallowRef } from "vue"
 import { clearDynamicBan, getDynamicBans, type DynamicBan, type DynamicBanClearResult } from "@/api/litewaf"
 
 export interface DynamicBanFilters {
-  site_id: string
+  application_id: string
   client_ip: string
   status: string
 }
 
 const defaultFilters: DynamicBanFilters = {
-  site_id: "",
+  application_id: "",
   client_ip: "",
   status: "active"
 }
@@ -48,7 +48,7 @@ export function useActiveDynamicBans() {
     clearingKey.value = rowKey(item)
     error.value = ""
     try {
-      lastClear.value = await clearDynamicBan({ site_id: item.site_id, client_ip: item.client_ip })
+      lastClear.value = await clearDynamicBan({ application_id: item.application_id, client_ip: item.client_ip })
       await refresh()
     } catch (err) {
       error.value = err instanceof Error ? err.message : "解封失败"
@@ -77,6 +77,6 @@ export function useActiveDynamicBans() {
   }
 }
 
-function rowKey(item: Pick<DynamicBan, "site_id" | "client_ip">) {
-  return `${item.site_id}:${item.client_ip}`
+function rowKey(item: Pick<DynamicBan, "application_id" | "client_ip">) {
+  return `${item.application_id}:${item.client_ip}`
 }

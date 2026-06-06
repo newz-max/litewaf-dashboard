@@ -9,7 +9,7 @@ const route = useRoute()
 const router = useRouter()
 
 const filterKeys = [
-  "site_id",
+  "application_id",
   "client_ip",
   "rule_id",
   "action",
@@ -32,7 +32,7 @@ const logs = computed(() => [...(logsResource.data.value ?? [])])
 const columns = [
   { title: "时间", key: "time" },
   { title: "请求 ID", key: "request_id" },
-  { title: "站点", key: "site_id" },
+  { title: "站点", key: "application_id" },
   { title: "来源 IP", key: "client_ip" },
   { title: "类型", key: "event_type" },
   { title: "模块", key: "module" },
@@ -119,7 +119,7 @@ function moduleRoute(module: string) {
 
     <section class="section section-pad">
       <NSpace class="toolbar">
-        <NInput v-model:value="filters.site_id" placeholder="站点 ID" clearable />
+        <NInput v-model:value="filters.application_id" placeholder="应用 ID" clearable />
         <NInput v-model:value="filters.client_ip" placeholder="来源 IP" clearable />
         <NInput v-model:value="filters.rule_id" placeholder="规则 ID" clearable />
         <NSelect

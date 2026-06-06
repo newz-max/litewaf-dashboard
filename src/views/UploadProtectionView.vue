@@ -70,11 +70,11 @@ const actionOptions = [
 const columns: DataTableColumns<ProtectionRule> = [
   { title: "名称", key: "name", minWidth: 170 },
   {
-    title: "生效站点",
-    key: "site_id",
+    title: "生效应用",
+    key: "application_id",
     width: 92,
     render(row) {
-      return row.site_id > 0 ? `#${row.site_id}` : "全局"
+      return row.application_id > 0 ? `#${row.application_id}` : "全局"
     }
   },
   {
@@ -187,7 +187,7 @@ function emptyForm(): ProtectionRuleInput {
     name: "",
     module: "upload-protection",
     category: "upload",
-    site_id: 0,
+    application_id: 0,
     enabled: true,
     priority: 100,
     match: {
@@ -236,7 +236,7 @@ function startEdit(item: ProtectionRule) {
     name: item.name,
     module: item.module,
     category: item.category,
-    site_id: item.site_id,
+    application_id: item.application_id,
     enabled: item.enabled,
     priority: item.priority,
     match: {
@@ -448,8 +448,8 @@ function formatTime(value?: string) {
           <NFormItem label="规则名称">
             <NInput v-model:value="form.name" />
           </NFormItem>
-          <NFormItem label="站点 ID">
-            <NInputNumber v-model:value="form.site_id" :min="0" />
+          <NFormItem label="应用 ID">
+            <NInputNumber v-model:value="form.application_id" :min="0" />
           </NFormItem>
           <NFormItem label="上传路径">
             <NInput v-model:value="form.match.path" />

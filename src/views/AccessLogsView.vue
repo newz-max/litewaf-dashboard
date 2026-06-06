@@ -4,7 +4,7 @@ import { getAccessLogs } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 
 const filters = reactive({
-  site_id: "",
+  application_id: "",
   host: "",
   client_ip: "",
   method: "",
@@ -19,7 +19,7 @@ const logs = computed(() => [...(logsResource.data.value ?? [])])
 const columns = [
   { title: "时间", key: "time" },
   { title: "请求 ID", key: "request_id" },
-  { title: "站点", key: "site_id" },
+  { title: "站点", key: "application_id" },
   { title: "Host", key: "host" },
   { title: "方法", key: "method" },
   { title: "URI", key: "uri" },
@@ -46,7 +46,7 @@ function cleanFilters() {
 
     <section class="section section-pad">
       <NSpace class="toolbar">
-        <NInput v-model:value="filters.site_id" placeholder="站点 ID" clearable />
+        <NInput v-model:value="filters.application_id" placeholder="应用 ID" clearable />
         <NInput v-model:value="filters.host" placeholder="Host" clearable />
         <NInput v-model:value="filters.client_ip" placeholder="来源 IP" clearable />
         <NSelect
