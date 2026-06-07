@@ -118,7 +118,7 @@ function moduleRoute(module: string) {
     </div>
 
     <section class="section section-pad">
-      <NSpace class="toolbar">
+      <div class="toolbar query-toolbar">
         <NInput v-model:value="filters.application_id" placeholder="应用 ID" clearable />
         <NInput v-model:value="filters.client_ip" placeholder="来源 IP" clearable />
         <NInput v-model:value="filters.rule_id" placeholder="规则 ID" clearable />
@@ -234,7 +234,7 @@ function moduleRoute(module: string) {
           ]"
         />
         <NButton type="primary" @click="searchLogs">查询</NButton>
-      </NSpace>
+      </div>
 
       <NDataTable
         :loading="logsResource.loading.value"
@@ -249,9 +249,3 @@ function moduleRoute(module: string) {
     </section>
   </main>
 </template>
-
-<style scoped>
-.toolbar {
-  margin-bottom: 14px;
-}
-</style>

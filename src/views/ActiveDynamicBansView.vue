@@ -123,13 +123,13 @@ async function resetFilters() {
     </div>
 
     <section class="section section-pad">
-      <NSpace class="toolbar">
+      <div class="toolbar query-toolbar">
         <NInput v-model:value="bans.filters.application_id" placeholder="应用 ID" clearable />
         <NInput v-model:value="bans.filters.client_ip" placeholder="来源 IP" clearable />
         <NSelect v-model:value="bans.filters.status" :options="statusOptions" clearable placeholder="状态" />
         <NButton type="primary" @click="applyFilters">查询</NButton>
         <NButton @click="resetFilters">重置</NButton>
-      </NSpace>
+      </div>
 
       <NAlert v-if="bans.lastClear.value" type="success" class="result-alert">
         {{ bans.lastClear.value.client_ip }}: {{ bans.lastClear.value.status }} / revision {{ bans.lastClear.value.revision }}
@@ -151,10 +151,6 @@ async function resetFilters() {
 </template>
 
 <style scoped>
-.toolbar {
-  margin-bottom: 14px;
-}
-
 .result-alert {
   margin-bottom: 12px;
 }

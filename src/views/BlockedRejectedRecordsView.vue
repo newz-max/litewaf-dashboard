@@ -245,22 +245,22 @@ function moduleRoute(module: string) {
     </div>
 
     <section class="section section-pad">
-      <NSpace class="toolbar">
+      <div class="toolbar query-toolbar">
         <NInput v-model:value="filters.application_id" placeholder="应用 ID" clearable />
         <NInput v-model:value="filters.listener_port" placeholder="监听端口" clearable />
         <NSelect v-model:value="filters.scheme" :options="schemeOptions" clearable placeholder="协议" />
-        <NInput v-model:value="filters.host" placeholder="Host" clearable />
+        <NInput v-model:value="filters.host" class="query-field-wide" placeholder="Host" clearable />
         <NInput v-model:value="filters.client_ip" placeholder="来源 IP" clearable />
-        <NInput v-model:value="filters.uri" placeholder="URI" clearable />
+        <NInput v-model:value="filters.uri" class="query-field-wide" placeholder="URI" clearable />
         <NInput v-model:value="filters.status" placeholder="状态码" clearable />
         <NSelect v-model:value="filters.disposition" :options="dispositionOptions" clearable placeholder="处置" />
         <NInput v-model:value="filters.module" placeholder="模块" clearable />
         <NSelect v-model:value="filters.action" :options="actionOptions" clearable placeholder="动作" />
         <NSelect v-model:value="filters.trigger_source" :options="sourceOptions" clearable placeholder="触发来源" />
-        <NDatePicker v-model:value="timeRange" type="datetimerange" clearable />
+        <NDatePicker v-model:value="timeRange" class="query-time-range" type="datetimerange" clearable />
         <NButton type="primary" @click="searchRecords">查询</NButton>
         <NButton @click="resetFilters">重置</NButton>
-      </NSpace>
+      </div>
 
       <NDataTable
         :loading="recordsResource.loading.value"
@@ -278,10 +278,6 @@ function moduleRoute(module: string) {
 </template>
 
 <style scoped>
-.toolbar {
-  margin-bottom: 14px;
-}
-
 .result-alert {
   margin-top: 12px;
 }

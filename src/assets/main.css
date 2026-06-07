@@ -141,6 +141,35 @@ body {
   gap: 12px;
 }
 
+.query-toolbar {
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin-bottom: 14px;
+}
+
+.query-toolbar > .n-input,
+.query-toolbar > .n-select {
+  flex: 0 1 180px;
+  min-width: 160px;
+  max-width: 260px;
+}
+
+.query-toolbar > .query-field-wide {
+  flex-basis: 240px;
+  min-width: 220px;
+  max-width: 360px;
+}
+
+.query-toolbar > .query-time-range {
+  flex-basis: 360px;
+  min-width: 300px;
+  max-width: 440px;
+}
+
+.query-toolbar > .n-button {
+  flex: 0 0 auto;
+}
+
 :root[data-density="compact"] .page-title {
   font-size: 20px;
 }
@@ -174,5 +203,19 @@ body {
 
   .metric-grid {
     grid-template-columns: 1fr;
+  }
+
+  .query-toolbar > .n-input,
+  .query-toolbar > .n-select,
+  .query-toolbar > .n-date-picker,
+  .query-toolbar > .query-field-wide,
+  .query-toolbar > .query-time-range {
+    flex: 1 1 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .query-toolbar > .n-button {
+    flex: 0 0 auto;
   }
 }

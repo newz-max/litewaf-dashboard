@@ -39,7 +39,7 @@ function cleanFilters() {
     </div>
 
     <section class="section section-pad">
-      <NSpace class="toolbar">
+      <div class="toolbar query-toolbar">
         <NInput v-model:value="filters.action" placeholder="动作" clearable />
         <NInput v-model:value="filters.resource_type" placeholder="资源类型" clearable />
         <NSelect
@@ -52,7 +52,7 @@ function cleanFilters() {
           ]"
         />
         <NButton type="primary" @click="auditResource.refresh">查询</NButton>
-      </NSpace>
+      </div>
 
       <NDataTable
         :loading="auditResource.loading.value"
@@ -67,9 +67,3 @@ function cleanFilters() {
     </section>
   </main>
 </template>
-
-<style scoped>
-.toolbar {
-  margin-bottom: 14px;
-}
-</style>

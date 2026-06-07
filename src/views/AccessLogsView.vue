@@ -45,9 +45,9 @@ function cleanFilters() {
     </div>
 
     <section class="section section-pad">
-      <NSpace class="toolbar">
+      <div class="toolbar query-toolbar">
         <NInput v-model:value="filters.application_id" placeholder="应用 ID" clearable />
-        <NInput v-model:value="filters.host" placeholder="Host" clearable />
+        <NInput v-model:value="filters.host" class="query-field-wide" placeholder="Host" clearable />
         <NInput v-model:value="filters.client_ip" placeholder="来源 IP" clearable />
         <NSelect
           v-model:value="filters.method"
@@ -60,7 +60,7 @@ function cleanFilters() {
             { label: 'DELETE', value: 'DELETE' }
           ]"
         />
-        <NInput v-model:value="filters.uri" placeholder="URI" clearable />
+        <NInput v-model:value="filters.uri" class="query-field-wide" placeholder="URI" clearable />
         <NInput v-model:value="filters.status" placeholder="状态码" clearable />
         <NSelect
           v-model:value="filters.disposition"
@@ -74,7 +74,7 @@ function cleanFilters() {
           ]"
         />
         <NButton type="primary" @click="logsResource.refresh">查询</NButton>
-      </NSpace>
+      </div>
 
       <NDataTable
         :loading="logsResource.loading.value"
@@ -89,9 +89,3 @@ function cleanFilters() {
     </section>
   </main>
 </template>
-
-<style scoped>
-.toolbar {
-  margin-bottom: 14px;
-}
-</style>
