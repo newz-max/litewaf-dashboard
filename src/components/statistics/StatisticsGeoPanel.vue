@@ -97,11 +97,10 @@ const chartData = computed(() => ranking.value.map((item) => toMapDatum(item, ac
 const displayRanking = computed(() => ranking.value.map((item) => ({ ...item, displayName: findRegion(item, activeRegions.value)?.name ?? item.name })))
 const maxRegionValue = computed(() => Math.max(...chartData.value.map((item) => item.value), 1))
 const globeTexture = computed(() => {
-  const palette = themeStore.chartPalette
   return createGlobeTexture(normalizedWorldMap, {
-    landColor: withAlpha(palette[0] ?? "#0f766e", 0.72),
-    borderColor: withAlpha(themeStore.chartTextColor, 0.3),
-    waterColor: "rgba(8, 19, 31, 0.96)"
+    landColor: "rgba(255, 255, 255, 0.92)",
+    borderColor: "rgba(255, 255, 255, 0.45)",
+    waterColor: "rgba(8, 19, 31, 0.22)"
   })
 })
 
@@ -125,12 +124,12 @@ const chartOption = computed(() => {
       },
       globe: {
         baseTexture: globeTexture.value,
-        baseColor: "rgba(8, 19, 31, 0.96)",
-        globeOuterRadius: 105,
+        baseColor: "rgba(8, 19, 31, 0.22)",
+        globeOuterRadius: 138,
         shading: "color",
         viewControl: {
           autoRotate: false,
-          distance: 185,
+          distance: 142,
           rotateSensitivity: [1, 1],
           zoomSensitivity: 0,
           panSensitivity: 0
@@ -187,7 +186,7 @@ const chartOption = computed(() => {
         roam: false,
         zoom: 1,
         layoutCenter: ["50%", "50%"],
-        layoutSize: props.scope === "china" ? "100%" : "98%",
+        layoutSize: props.scope === "china" ? "118%" : "112%",
         data: chartData.value,
         selectedMode: false,
         itemStyle: {
@@ -466,11 +465,11 @@ function withAlpha(color: string, alpha: number) {
       </div>
     </div>
 
-    <div class="geo-content">
+    <div class="geo-content geo-content--immersive">
       <div class="map-wrap">
         <VChart class="map-chart" :option="chartOption" :loading="loading" autoresize />
       </div>
-      <aside class="geo-ranking">
+      <aside class="geo-ranking" :class="{ 'geo-ranking--empty': ranking.length === 0 }">
         <NEmpty v-if="ranking.length === 0" description="暂无地理统计" />
         <div v-for="item in displayRanking" v-else :key="item.code || item.name" class="rank-row">
           <span>{{ item.displayName }}</span>
@@ -519,18 +518,31 @@ function withAlpha(color: string, alpha: number) {
 }
 
 .geo-content {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(230px, 300px);
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
   gap: 18px;
+  min-height: 430px;
+}
+
+.geo-content--immersive {
+  grid-template-columns: 1fr;
 }
 
 .map-wrap {
-  min-height: 350px;
+  min-height: 430px;
+  height: 100%;
 }
 
 .map-chart {
   width: 100%;
-  height: 350px;
+  min-height: 430px;
+  height: 100%;
+}
+
+.geo-content--immersive .map-wrap,
+.geo-content--immersive .map-chart {
+  min-height: 500px;
 }
 
 .geo-ranking {
@@ -540,6 +552,24 @@ function withAlpha(color: string, alpha: number) {
   min-height: 320px;
   padding: 14px;
   background: var(--lw-panel-muted);
+}
+
+.geo-content--immersive .geo-ranking {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+  width: min(240px, 28%);
+  max-height: calc(100% - 28px);
+  overflow: auto;
+  border: 1px solid var(--lw-border);
+  background: color-mix(in srgb, var(--lw-panel-muted) 86%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.geo-content--immersive .geo-ranking--empty {
+  width: min(190px, 24%);
+  min-height: 140px;
 }
 
 .rank-row {
@@ -565,6 +595,11 @@ function withAlpha(color: string, alpha: number) {
     grid-template-columns: 1fr;
   }
 
+  .map-wrap,
+  .map-chart {
+    min-height: 460px;
+  }
+
   .geo-ranking {
     align-content: start;
     min-height: auto;
@@ -582,6 +617,20 @@ function withAlpha(color: string, alpha: number) {
 
   .geo-controls {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .geo-content,
+  .map-wrap,
+  .map-chart {
+    min-height: 360px;
+  }
+
+  .geo-content--immersive .geo-ranking {
+    position: static;
+    width: auto;
+    max-height: none;
   }
 }
 </style>
