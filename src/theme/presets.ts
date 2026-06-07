@@ -285,6 +285,33 @@ export function buildThemeOverrides(
       tdColor: tokens.panel,
       borderColor: tokens.border
     },
+    Select: {
+      peers: {
+        InternalSelection: {
+          textColor: tokens.text,
+          placeholderColor: tokens.textSubtle,
+          color: tokens.panel,
+          colorActive: tokens.panel,
+          border: `1px solid ${tokens.border}`,
+          borderHover: `1px solid ${tokens.borderStrong}`,
+          borderActive: `1px solid ${settings.accentColor}`,
+          borderFocus: `1px solid ${settings.accentColor}`,
+          arrowColor: tokens.textMuted
+        },
+        InternalSelectMenu: {
+          color: tokens.panel,
+          optionTextColor: tokens.text,
+          optionTextColorPressed: tokens.accentStrong,
+          optionTextColorActive: settings.accentColor,
+          optionTextColorDisabled: tokens.textSubtle,
+          optionColorPending: `color-mix(in srgb, ${settings.accentColor} 10%, transparent)`,
+          optionColorActive: `color-mix(in srgb, ${settings.accentColor} 14%, transparent)`,
+          optionColorActivePending: `color-mix(in srgb, ${settings.accentColor} 18%, transparent)`,
+          groupHeaderTextColor: tokens.textMuted,
+          actionTextColor: tokens.text
+        }
+      }
+    },
     Menu: {
       itemBorderRadius: `${settings.radius}px`
     }

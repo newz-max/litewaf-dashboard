@@ -1,7 +1,7 @@
 import { apiClient } from "@/api/client"
 
 export interface ListResponse<T> {
-  items: T[]
+  items?: T[] | null
 }
 
 export interface ItemResponse<T> {
@@ -442,6 +442,10 @@ export interface ProtectionOverview {
 
 function asArray<T>(value: T[] | null | undefined): T[] {
   return Array.isArray(value) ? value : []
+}
+
+function listItems<T>(response: ListResponse<T>): T[] {
+  return asArray(response.items)
 }
 
 function normalizeObservabilitySummary(item: ObservabilitySummary): ObservabilitySummary {
@@ -1359,7 +1363,7 @@ export function login(payload: { username: string; password: string }) {
 }
 
 export function getApplications() {
-  return apiClient.get<ListResponse<Application>>("/api/v1/applications").then((response) => response.data.items)
+  return apiClient.get<ListResponse<Application>>("/api/v1/applications").then((response) => listItems(response.data))
 }
 
 export function createApplication(payload: ApplicationInput) {
@@ -1375,7 +1379,7 @@ export function deleteApplication(id: number) {
 }
 
 export function getCertificates() {
-  return apiClient.get<ListResponse<Certificate>>("/api/v1/certificates").then((response) => response.data.items)
+  return apiClient.get<ListResponse<Certificate>>("/api/v1/certificates").then((response) => listItems(response.data))
 }
 
 export function createCertificate(payload: CertificateInput) {
@@ -1391,7 +1395,7 @@ export function deleteCertificate(id: number) {
 }
 
 export function getRules() {
-  return apiClient.get<ListResponse<Rule>>("/api/v1/rules").then((response) => response.data.items)
+  return apiClient.get<ListResponse<Rule>>("/api/v1/rules").then((response) => listItems(response.data))
 }
 
 export function createRule(payload: RuleInput) {
@@ -1409,7 +1413,7 @@ export function deleteRule(id: number) {
 export function getRulePackages() {
   return apiClient
     .get<ListResponse<RulePackageMetadata>>("/api/v1/rule-packages")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function previewRulePackage(payload: unknown = {}) {
@@ -1431,7 +1435,7 @@ export function deleteRulePackage(id: string) {
 export function getRuleCatalogs() {
   return apiClient
     .get<ListResponse<RuleCatalogSource>>("/api/v1/rule-community/catalogs")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function createRuleCatalog(payload: RuleCatalogSourceInput) {
@@ -1443,13 +1447,13 @@ export function createRuleCatalog(payload: RuleCatalogSourceInput) {
 export function syncRuleCatalog(id: number) {
   return apiClient
     .post<ListResponse<RuleCatalogPackage>>(`/api/v1/rule-community/catalogs/${id}/sync`, {})
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function getRuleCatalogPackages(catalogId: number) {
   return apiClient
     .get<ListResponse<RuleCatalogPackage>>(`/api/v1/rule-community/catalogs/${catalogId}/packages`)
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function previewRemoteRulePackage(catalogId: number, packageId: string) {
@@ -1482,7 +1486,7 @@ export function applyRulePackageUpdate(catalogId: number, packageId: string) {
 export function getRuleTrustKeys() {
   return apiClient
     .get<ListResponse<RuleTrustKey>>("/api/v1/rule-community/trust-keys")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function createRuleTrustKey(payload: RuleTrustKeyInput) {
@@ -1494,7 +1498,7 @@ export function createRuleTrustKey(payload: RuleTrustKeyInput) {
 export function getRuleProviders() {
   return apiClient
     .get<ListResponse<RuleProviderAdapter>>("/api/v1/rule-community/providers")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function createRuleProvider(payload: RuleProviderAdapterInput) {
@@ -1525,7 +1529,7 @@ export function syncRuleProvider(id: number) {
       `/api/v1/rule-community/providers/${id}/sync`,
       {}
     )
-    .then((response) => response.data)
+    .then((response) => ({ ...response.data, items: listItems(response.data) }))
 }
 
 export function retryRuleProvider(id: number) {
@@ -1534,13 +1538,13 @@ export function retryRuleProvider(id: number) {
       `/api/v1/rule-community/providers/${id}/retry`,
       {}
     )
-    .then((response) => response.data)
+    .then((response) => ({ ...response.data, items: listItems(response.data) }))
 }
 
 export function getRuleProviderPackages(providerId: number) {
   return apiClient
     .get<ListResponse<RuleProviderPackage>>(`/api/v1/rule-community/providers/${providerId}/packages`)
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function previewRuleProviderPackage(providerId: number, packageId: string) {
@@ -1576,7 +1580,7 @@ export function exportRulePackage(payload: RulePackageExportRequest) {
 export function getRuleAccountSources() {
   return apiClient
     .get<ListResponse<RuleCommunityAccountSource>>("/api/v1/rule-community/account-sources")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function createRuleAccountSource(payload: RuleCommunityAccountSourceInput) {
@@ -1594,7 +1598,7 @@ export function refreshRuleAccountSource(id: number) {
 export function getRuleContributionTargets() {
   return apiClient
     .get<ListResponse<RuleContributionTarget>>("/api/v1/rule-community/contribution-targets")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function createRuleContributionTarget(payload: RuleContributionTargetInput) {
@@ -1606,7 +1610,7 @@ export function createRuleContributionTarget(payload: RuleContributionTargetInpu
 export function getRuleContributionPushes() {
   return apiClient
     .get<ListResponse<RuleContributionPushAttempt>>("/api/v1/rule-community/contribution-pushes")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function previewRuleContributionPush(payload: { target_id: number; artifact: RulePackageExportArtifact }) {
@@ -1624,7 +1628,7 @@ export function executeRuleContributionPush(payload: { target_id: number; artifa
 export function getRuleReviewQueue() {
   return apiClient
     .get<ListResponse<RuleReviewQueueItem>>("/api/v1/rule-community/review-queue")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function decideRuleReviewQueueItem(id: number, payload: { state: string; reason?: string }) {
@@ -1636,7 +1640,7 @@ export function decideRuleReviewQueueItem(id: number, payload: { state: string; 
 export function getRuleFeedback() {
   return apiClient
     .get<ListResponse<RuleFeedback>>("/api/v1/rule-community/feedback")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function createRuleFeedback(payload: RuleFeedbackInput) {
@@ -1648,7 +1652,7 @@ export function createRuleFeedback(payload: RuleFeedbackInput) {
 export function getRuleFeedbackSuggestions() {
   return apiClient
     .get<ListResponse<RuleFeedbackSuggestion>>("/api/v1/rule-community/feedback-suggestions")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function testRuleFeedbackSuggestion(id: number) {
@@ -1670,7 +1674,7 @@ export function testRule(payload: { rule_id?: number; rule?: RuleInput; sample: 
 }
 
 export function getPolicies() {
-  return apiClient.get<ListResponse<Policy>>("/api/v1/policies").then((response) => response.data.items)
+  return apiClient.get<ListResponse<Policy>>("/api/v1/policies").then((response) => listItems(response.data))
 }
 
 export function createPolicy(payload: PolicyInput) {
@@ -1690,19 +1694,19 @@ export function deletePolicy(id: number) {
 export function getAttackLogs(params: Record<string, string | number> = {}) {
   return apiClient
     .get<ListResponse<AttackLog>>("/api/v1/attack-logs", { params })
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function getAccessLogs(params: Record<string, string | number> = {}) {
   return apiClient
     .get<ListResponse<AccessLog>>("/api/v1/access-logs", { params })
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function getBlockedRejectedRecords(params: Record<string, string | number> = {}) {
   return apiClient
     .get<ListResponse<BlockedRejectedRecord>>("/api/v1/blocked-rejected-records", { params })
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function getObservabilitySummary(params: Record<string, string | number> = {}) {
@@ -1732,7 +1736,7 @@ export function getProtectionMigrationHealth() {
 export function getReleases() {
   return apiClient
     .get<ListResponse<ReleaseRecord>>("/api/v1/releases")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function publishRelease(payload: { operator?: string; note?: string } = {}) {
@@ -1754,13 +1758,13 @@ export function rollbackRelease(version: string) {
 export function getAuditLogs(params: Record<string, string> = {}) {
   return apiClient
     .get<ListResponse<AuditLog>>("/api/v1/audit-logs", { params })
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function getDynamicBans(params: Record<string, string | number> = {}) {
   return apiClient
     .get<ListResponse<DynamicBan>>("/api/v1/dynamic-bans", { params })
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function clearDynamicBan(payload: { application_id: number; client_ip: string }) {
@@ -1772,7 +1776,7 @@ export function clearDynamicBan(payload: { application_id: number; client_ip: st
 export function getIPAccessLists() {
   return apiClient
     .get<ListResponse<IPAccessListEntry>>("/api/v1/ip-access-lists")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function createIPAccessList(payload: IPAccessListInput) {
@@ -1794,7 +1798,7 @@ export function deleteIPAccessList(id: number) {
 export function getRateLimits() {
   return apiClient
     .get<ListResponse<RateLimitRule>>("/api/v1/rate-limits")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function createRateLimit(payload: RateLimitInput) {
@@ -1816,7 +1820,7 @@ export function deleteRateLimit(id: number) {
 export function getCCProtectionRules(params: Record<string, string | number | boolean> = {}) {
   return apiClient
     .get<ListResponse<ProtectionRule>>("/api/v1/cc-protection/rules", { params })
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function createCCProtectionRule(payload: ProtectionRuleInput) {
@@ -1844,7 +1848,7 @@ export function previewCCProtection(payload: CCProtectionPreviewRequest) {
 export function getAccessControlRules(params: Record<string, string | number | boolean> = {}) {
   return apiClient
     .get<ListResponse<ProtectionRule>>("/api/v1/access-control/rules", { params })
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function createAccessControlRule(payload: ProtectionRuleInput) {
@@ -1866,7 +1870,7 @@ export function deleteAccessControlRule(id: number) {
 export function getUploadProtectionRules(params: Record<string, string | number | boolean> = {}) {
   return apiClient
     .get<ListResponse<ProtectionRule>>("/api/v1/upload-protection/rules", { params })
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function createUploadProtectionRule(payload: ProtectionRuleInput) {
@@ -1888,7 +1892,7 @@ export function deleteUploadProtectionRule(id: number) {
 export function getBotProtectionRules(params: Record<string, string | number | boolean> = {}) {
   return apiClient
     .get<ListResponse<ProtectionRule>>("/api/v1/bot-protection/rules", { params })
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function createBotProtectionRule(payload: ProtectionRuleInput) {
@@ -1910,7 +1914,7 @@ export function deleteBotProtectionRule(id: number) {
 export function getDynamicProtectionRules(params: Record<string, string | number | boolean> = {}) {
   return apiClient
     .get<ListResponse<ProtectionRule>>("/api/v1/dynamic-protection/rules", { params })
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function createDynamicProtectionRule(payload: ProtectionRuleInput) {
@@ -1932,7 +1936,7 @@ export function deleteDynamicProtectionRule(id: number) {
 export function getAttackProtectionGroups() {
   return apiClient
     .get<ListResponse<AttackProtectionGroup>>("/api/v1/attack-protection/groups")
-    .then((response) => response.data.items)
+    .then((response) => listItems(response.data))
 }
 
 export function updateAttackProtectionGroup(attackType: string, payload: AttackProtectionGroupInput) {
