@@ -18,6 +18,7 @@ const applicationOptions = computed(() => [
 
 const isLoading = computed(() => applicationsResource.loading.value || resource.loading.value)
 const errorMessage = computed(() => applicationsResource.error.value || resource.error.value)
+const effectiveMapView = computed<StatisticsMapView>(() => (filters.scope === "china" ? "2d" : filters.mapView))
 const hasAnyData = computed(() => {
   const item = report.value
   if (!item) {
@@ -42,7 +43,6 @@ function setScope(value: StatisticsScope) {
 
 function setMapView(value: StatisticsMapView) {
   if (filters.scope === "china" && value === "3d") {
-    filters.mapView = "2d"
     return
   }
   filters.mapView = value
@@ -94,7 +94,7 @@ function setMetric(value: StatisticsMetric) {
         class="geo-panel-item"
         :geo="report?.geo"
         :scope="filters.scope"
-        :map-view="filters.mapView"
+        :map-view="effectiveMapView"
         :metric="filters.metric"
         :loading="isLoading"
         @update-scope="setScope"

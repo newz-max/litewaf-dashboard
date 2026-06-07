@@ -41,12 +41,7 @@ export function useStatisticsReport() {
 
   watch(
     () => filters.scope,
-    (scope) => {
-      if (scope === "china") {
-        filters.mapView = "2d"
-      } else {
-        filters.mapView = "3d"
-      }
+    () => {
       void resource.refresh()
     }
   )
