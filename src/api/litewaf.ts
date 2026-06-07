@@ -274,6 +274,43 @@ export interface AccessLog {
   geo_longitude?: number
   geo_latitude?: number
   disposition: string
+  reason_code?: string
+  reason?: string
+  created_at?: string
+  time?: string
+}
+
+export interface BlockedRejectedRecord {
+  id: number
+  request_id: string
+  application_id: number
+  listener_port?: number
+  scheme?: string
+  host: string
+  method: string
+  uri: string
+  status: number
+  upstream_status: number
+  duration_ms: number
+  client_ip: string
+  disposition: string
+  reason_code?: string
+  reason?: string
+  explanation_source: string
+  correlation_type: string
+  waf_event_id?: number
+  event_type?: string
+  module?: string
+  category?: string
+  rule_id?: number
+  rule_name?: string
+  action?: string
+  attack_type?: string
+  summary?: string
+  dynamic_ban_reason?: string
+  dynamic_ban_source?: string
+  dynamic_ban_status?: string
+  dynamic_ban_remaining_sec?: number
   created_at?: string
   time?: string
 }
@@ -1659,6 +1696,12 @@ export function getAttackLogs(params: Record<string, string | number> = {}) {
 export function getAccessLogs(params: Record<string, string | number> = {}) {
   return apiClient
     .get<ListResponse<AccessLog>>("/api/v1/access-logs", { params })
+    .then((response) => response.data.items)
+}
+
+export function getBlockedRejectedRecords(params: Record<string, string | number> = {}) {
+  return apiClient
+    .get<ListResponse<BlockedRejectedRecord>>("/api/v1/blocked-rejected-records", { params })
     .then((response) => response.data.items)
 }
 

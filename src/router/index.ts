@@ -6,6 +6,7 @@ import RulesView from "@/views/RulesView.vue"
 import RuleEcosystemView from "@/views/RuleEcosystemView.vue"
 import PoliciesView from "@/views/PoliciesView.vue"
 import AttackLogsView from "@/views/AttackLogsView.vue"
+import BlockedRejectedRecordsView from "@/views/BlockedRejectedRecordsView.vue"
 import AccessLogsView from "@/views/AccessLogsView.vue"
 import ReleasesView from "@/views/ReleasesView.vue"
 import MigrationHealthView from "@/views/MigrationHealthView.vue"
@@ -89,6 +90,12 @@ const router = createRouter({
           name: "attackLogs",
           component: AttackLogsView,
           meta: { title: "攻击日志" }
+        },
+        {
+          path: "blocked-rejected-records",
+          name: "blockedRejectedRecords",
+          component: BlockedRejectedRecordsView,
+          meta: { title: "拦截 / 拒绝记录" }
         },
         {
           path: "dynamic-bans",

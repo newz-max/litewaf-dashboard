@@ -153,6 +153,11 @@ const menuOptions = computed<MenuOption[]>(() => [
         icon: renderIcon(WarningOutline)
       },
       {
+        key: "blockedRejectedRecords",
+        label: renderLabel("拦截 / 拒绝记录", "/blocked-rejected-records"),
+        icon: renderIcon(FlashOutline)
+      },
+      {
         key: "dynamicBans",
         label: renderLabel("动态封禁", "/dynamic-bans"),
         icon: renderIcon(WarningOutline)
