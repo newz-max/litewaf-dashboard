@@ -7,6 +7,11 @@ declare module "@geo-maps/countries-land-10km/map.geo.json" {
   export default value
 }
 
+declare module "china-geojson/src/geojson/china.json" {
+  const value: unknown
+  export default value
+}
+
 declare module "*.vue" {
   import type { DefineComponent } from "vue"
 

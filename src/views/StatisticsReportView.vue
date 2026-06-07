@@ -165,8 +165,17 @@ function setMetric(value: StatisticsMetric) {
   gap: 16px;
 }
 
+@media (max-width: 1380px) {
+  .main-report-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .side-trends {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 1180px) {
-  .main-report-grid,
   .breakdown-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -179,6 +188,7 @@ function setMetric(value: StatisticsMetric) {
 @media (max-width: 760px) {
   .filter-bar,
   .main-report-grid,
+  .side-trends,
   .breakdown-grid {
     grid-template-columns: 1fr;
   }

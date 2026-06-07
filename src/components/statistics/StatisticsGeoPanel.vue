@@ -6,15 +6,69 @@ import { CanvasRenderer } from "echarts/renderers"
 import { MapChart, ScatterChart } from "echarts/charts"
 import { GeoComponent, TooltipComponent, VisualMapComponent } from "echarts/components"
 import "echarts-gl"
+import { whereAlpha3, whereCountry } from "iso-3166-1"
 import worldMap from "@geo-maps/countries-land-10km/map.geo.json"
-import chinaMap from "@/assets/maps/china-lite.geo.json"
+import chinaMap from "china-geojson/src/geojson/china.json"
 import type { GeoPoint, GeoRank, StatisticsGeoReport } from "@/api/litewaf"
 import type { StatisticsMapView, StatisticsMetric, StatisticsScope } from "@/composables/useStatisticsReport"
 import { useThemeStore } from "@/stores/theme"
 
 use([CanvasRenderer, MapChart, ScatterChart, GeoComponent, TooltipComponent, VisualMapComponent])
-registerMap("litewaf-world", worldMap as any)
-registerMap("litewaf-china", chinaMap as any)
+
+type Coordinate = [number, number]
+type LinearRing = Coordinate[]
+type PolygonCoordinates = LinearRing[]
+type MultiPolygonCoordinates = PolygonCoordinates[]
+type GeoJsonGeometry =
+  | { type: "Polygon"; coordinates: PolygonCoordinates }
+  | { type: "MultiPolygon"; coordinates: MultiPolygonCoordinates }
+  | { type: string; coordinates?: unknown }
+
+interface GeoJsonFeature {
+  type: "Feature"
+  id?: string | number
+  properties?: Record<string, unknown>
+  geometry: GeoJsonGeometry
+}
+
+interface GeoJsonFeatureCollection {
+  type: "FeatureCollection"
+  features: GeoJsonFeature[]
+}
+
+interface MapRegion {
+  code: string
+  name: string
+}
+
+interface MapDatum {
+  name: string
+  value: number
+  count: number
+  blocked: number
+  code: string
+  displayName: string
+}
+
+interface GlobeLine {
+  coords: Array<[number, number, number]>
+}
+
+interface TooltipParams {
+  name?: string
+  value?: unknown
+  data?: Partial<MapDatum>
+}
+
+const regionDisplayNames = new Intl.DisplayNames(["zh-CN"], { type: "region" })
+const normalizedWorldMap = normalizeWorldMap(worldMap)
+const normalizedChinaMap = normalizeChinaMap(chinaMap)
+const worldRegions = collectRegions(normalizedWorldMap)
+const chinaRegions = collectRegions(normalizedChinaMap)
+const globeBorderLines = buildGlobeBorderLines(normalizedWorldMap)
+
+registerMap("litewaf-world", normalizedWorldMap as any)
+registerMap("litewaf-china", normalizedChinaMap as any)
 
 const props = defineProps<{
   geo?: Omit<Readonly<StatisticsGeoReport>, "ranking" | "points" | "diagnostics"> & {
@@ -38,13 +92,26 @@ const themeStore = useThemeStore()
 const canUse3D = computed(() => props.scope === "world")
 const ranking = computed(() => props.geo?.ranking ?? [])
 const chartMapName = computed(() => (props.scope === "china" ? "litewaf-china" : "litewaf-world"))
-const chartData = computed(() => ranking.value.map((item) => ({ name: item.name, value: item.count })))
+const activeRegions = computed(() => (props.scope === "china" ? chinaRegions : worldRegions))
+const chartData = computed(() => ranking.value.map((item) => toMapDatum(item, activeRegions.value)))
+const displayRanking = computed(() => ranking.value.map((item) => ({ ...item, displayName: findRegion(item, activeRegions.value)?.name ?? item.name })))
+const maxRegionValue = computed(() => Math.max(...chartData.value.map((item) => item.value), 1))
+const globeTexture = computed(() => {
+  const palette = themeStore.chartPalette
+  return createGlobeTexture(normalizedWorldMap, {
+    landColor: withAlpha(palette[0] ?? "#0f766e", 0.72),
+    borderColor: withAlpha(themeStore.chartTextColor, 0.3),
+    waterColor: "rgba(8, 19, 31, 0.96)"
+  })
+})
 
 const chartOption = computed(() => {
   const textColor = themeStore.chartTextColor
   const panelColor = themeStore.cssVars["--lw-panel"]
   const borderColor = themeStore.chartGridColor
   const palette = themeStore.chartPalette
+  const accentColor = palette[0] ?? "#0f766e"
+  const alertColor = palette[3] ?? "#ef4444"
 
   if (props.scope === "world" && props.mapView === "3d") {
     return {
@@ -53,17 +120,20 @@ const chartOption = computed(() => {
         trigger: "item",
         backgroundColor: panelColor,
         borderColor,
-        textStyle: { color: textColor }
+        textStyle: { color: textColor },
+        formatter: formatTooltip
       },
       globe: {
-        baseColor: "rgba(25, 211, 181, 0.28)",
+        baseTexture: globeTexture.value,
+        baseColor: "rgba(8, 19, 31, 0.96)",
         globeOuterRadius: 105,
         shading: "color",
         viewControl: {
-          autoRotate: true,
-          autoRotateSpeed: 2,
+          autoRotate: false,
           distance: 185,
-          zoomSensitivity: 0.8
+          rotateSensitivity: [1, 1],
+          zoomSensitivity: 0,
+          panSensitivity: 0
         },
         light: {
           ambient: { intensity: 0.8 },
@@ -72,11 +142,23 @@ const chartOption = computed(() => {
       },
       series: [
         {
+          type: "lines3D",
+          coordinateSystem: "globe",
+          polyline: true,
+          silent: true,
+          data: globeBorderLines,
+          lineStyle: {
+            color: withAlpha(accentColor, 0.72),
+            width: 1,
+            opacity: 0.72
+          }
+        },
+        {
           type: "scatter3D",
           coordinateSystem: "globe",
           data: (props.geo?.points ?? []).map((point) => [point.longitude, point.latitude, point.value, point.name]),
           symbolSize: 7,
-          itemStyle: { color: palette[0] }
+          itemStyle: { color: alertColor }
         }
       ]
     }
@@ -89,29 +171,41 @@ const chartOption = computed(() => {
       trigger: "item",
       backgroundColor: panelColor,
       borderColor,
-      textStyle: { color: textColor }
+      textStyle: { color: textColor },
+      formatter: formatTooltip
     },
     visualMap: {
       show: false,
       min: 0,
-      max: Math.max(...chartData.value.map((item) => Number(item.value)), 1),
-      inRange: { color: ["#d8f8f5", palette[0]] }
+      max: maxRegionValue.value,
+      inRange: { color: [withAlpha(accentColor, 0.18), accentColor] }
     },
     series: [
       {
         type: "map",
         map: chartMapName.value,
-        roam: true,
-        zoom: props.scope === "china" ? 1.12 : 1.08,
+        roam: false,
+        zoom: 1,
+        layoutCenter: ["50%", "50%"],
+        layoutSize: props.scope === "china" ? "100%" : "98%",
         data: chartData.value,
+        selectedMode: false,
         itemStyle: {
-          areaColor: "rgba(15, 118, 110, 0.08)",
+          areaColor: withAlpha(accentColor, 0.08),
           borderColor: borderColor,
           borderWidth: 0.7
         },
+        label: {
+          show: false,
+          color: textColor
+        },
         emphasis: {
-          label: { color: textColor },
-          itemStyle: { areaColor: palette[0] }
+          label: {
+            show: true,
+            color: textColor,
+            fontSize: 11
+          },
+          itemStyle: { areaColor: alertColor }
         }
       }
     ]
@@ -120,6 +214,232 @@ const chartOption = computed(() => {
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("en-US", { notation: value >= 10000 ? "compact" : "standard", maximumFractionDigits: 1 }).format(value)
+}
+
+function normalizeWorldMap(input: unknown): GeoJsonFeatureCollection {
+  const collection = toFeatureCollection(input)
+  return {
+    type: "FeatureCollection",
+    features: collection.features.map((feature) => {
+      const properties = feature.properties ?? {}
+      const code = String(properties.A3 ?? feature.id ?? "").toUpperCase()
+      const country = code ? whereAlpha3(code) : undefined
+      const name = (country?.alpha2 ? regionDisplayNames.of(country.alpha2) : undefined) ?? country?.country ?? stringFrom(properties.name) ?? code
+
+      return {
+        ...feature,
+        properties: {
+          ...properties,
+          code,
+          name
+        }
+      }
+    })
+  }
+}
+
+function normalizeChinaMap(input: unknown): GeoJsonFeatureCollection {
+  const collection = toFeatureCollection(input)
+  return {
+    type: "FeatureCollection",
+    features: collection.features.map((feature) => {
+      const properties = feature.properties ?? {}
+      const code = String(properties.id ?? feature.id ?? properties.adcode ?? "")
+      const name = stringFrom(properties.name) ?? code
+
+      return {
+        ...feature,
+        properties: {
+          ...properties,
+          code,
+          name
+        }
+      }
+    })
+  }
+}
+
+function toFeatureCollection(input: unknown): GeoJsonFeatureCollection {
+  const candidate = input as Partial<GeoJsonFeatureCollection>
+  return {
+    type: "FeatureCollection",
+    features: Array.isArray(candidate.features) ? candidate.features : []
+  }
+}
+
+function collectRegions(collection: GeoJsonFeatureCollection): MapRegion[] {
+  return collection.features.map((feature) => {
+    const properties = feature.properties ?? {}
+    return {
+      code: String(properties.code ?? feature.id ?? ""),
+      name: stringFrom(properties.name) ?? String(feature.id ?? "")
+    }
+  })
+}
+
+function toMapDatum(item: GeoRank, regions: readonly MapRegion[]): MapDatum {
+  const region = findRegion(item, regions)
+  return {
+    name: region?.name ?? item.name,
+    value: item.count,
+    count: item.count,
+    blocked: item.blocked,
+    code: item.code,
+    displayName: region?.name ?? item.name
+  }
+}
+
+function findRegion(item: GeoRank, regions: readonly MapRegion[]) {
+  const code = normalizeKey(item.code)
+  const name = normalizeRegionName(item.name)
+  const countryCode = whereAlpha3(item.code)?.alpha3 ?? whereCountry(item.name)?.alpha3
+  const normalizedCountryCode = countryCode ? normalizeKey(countryCode) : ""
+  return (
+    regions.find((region) => normalizeKey(region.code) === code) ??
+    regions.find((region) => normalizedCountryCode && normalizeKey(region.code) === normalizedCountryCode) ??
+    regions.find((region) => normalizeRegionName(region.name) === name)
+  )
+}
+
+function normalizeRegionName(value: string) {
+  return normalizeKey(
+    value
+      .replace(/省|市|特别行政区|壮族自治区|回族自治区|维吾尔自治区|自治区/g, "")
+      .replace(/\s+/g, "")
+  )
+}
+
+function normalizeKey(value: string) {
+  return value.trim().toLowerCase()
+}
+
+function stringFrom(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined
+}
+
+function formatTooltip(params: TooltipParams) {
+  const value = Array.isArray(params.value) ? Number(params.value[2] ?? 0) : Number(params.data?.count ?? params.value ?? 0)
+  const name = Array.isArray(params.value) ? String(params.value[3] ?? params.name ?? "") : params.data?.displayName ?? params.name ?? ""
+  const blocked = Number(params.data?.blocked ?? 0)
+  const metricLabel = props.metric === "blocked" ? "拦截数量" : "访问数量"
+  const lines = [`${name || "未知地区"}`, `${metricLabel}: ${formatNumber(Number.isFinite(value) ? value : 0)}`]
+  if (blocked > 0 && props.metric !== "blocked") {
+    lines.push(`拦截数量: ${formatNumber(blocked)}`)
+  }
+  return lines.join("<br />")
+}
+
+function createGlobeTexture(
+  collection: GeoJsonFeatureCollection,
+  colors: { landColor: string; borderColor: string; waterColor: string }
+) {
+  if (typeof document === "undefined") {
+    return undefined
+  }
+
+  const canvas = document.createElement("canvas")
+  canvas.width = 2048
+  canvas.height = 1024
+  const context = canvas.getContext("2d")
+  if (!context) {
+    return undefined
+  }
+
+  context.fillStyle = colors.waterColor
+  context.fillRect(0, 0, canvas.width, canvas.height)
+  context.fillStyle = colors.landColor
+  context.strokeStyle = colors.borderColor
+  context.lineWidth = 1.5
+
+  for (const feature of collection.features) {
+    drawGeometry(context, feature.geometry, canvas.width, canvas.height)
+  }
+
+  return canvas.toDataURL("image/png")
+}
+
+function drawGeometry(context: CanvasRenderingContext2D, geometry: GeoJsonGeometry, width: number, height: number) {
+  if (isPolygonGeometry(geometry)) {
+    drawPolygon(context, geometry.coordinates, width, height)
+    return
+  }
+  if (isMultiPolygonGeometry(geometry)) {
+    for (const polygon of geometry.coordinates) {
+      drawPolygon(context, polygon, width, height)
+    }
+  }
+}
+
+function isPolygonGeometry(geometry: GeoJsonGeometry): geometry is { type: "Polygon"; coordinates: PolygonCoordinates } {
+  return geometry.type === "Polygon" && Array.isArray(geometry.coordinates)
+}
+
+function isMultiPolygonGeometry(geometry: GeoJsonGeometry): geometry is { type: "MultiPolygon"; coordinates: MultiPolygonCoordinates } {
+  return geometry.type === "MultiPolygon" && Array.isArray(geometry.coordinates)
+}
+
+function buildGlobeBorderLines(collection: GeoJsonFeatureCollection): GlobeLine[] {
+  const lines: GlobeLine[] = []
+  for (const feature of collection.features) {
+    if (isPolygonGeometry(feature.geometry)) {
+      pushPolygonLines(lines, feature.geometry.coordinates)
+      continue
+    }
+    if (isMultiPolygonGeometry(feature.geometry)) {
+      for (const polygon of feature.geometry.coordinates) {
+        pushPolygonLines(lines, polygon)
+      }
+    }
+  }
+  return lines
+}
+
+function pushPolygonLines(lines: GlobeLine[], polygon: PolygonCoordinates) {
+  for (const ring of polygon) {
+    if (ring.length < 2) {
+      continue
+    }
+    const sampleStep = Math.max(1, Math.ceil(ring.length / 120))
+    const coords = ring
+      .filter((_, index) => index % sampleStep === 0)
+      .map(([longitude, latitude]) => [longitude, latitude, 0] as [number, number, number])
+    if (coords.length > 1) {
+      lines.push({ coords })
+    }
+  }
+}
+
+function drawPolygon(context: CanvasRenderingContext2D, polygon: PolygonCoordinates, width: number, height: number) {
+  context.beginPath()
+  for (const ring of polygon) {
+    drawRing(context, ring, width, height)
+  }
+  context.fill()
+  context.stroke()
+}
+
+function drawRing(context: CanvasRenderingContext2D, ring: LinearRing, width: number, height: number) {
+  ring.forEach(([longitude, latitude], index) => {
+    const x = ((longitude + 180) / 360) * width
+    const y = ((90 - latitude) / 180) * height
+    if (index === 0) {
+      context.moveTo(x, y)
+      return
+    }
+    context.lineTo(x, y)
+  })
+  context.closePath()
+}
+
+function withAlpha(color: string, alpha: number) {
+  if (color.startsWith("#") && (color.length === 7 || color.length === 4)) {
+    const hex = color.length === 4 ? color.slice(1).split("").map((char) => `${char}${char}`).join("") : color.slice(1)
+    const red = Number.parseInt(hex.slice(0, 2), 16)
+    const green = Number.parseInt(hex.slice(2, 4), 16)
+    const blue = Number.parseInt(hex.slice(4, 6), 16)
+    return `rgba(${red}, ${green}, ${blue}, ${alpha})`
+  }
+  return color
 }
 </script>
 
@@ -152,8 +472,8 @@ function formatNumber(value: number) {
       </div>
       <aside class="geo-ranking">
         <NEmpty v-if="ranking.length === 0" description="暂无地理统计" />
-        <div v-for="item in ranking" v-else :key="item.code || item.name" class="rank-row">
-          <span>{{ item.name }}</span>
+        <div v-for="item in displayRanking" v-else :key="item.code || item.name" class="rank-row">
+          <span>{{ item.displayName }}</span>
           <strong>{{ formatNumber(item.count) }}</strong>
           <NProgress type="line" :show-indicator="false" :percentage="Math.min(100, item.count)" />
         </div>
@@ -240,9 +560,19 @@ function formatNumber(value: number) {
   grid-column: 1 / -1;
 }
 
-@media (max-width: 980px) {
-  .panel-heading,
+@media (max-width: 1360px) {
   .geo-content {
+    grid-template-columns: 1fr;
+  }
+
+  .geo-ranking {
+    align-content: start;
+    min-height: auto;
+  }
+}
+
+@media (max-width: 980px) {
+  .panel-heading {
     grid-template-columns: 1fr;
   }
 
