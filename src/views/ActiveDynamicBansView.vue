@@ -99,6 +99,14 @@ function confirmClear(row: DynamicBan) {
   })
 }
 
+function statusFilterValue() {
+  return bans.filters.status || null
+}
+
+function updateStatusFilter(value: string | number | null) {
+  bans.filters.status = value == null ? "" : String(value)
+}
+
 async function applyFilters() {
   await bans.refresh()
 }
@@ -124,9 +132,24 @@ async function resetFilters() {
 
     <section class="section section-pad">
       <div class="toolbar query-toolbar">
-        <NInput v-model:value="bans.filters.application_id" placeholder="应用 ID" clearable />
-        <NInput v-model:value="bans.filters.client_ip" placeholder="来源 IP" clearable />
-        <NSelect v-model:value="bans.filters.status" :options="statusOptions" clearable placeholder="状态" />
+        <div class="query-field">
+          <span class="query-label">应用 ID</span>
+          <NInput v-model:value="bans.filters.application_id" placeholder="输入应用 ID" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">来源 IP</span>
+          <NInput v-model:value="bans.filters.client_ip" placeholder="输入来源 IP" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">封禁状态</span>
+          <NSelect
+            :value="statusFilterValue()"
+            :options="statusOptions"
+            clearable
+            placeholder="选择状态"
+            @update:value="updateStatusFilter"
+          />
+        </div>
         <NButton type="primary" @click="applyFilters">查询</NButton>
         <NButton @click="resetFilters">重置</NButton>
       </div>

@@ -23,6 +23,8 @@ const filterKeys = [
   "trigger_source"
 ] as const
 
+type FilterKey = typeof filterKeys[number]
+
 const filters = reactive(Object.fromEntries(filterKeys.map((key) => [key, queryString(key)])) as Record<typeof filterKeys[number], string>)
 const timeRange = shallowRef<[number, number] | null>(initialTimeRange())
 
@@ -111,6 +113,14 @@ async function resetFilters() {
 function queryString(key: string) {
   const value = route.query[key]
   return Array.isArray(value) ? value[0] ?? "" : String(value ?? "")
+}
+
+function selectFilterValue(key: FilterKey) {
+  return filters[key] || null
+}
+
+function updateSelectFilter(key: FilterKey, value: string | number | null) {
+  filters[key] = value == null ? "" : String(value)
 }
 
 function initialTimeRange() {
@@ -246,18 +256,84 @@ function moduleRoute(module: string) {
 
     <section class="section section-pad">
       <div class="toolbar query-toolbar">
-        <NInput v-model:value="filters.application_id" placeholder="应用 ID" clearable />
-        <NInput v-model:value="filters.listener_port" placeholder="监听端口" clearable />
-        <NSelect v-model:value="filters.scheme" :options="schemeOptions" clearable placeholder="协议" />
-        <NInput v-model:value="filters.host" class="query-field-wide" placeholder="Host" clearable />
-        <NInput v-model:value="filters.client_ip" placeholder="来源 IP" clearable />
-        <NInput v-model:value="filters.uri" class="query-field-wide" placeholder="URI" clearable />
-        <NInput v-model:value="filters.status" placeholder="状态码" clearable />
-        <NSelect v-model:value="filters.disposition" :options="dispositionOptions" clearable placeholder="处置" />
-        <NInput v-model:value="filters.module" placeholder="模块" clearable />
-        <NSelect v-model:value="filters.action" :options="actionOptions" clearable placeholder="动作" />
-        <NSelect v-model:value="filters.trigger_source" :options="sourceOptions" clearable placeholder="触发来源" />
-        <NDatePicker v-model:value="timeRange" class="query-time-range" type="datetimerange" clearable />
+        <div class="query-field">
+          <span class="query-label">应用 ID</span>
+          <NInput v-model:value="filters.application_id" placeholder="输入应用 ID" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">监听端口</span>
+          <NInput v-model:value="filters.listener_port" placeholder="输入监听端口" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">访问协议</span>
+          <NSelect
+            :value="selectFilterValue('scheme')"
+            :options="schemeOptions"
+            clearable
+            placeholder="选择访问协议"
+            @update:value="updateSelectFilter('scheme', $event)"
+          />
+        </div>
+        <div class="query-field query-field-wide">
+          <span class="query-label">Host</span>
+          <NInput v-model:value="filters.host" placeholder="输入 Host" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">来源 IP</span>
+          <NInput v-model:value="filters.client_ip" placeholder="输入来源 IP" clearable />
+        </div>
+        <div class="query-field query-field-wide">
+          <span class="query-label">请求 URI</span>
+          <NInput v-model:value="filters.uri" placeholder="输入请求 URI" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">状态码</span>
+          <NInput v-model:value="filters.status" placeholder="输入状态码" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">处置结果</span>
+          <NSelect
+            :value="selectFilterValue('disposition')"
+            :options="dispositionOptions"
+            clearable
+            placeholder="选择处置结果"
+            @update:value="updateSelectFilter('disposition', $event)"
+          />
+        </div>
+        <div class="query-field">
+          <span class="query-label">防护模块</span>
+          <NInput v-model:value="filters.module" placeholder="输入防护模块" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">执行动作</span>
+          <NSelect
+            :value="selectFilterValue('action')"
+            :options="actionOptions"
+            clearable
+            placeholder="选择执行动作"
+            @update:value="updateSelectFilter('action', $event)"
+          />
+        </div>
+        <div class="query-field">
+          <span class="query-label">触发来源</span>
+          <NSelect
+            :value="selectFilterValue('trigger_source')"
+            :options="sourceOptions"
+            clearable
+            placeholder="选择触发来源"
+            @update:value="updateSelectFilter('trigger_source', $event)"
+          />
+        </div>
+        <div class="query-field query-time-range">
+          <span class="query-label">时间范围</span>
+          <NDatePicker
+            v-model:value="timeRange"
+            type="datetimerange"
+            clearable
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+          />
+        </div>
         <NButton type="primary" @click="searchRecords">查询</NButton>
         <NButton @click="resetFilters">重置</NButton>
       </div>

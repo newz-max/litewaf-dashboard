@@ -24,6 +24,8 @@ const filterKeys = [
   "min_score"
 ] as const
 
+type FilterKey = typeof filterKeys[number]
+
 const filters = reactive(Object.fromEntries(filterKeys.map((key) => [key, queryString(key)])) as Record<typeof filterKeys[number], string>)
 
 const logsResource = useApiResource(() => getAttackLogs(cleanFilters()))
@@ -93,6 +95,14 @@ function queryString(key: string) {
   return Array.isArray(value) ? value[0] ?? "" : String(value ?? "")
 }
 
+function selectFilterValue(key: FilterKey) {
+  return filters[key] || null
+}
+
+function updateSelectFilter(key: FilterKey, value: string | number | null) {
+  filters[key] = value == null ? "" : String(value)
+}
+
 function moduleRoute(module: string) {
   const routes: Record<string, string> = {
     "cc-protection": "/cc-protection",
@@ -119,120 +129,168 @@ function moduleRoute(module: string) {
 
     <section class="section section-pad">
       <div class="toolbar query-toolbar">
-        <NInput v-model:value="filters.application_id" placeholder="应用 ID" clearable />
-        <NInput v-model:value="filters.client_ip" placeholder="来源 IP" clearable />
-        <NInput v-model:value="filters.rule_id" placeholder="规则 ID" clearable />
-        <NSelect
-          v-model:value="filters.event_type"
-          clearable
-          placeholder="事件类型"
-          :options="[
-            { label: '规则', value: 'rule' },
-            { label: 'IP 黑白名单', value: 'ip-access-list' },
-            { label: 'CC 防护兼容事件', value: 'rate-limit' },
-            { label: '评分阈值', value: 'score-threshold' },
-            { label: '请求体检测', value: 'body-inspection' },
-            { label: '上传检测', value: 'upload-inspection' },
-            { label: '动态封禁', value: 'dynamic-ban' }
-          ]"
-        />
-        <NSelect
-          v-model:value="filters.module"
-          clearable
-          placeholder="模块"
-          :options="[
-            { label: '攻击防护', value: 'attack-protection' },
-            { label: 'IP 黑白名单', value: 'ip-access-list' },
-            { label: 'CC 防护', value: 'cc-protection' },
-            { label: '访问控制', value: 'access-control' },
-            { label: '上传防护', value: 'upload-protection' },
-            { label: 'Bot / 人机验证', value: 'bot-protection' },
-            { label: '动态防护', value: 'dynamic-protection' }
-          ]"
-        />
-        <NSelect
-          v-model:value="filters.attack_type"
-          clearable
-          placeholder="攻击类型"
-          :options="[
-            { label: 'SQL 注入', value: 'sqli' },
-            { label: 'XSS', value: 'xss' },
-            { label: 'RCE', value: 'rce' },
-            { label: '路径穿越', value: 'path-traversal' }
-          ]"
-        />
-        <NSelect
-          v-model:value="filters.advanced_target"
-          clearable
-          placeholder="高级目标"
-          :options="[
-            { label: 'Body', value: 'body' },
-            { label: 'JSON Body', value: 'body_json' },
-            { label: '上传文件名', value: 'upload_filename' },
-            { label: '上传扩展名', value: 'upload_extension' },
-            { label: '上传 MIME', value: 'upload_mime' },
-            { label: '上传大小', value: 'upload_size' }
-          ]"
-        />
-        <NSelect
-          v-model:value="filters.challenge_result"
-          clearable
-          placeholder="挑战结果"
-          :options="[
-            { label: '已发起', value: 'issued' },
-            { label: '已通过', value: 'passed' },
-            { label: '失败', value: 'failed' }
-          ]"
-        />
-        <NSelect
-          v-model:value="filters.bot_result"
-          clearable
-          placeholder="Bot 结果"
-          :options="[
-            { label: 'Captcha 发放', value: 'captcha-issued' },
-            { label: 'Captcha 通过', value: 'captcha-passed' },
-            { label: 'Captcha 失败', value: 'captcha-failed' },
-            { label: '行为评分通过', value: 'behavior-pass' },
-            { label: '搜索引擎绕过', value: 'search-engine-bypass' },
-            { label: '设备不匹配', value: 'device-mismatch' }
-          ]"
-        />
-        <NSelect
-          v-model:value="filters.dynamic_result"
-          clearable
-          placeholder="动态结果"
-          :options="[
-            { label: '令牌发放', value: 'token-issued' },
-            { label: '令牌通过', value: 'token-passed' },
-            { label: '令牌失败', value: 'token-failed' },
-            { label: '页面已注入', value: 'mutation-applied' },
-            { label: '页面跳过', value: 'mutation-skipped' },
-            { label: '已准入', value: 'queue-admitted' },
-            { label: '已排队', value: 'queue-rejected' }
-          ]"
-        />
-        <NInput v-model:value="filters.min_score" placeholder="最低分数" clearable />
-        <NSelect
-          v-model:value="filters.action"
-          clearable
-          placeholder="动作"
-          :options="[
-            { label: '阻断', value: 'block' },
-            { label: '观察', value: 'log-only' },
-            { label: '放行', value: 'allow' }
-          ]"
-        />
-        <NSelect
-          v-model:value="filters.disposition"
-          clearable
-          placeholder="处置"
-          :options="[
-            { label: '已阻断', value: 'blocked' },
-            { label: '已限流', value: 'rate-limited' },
-            { label: '已观察', value: 'observed' },
-            { label: '已拒绝', value: 'rejected' }
-          ]"
-        />
+        <div class="query-field">
+          <span class="query-label">应用 ID</span>
+          <NInput v-model:value="filters.application_id" placeholder="输入应用 ID" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">来源 IP</span>
+          <NInput v-model:value="filters.client_ip" placeholder="输入来源 IP" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">规则 ID</span>
+          <NInput v-model:value="filters.rule_id" placeholder="输入规则 ID" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">事件类型</span>
+          <NSelect
+            :value="selectFilterValue('event_type')"
+            clearable
+            placeholder="选择事件类型"
+            @update:value="updateSelectFilter('event_type', $event)"
+            :options="[
+              { label: '规则', value: 'rule' },
+              { label: 'IP 黑白名单', value: 'ip-access-list' },
+              { label: 'CC 防护兼容事件', value: 'rate-limit' },
+              { label: '评分阈值', value: 'score-threshold' },
+              { label: '请求体检测', value: 'body-inspection' },
+              { label: '上传检测', value: 'upload-inspection' },
+              { label: '动态封禁', value: 'dynamic-ban' }
+            ]"
+          />
+        </div>
+        <div class="query-field">
+          <span class="query-label">防护模块</span>
+          <NSelect
+            :value="selectFilterValue('module')"
+            clearable
+            placeholder="选择防护模块"
+            @update:value="updateSelectFilter('module', $event)"
+            :options="[
+              { label: '攻击防护', value: 'attack-protection' },
+              { label: 'IP 黑白名单', value: 'ip-access-list' },
+              { label: 'CC 防护', value: 'cc-protection' },
+              { label: '访问控制', value: 'access-control' },
+              { label: '上传防护', value: 'upload-protection' },
+              { label: 'Bot / 人机验证', value: 'bot-protection' },
+              { label: '动态防护', value: 'dynamic-protection' }
+            ]"
+          />
+        </div>
+        <div class="query-field">
+          <span class="query-label">攻击类型</span>
+          <NSelect
+            :value="selectFilterValue('attack_type')"
+            clearable
+            placeholder="选择攻击类型"
+            @update:value="updateSelectFilter('attack_type', $event)"
+            :options="[
+              { label: 'SQL 注入', value: 'sqli' },
+              { label: 'XSS', value: 'xss' },
+              { label: 'RCE', value: 'rce' },
+              { label: '路径穿越', value: 'path-traversal' }
+            ]"
+          />
+        </div>
+        <div class="query-field">
+          <span class="query-label">高级检测目标</span>
+          <NSelect
+            :value="selectFilterValue('advanced_target')"
+            clearable
+            placeholder="选择高级检测目标"
+            @update:value="updateSelectFilter('advanced_target', $event)"
+            :options="[
+              { label: 'Body', value: 'body' },
+              { label: 'JSON Body', value: 'body_json' },
+              { label: '上传文件名', value: 'upload_filename' },
+              { label: '上传扩展名', value: 'upload_extension' },
+              { label: '上传 MIME', value: 'upload_mime' },
+              { label: '上传大小', value: 'upload_size' }
+            ]"
+          />
+        </div>
+        <div class="query-field">
+          <span class="query-label">挑战结果</span>
+          <NSelect
+            :value="selectFilterValue('challenge_result')"
+            clearable
+            placeholder="选择挑战结果"
+            @update:value="updateSelectFilter('challenge_result', $event)"
+            :options="[
+              { label: '已发起', value: 'issued' },
+              { label: '已通过', value: 'passed' },
+              { label: '失败', value: 'failed' }
+            ]"
+          />
+        </div>
+        <div class="query-field">
+          <span class="query-label">Bot 验证结果</span>
+          <NSelect
+            :value="selectFilterValue('bot_result')"
+            clearable
+            placeholder="选择 Bot 验证结果"
+            @update:value="updateSelectFilter('bot_result', $event)"
+            :options="[
+              { label: 'Captcha 发放', value: 'captcha-issued' },
+              { label: 'Captcha 通过', value: 'captcha-passed' },
+              { label: 'Captcha 失败', value: 'captcha-failed' },
+              { label: '行为评分通过', value: 'behavior-pass' },
+              { label: '搜索引擎绕过', value: 'search-engine-bypass' },
+              { label: '设备不匹配', value: 'device-mismatch' }
+            ]"
+          />
+        </div>
+        <div class="query-field">
+          <span class="query-label">动态防护结果</span>
+          <NSelect
+            :value="selectFilterValue('dynamic_result')"
+            clearable
+            placeholder="选择动态防护结果"
+            @update:value="updateSelectFilter('dynamic_result', $event)"
+            :options="[
+              { label: '令牌发放', value: 'token-issued' },
+              { label: '令牌通过', value: 'token-passed' },
+              { label: '令牌失败', value: 'token-failed' },
+              { label: '页面已注入', value: 'mutation-applied' },
+              { label: '页面跳过', value: 'mutation-skipped' },
+              { label: '已准入', value: 'queue-admitted' },
+              { label: '已排队', value: 'queue-rejected' }
+            ]"
+          />
+        </div>
+        <div class="query-field">
+          <span class="query-label">最低分数</span>
+          <NInput v-model:value="filters.min_score" placeholder="输入最低分数" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">执行动作</span>
+          <NSelect
+            :value="selectFilterValue('action')"
+            clearable
+            placeholder="选择执行动作"
+            @update:value="updateSelectFilter('action', $event)"
+            :options="[
+              { label: '阻断', value: 'block' },
+              { label: '观察', value: 'log-only' },
+              { label: '放行', value: 'allow' }
+            ]"
+          />
+        </div>
+        <div class="query-field">
+          <span class="query-label">处置结果</span>
+          <NSelect
+            :value="selectFilterValue('disposition')"
+            clearable
+            placeholder="选择处置结果"
+            @update:value="updateSelectFilter('disposition', $event)"
+            :options="[
+              { label: '已阻断', value: 'blocked' },
+              { label: '已限流', value: 'rate-limited' },
+              { label: '已观察', value: 'observed' },
+              { label: '已拒绝', value: 'rejected' }
+            ]"
+          />
+        </div>
         <NButton type="primary" @click="searchLogs">查询</NButton>
       </div>
 

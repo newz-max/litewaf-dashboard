@@ -147,8 +147,9 @@ body {
   margin-bottom: 14px;
 }
 
-.query-toolbar > .n-input,
-.query-toolbar > .n-select {
+.query-toolbar > .query-field {
+  display: grid;
+  gap: 6px;
   flex: 0 1 180px;
   min-width: 160px;
   max-width: 260px;
@@ -166,8 +167,22 @@ body {
   max-width: 440px;
 }
 
+.query-field > .n-input,
+.query-field > .n-select,
+.query-field > .n-date-picker {
+  width: 100%;
+}
+
+.query-label {
+  color: var(--lw-text-muted);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
 .query-toolbar > .n-button {
   flex: 0 0 auto;
+  align-self: end;
 }
 
 :root[data-density="compact"] .page-title {
@@ -205,9 +220,7 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .query-toolbar > .n-input,
-  .query-toolbar > .n-select,
-  .query-toolbar > .n-date-picker,
+  .query-toolbar > .query-field,
   .query-toolbar > .query-field-wide,
   .query-toolbar > .query-time-range {
     flex: 1 1 100%;

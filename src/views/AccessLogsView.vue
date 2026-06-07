@@ -13,6 +13,8 @@ const filters = reactive({
   disposition: ""
 })
 
+type SelectFilterKey = "method" | "disposition"
+
 const logsResource = useApiResource(() => getAccessLogs(cleanFilters()))
 const logs = computed(() => [...(logsResource.data.value ?? [])])
 
@@ -32,6 +34,14 @@ const columns = [
 function cleanFilters() {
   return Object.fromEntries(Object.entries(filters).filter(([, value]) => value.trim() !== ""))
 }
+
+function selectFilterValue(key: SelectFilterKey) {
+  return filters[key] || null
+}
+
+function updateSelectFilter(key: SelectFilterKey, value: string | number | null) {
+  filters[key] = value == null ? "" : String(value)
+}
 </script>
 
 <template>
@@ -46,33 +56,56 @@ function cleanFilters() {
 
     <section class="section section-pad">
       <div class="toolbar query-toolbar">
-        <NInput v-model:value="filters.application_id" placeholder="应用 ID" clearable />
-        <NInput v-model:value="filters.host" class="query-field-wide" placeholder="Host" clearable />
-        <NInput v-model:value="filters.client_ip" placeholder="来源 IP" clearable />
-        <NSelect
-          v-model:value="filters.method"
-          clearable
-          placeholder="方法"
-          :options="[
-            { label: 'GET', value: 'GET' },
-            { label: 'POST', value: 'POST' },
-            { label: 'PUT', value: 'PUT' },
-            { label: 'DELETE', value: 'DELETE' }
-          ]"
-        />
-        <NInput v-model:value="filters.uri" class="query-field-wide" placeholder="URI" clearable />
-        <NInput v-model:value="filters.status" placeholder="状态码" clearable />
-        <NSelect
-          v-model:value="filters.disposition"
-          clearable
-          placeholder="处置"
-          :options="[
-            { label: '已代理', value: 'proxied' },
-            { label: '已阻断', value: 'blocked' },
-            { label: '已限流', value: 'rate-limited' },
-            { label: '已拒绝', value: 'rejected' }
-          ]"
-        />
+        <div class="query-field">
+          <span class="query-label">应用 ID</span>
+          <NInput v-model:value="filters.application_id" placeholder="输入应用 ID" clearable />
+        </div>
+        <div class="query-field query-field-wide">
+          <span class="query-label">Host</span>
+          <NInput v-model:value="filters.host" placeholder="输入 Host" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">来源 IP</span>
+          <NInput v-model:value="filters.client_ip" placeholder="输入来源 IP" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">请求方法</span>
+          <NSelect
+            :value="selectFilterValue('method')"
+            clearable
+            placeholder="选择方法"
+            @update:value="updateSelectFilter('method', $event)"
+            :options="[
+              { label: 'GET', value: 'GET' },
+              { label: 'POST', value: 'POST' },
+              { label: 'PUT', value: 'PUT' },
+              { label: 'DELETE', value: 'DELETE' }
+            ]"
+          />
+        </div>
+        <div class="query-field query-field-wide">
+          <span class="query-label">URI</span>
+          <NInput v-model:value="filters.uri" placeholder="输入 URI" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">状态码</span>
+          <NInput v-model:value="filters.status" placeholder="输入状态码" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">处置结果</span>
+          <NSelect
+            :value="selectFilterValue('disposition')"
+            clearable
+            placeholder="选择处置"
+            @update:value="updateSelectFilter('disposition', $event)"
+            :options="[
+              { label: '已代理', value: 'proxied' },
+              { label: '已阻断', value: 'blocked' },
+              { label: '已限流', value: 'rate-limited' },
+              { label: '已拒绝', value: 'rejected' }
+            ]"
+          />
+        </div>
         <NButton type="primary" @click="logsResource.refresh">查询</NButton>
       </div>
 

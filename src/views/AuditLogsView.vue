@@ -26,6 +26,14 @@ const columns = [
 function cleanFilters() {
   return Object.fromEntries(Object.entries(filters).filter(([, value]) => value.trim() !== ""))
 }
+
+function selectResultValue() {
+  return filters.result || null
+}
+
+function updateResultFilter(value: string | number | null) {
+  filters.result = value == null ? "" : String(value)
+}
 </script>
 
 <template>
@@ -40,17 +48,27 @@ function cleanFilters() {
 
     <section class="section section-pad">
       <div class="toolbar query-toolbar">
-        <NInput v-model:value="filters.action" placeholder="动作" clearable />
-        <NInput v-model:value="filters.resource_type" placeholder="资源类型" clearable />
-        <NSelect
-          v-model:value="filters.result"
-          clearable
-          placeholder="结果"
-          :options="[
-            { label: '成功', value: 'success' },
-            { label: '失败', value: 'failure' }
-          ]"
-        />
+        <div class="query-field">
+          <span class="query-label">操作动作</span>
+          <NInput v-model:value="filters.action" placeholder="输入动作" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">资源类型</span>
+          <NInput v-model:value="filters.resource_type" placeholder="输入资源类型" clearable />
+        </div>
+        <div class="query-field">
+          <span class="query-label">操作结果</span>
+          <NSelect
+            :value="selectResultValue()"
+            clearable
+            placeholder="选择结果"
+            @update:value="updateResultFilter"
+            :options="[
+              { label: '成功', value: 'success' },
+              { label: '失败', value: 'failure' }
+            ]"
+          />
+        </div>
         <NButton type="primary" @click="auditResource.refresh">查询</NButton>
       </div>
 
