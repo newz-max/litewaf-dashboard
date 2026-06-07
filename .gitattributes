@@ -1,0 +1,4 @@
+/.gitattributes text eol=lf
+VERSION text eol=lf
+package*.json text eol=lf
+.github/workflows/*.yml text eol=lf
