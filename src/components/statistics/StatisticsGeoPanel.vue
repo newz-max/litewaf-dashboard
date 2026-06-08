@@ -6,7 +6,7 @@ import { CanvasRenderer } from "echarts/renderers"
 import { MapChart, ScatterChart } from "echarts/charts"
 import { GeoComponent, TooltipComponent, VisualMapComponent } from "echarts/components"
 import "echarts-gl"
-import { whereAlpha3, whereCountry } from "iso-3166-1"
+import { whereAlpha2, whereAlpha3, whereCountry } from "iso-3166-1"
 import worldMap from "@geo-maps/countries-land-10km/map.geo.json"
 import chinaMap from "china-geojson/src/geojson/china.json"
 import type { GeoPoint, GeoRank, StatisticsGeoReport } from "@/api/litewaf"
@@ -91,6 +91,7 @@ const emit = defineEmits<{
 const themeStore = useThemeStore()
 const canUse3D = computed(() => props.scope === "world")
 const ranking = computed(() => props.geo?.ranking ?? [])
+const emptyDescription = computed(() => (props.geo?.diagnostics?.length ? "当前日志未包含可用地理字段" : "暂无地理统计"))
 const chartMapName = computed(() => (props.scope === "china" ? "litewaf-china" : "litewaf-world"))
 const activeRegions = computed(() => (props.scope === "china" ? chinaRegions : worldRegions))
 const chartData = computed(() => ranking.value.map((item) => toMapDatum(item, activeRegions.value)))
@@ -291,13 +292,18 @@ function toMapDatum(item: GeoRank, regions: readonly MapRegion[]): MapDatum {
 function findRegion(item: GeoRank, regions: readonly MapRegion[]) {
   const code = normalizeKey(item.code)
   const name = normalizeRegionName(item.name)
-  const countryCode = whereAlpha3(item.code)?.alpha3 ?? whereCountry(item.name)?.alpha3
+  const countryCode = findCountry(item)?.alpha3
   const normalizedCountryCode = countryCode ? normalizeKey(countryCode) : ""
   return (
     regions.find((region) => normalizeKey(region.code) === code) ??
     regions.find((region) => normalizedCountryCode && normalizeKey(region.code) === normalizedCountryCode) ??
     regions.find((region) => normalizeRegionName(region.name) === name)
   )
+}
+
+function findCountry(item: GeoRank) {
+  const code = item.code.trim()
+  return whereAlpha3(code) ?? whereAlpha2(code) ?? whereCountry(item.name)
 }
 
 function normalizeRegionName(value: string) {
@@ -470,7 +476,7 @@ function withAlpha(color: string, alpha: number) {
         <VChart class="map-chart" :option="chartOption" :loading="loading" autoresize />
       </div>
       <aside class="geo-ranking" :class="{ 'geo-ranking--empty': ranking.length === 0 }">
-        <NEmpty v-if="ranking.length === 0" description="暂无地理统计" />
+        <NEmpty v-if="ranking.length === 0" :description="emptyDescription" />
         <div v-for="item in displayRanking" v-else :key="item.code || item.name" class="rank-row">
           <span>{{ item.displayName }}</span>
           <strong>{{ formatNumber(item.count) }}</strong>
