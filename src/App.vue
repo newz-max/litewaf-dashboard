@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { dateZhCN, zhCN } from "naive-ui"
+import ApiErrorNotifier from "@/components/system/ApiErrorNotifier.vue"
 import { useThemeStore } from "@/stores/theme"
 
 const themeStore = useThemeStore()
@@ -17,6 +18,7 @@ const themeStore = useThemeStore()
       <NDialogProvider>
         <NNotificationProvider>
           <NMessageProvider>
+            <ApiErrorNotifier />
             <RouterView />
           </NMessageProvider>
         </NNotificationProvider>

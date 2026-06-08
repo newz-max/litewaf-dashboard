@@ -1,4 +1,5 @@
 import axios from "axios"
+import { toApiRequestError } from "@/api/errors"
 
 let authTokenGetter: (() => string) | undefined
 let unauthorizedHandler: (() => void) | undefined
@@ -33,6 +34,6 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       unauthorizedHandler?.()
     }
-    return Promise.reject(error)
+    return Promise.reject(toApiRequestError(error))
   }
 )

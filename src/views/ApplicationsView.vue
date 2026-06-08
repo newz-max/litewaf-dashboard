@@ -219,14 +219,18 @@ async function removeApplication(id: number) {
 }
 
 function normalizedApplicationInput(): ApplicationInput {
+  const hosts = form.hosts.filter((host) => host.host.trim())
+  const primaryHostIndex = Math.max(
+    0,
+    hosts.findIndex((host) => host.is_primary)
+  )
+
   return {
     name: form.name.trim(),
     mode: form.mode,
     enabled: form.enabled,
     description: form.description?.trim(),
-    hosts: form.hosts
-      .filter((host) => host.host.trim())
-      .map((host, index) => ({ host: host.host.trim(), is_primary: index === 0 || host.is_primary })),
+    hosts: hosts.map((host, index) => ({ host: host.host.trim(), is_primary: index === primaryHostIndex })),
     listeners: form.listeners.map((listener) => ({
       port: Number(listener.port),
       protocol: listener.protocol,
@@ -248,12 +252,27 @@ function addHost() {
   form.hosts.push({ host: "", is_primary: false })
 }
 
+function updateHostPrimary(index: number, value: boolean) {
+  if (value) {
+    form.hosts.forEach((host, hostIndex) => {
+      host.is_primary = hostIndex === index
+    })
+    return
+  }
+  form.hosts[index].is_primary = false
+  if (!form.hosts.some((host) => host.is_primary)) {
+    form.hosts[0].is_primary = true
+  }
+}
+
 function removeHost(index: number) {
   form.hosts.splice(index, 1)
   if (form.hosts.length === 0) {
     addHost()
   }
-  form.hosts[0].is_primary = true
+  if (!form.hosts.some((host) => host.is_primary)) {
+    form.hosts[0].is_primary = true
+  }
 }
 
 function addListener() {
@@ -405,7 +424,7 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
             </div>
             <NSpace v-for="(host, index) in form.hosts" :key="index" align="center" class="row-line">
               <NInput v-model:value="host.host" placeholder="example.local" />
-              <NSwitch v-model:value="host.is_primary" :disabled="index === 0" />
+              <NSwitch v-model:value="host.is_primary" @update:value="(value) => updateHostPrimary(index, value)" />
               <NButton size="small" quaternary @click="removeHost(index)">删除</NButton>
             </NSpace>
           </div>

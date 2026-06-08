@@ -3,6 +3,7 @@ import { reactive, shallowRef } from "vue"
 import { useMessage } from "naive-ui"
 import { useRoute, useRouter } from "vue-router"
 import { FlashOutline, PulseOutline, ShieldCheckmarkOutline } from "@vicons/ionicons5"
+import { extractApiErrorMessage } from "@/api/errors"
 import { useAuthStore } from "@/stores/auth"
 
 const authStore = useAuthStore()
@@ -21,8 +22,8 @@ async function submit() {
     await authStore.signIn(form.username, form.password)
     const redirect = typeof route.query.redirect === "string" ? route.query.redirect : "/"
     await router.push(redirect)
-  } catch {
-    message.error("登录失败")
+  } catch (error) {
+    message.error(extractApiErrorMessage(error, "登录失败"))
   } finally {
     loading.value = false
   }
