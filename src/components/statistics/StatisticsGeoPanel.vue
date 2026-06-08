@@ -91,7 +91,7 @@ const emit = defineEmits<{
 const themeStore = useThemeStore()
 const canUse3D = computed(() => props.scope === "world")
 const ranking = computed(() => props.geo?.ranking ?? [])
-const emptyDescription = computed(() => (props.geo?.diagnostics?.length ? "当前日志未包含可用地理字段" : "暂无地理统计"))
+const emptyDescription = computed(() => (props.geo?.diagnostics?.length ? "GeoIP 未解析出可用地理数据" : "暂无地理统计"))
 const chartMapName = computed(() => (props.scope === "china" ? "litewaf-china" : "litewaf-world"))
 const activeRegions = computed(() => (props.scope === "china" ? chinaRegions : worldRegions))
 const chartData = computed(() => ranking.value.map((item) => toMapDatum(item, activeRegions.value)))

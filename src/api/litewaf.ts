@@ -271,8 +271,13 @@ export interface AccessLog {
   geo_country?: string
   geo_region?: string
   geo_city?: string
+  geo_district?: string
   geo_longitude?: number
   geo_latitude?: number
+  geo_resolved?: boolean
+  geo_source?: string
+  geo_source_version?: string
+  geo_unresolved_reason?: string
   disposition: string
   reason_code?: string
   reason?: string
