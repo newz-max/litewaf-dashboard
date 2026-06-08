@@ -424,7 +424,7 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
             </div>
             <NSpace v-for="(host, index) in form.hosts" :key="index" align="center" class="row-line">
               <NInput v-model:value="host.host" placeholder="example.local" />
-              <NSwitch v-model:value="host.is_primary" @update:value="(value) => updateHostPrimary(index, value)" />
+              <NSwitch v-model:value="host.is_primary" @update:value="updateHostPrimary(index, $event)" />
               <NButton size="small" quaternary @click="removeHost(index)">删除</NButton>
             </NSpace>
           </div>
