@@ -1,8 +1,10 @@
 node_modules/
 dist/
+.tmp/
 .env
 .env.local
 AGENTS.md
+CLAUDE.md
 src/auto-imports.d.ts
 src/components.d.ts
 .idea/
