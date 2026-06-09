@@ -5,7 +5,7 @@ import { use } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import { BarChart, PieChart } from "echarts/charts"
 import { GridComponent, LegendComponent, TooltipComponent } from "echarts/components"
-import { getApplications, getObservabilitySummary, getRules, type SummaryCount } from "@/api/litewaf"
+import { getApplications, getObservabilitySummary, getRules, type SummaryCount, type TimeSeriesPoint } from "@/api/litewaf"
 import OperationsCountList from "@/components/operations/OperationsCountList.vue"
 import PostureMetricCard, { type PostureMetric } from "@/components/operations/PostureMetricCard.vue"
 import { useApiResource } from "@/composables/useApiResource"
@@ -50,24 +50,8 @@ function sumCounts(items: readonly SummaryCount[]) {
   return items.reduce((total, item) => total + item.count, 0)
 }
 
-function trendFromValues(seed: readonly number[]) {
-  const values = seed.length > 0 ? seed : [0]
-  const total = values.reduce((sum, value) => sum + Math.max(value, 0), 0)
-  if (total <= 0) {
-    return [0, 0, 0, 0, 0, 0, 0]
-  }
-
-  const normalized = [
-    values[0] ?? 0,
-    Math.round(total * 0.18),
-    values[1] ?? Math.round(total * 0.3),
-    Math.round(total * 0.42),
-    values[2] ?? Math.round(total * 0.56),
-    values[3] ?? Math.round(total * 0.68),
-    total
-  ]
-
-  return normalized.map((value) => Math.max(value, 0))
+function normalizeTrend(points: readonly TimeSeriesPoint[] | undefined) {
+  return (points ?? []).map((point) => ({ time: point.time, value: point.value }))
 }
 
 const applicationCount = computed(() => applicationsResource.data.value?.length ?? 0)
@@ -86,6 +70,9 @@ const uploadProtectionTotal = computed(() => sumCounts(summary.value?.upload_pro
 const botProtectionTotal = computed(() => sumCounts(summary.value?.bot_protection ?? []))
 const attackProtectionTotal = computed(() => sumCounts(summary.value?.attack_protection ?? []))
 const dynamicProtectionTotal = computed(() => sumCounts(summary.value?.dynamic_protection ?? []))
+const requestTrend = computed(() => normalizeTrend(summary.value?.request_trend))
+const blockedTrend = computed(() => normalizeTrend(summary.value?.blocked_trend))
+const wafMatchTrend = computed(() => normalizeTrend(summary.value?.waf_match_trend))
 
 const hasSummaryData = computed(
   () =>
@@ -119,8 +106,7 @@ const primaryMetrics = computed<PostureMetric[]>(() => [
     note: "来自访问日志汇总",
     tone: "info",
     featured: true,
-    featuredSize: "large",
-    trend: trendFromValues([rateLimited.value, wafMatches.value, blockedRequests.value, totalRequests.value])
+    trend: requestTrend.value
   },
   {
     label: "拦截/拒绝",
@@ -128,7 +114,7 @@ const primaryMetrics = computed<PostureMetric[]>(() => [
     note: "阻断、拒绝和挑战失败等处置",
     tone: blockedRequests.value > 0 ? "danger" : "neutral",
     featured: true,
-    trend: trendFromValues([scoreBlocks.value, dynamicBans.value, blockedRequests.value])
+    trend: blockedTrend.value
   },
   {
     label: "WAF 命中",
@@ -136,15 +122,14 @@ const primaryMetrics = computed<PostureMetric[]>(() => [
     note: "规则、模块和控制命中",
     tone: wafMatches.value > 0 ? "warning" : "neutral",
     featured: true,
-    trend: trendFromValues([bodyDetections.value, uploadDetections.value, attackProtectionTotal.value, wafMatches.value])
+    trend: wafMatchTrend.value
   },
   {
     label: "防护应用",
     value: applicationCount.value,
     note: "来自控制面应用接口",
     tone: applicationCount.value > 0 ? "success" : "neutral",
-    featured: true,
-    trend: trendFromValues([ruleCount.value, applicationCount.value])
+    featured: false
   }
 ])
 

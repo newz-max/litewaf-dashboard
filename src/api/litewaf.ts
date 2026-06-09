@@ -339,6 +339,9 @@ export interface ObservabilitySummary {
   upload_protection: SummaryCount[]
   bot_protection: SummaryCount[]
   dynamic_protection: SummaryCount[]
+  request_trend: TimeSeriesPoint[]
+  blocked_trend: TimeSeriesPoint[]
+  waf_match_trend: TimeSeriesPoint[]
 }
 
 export interface SummaryCount {

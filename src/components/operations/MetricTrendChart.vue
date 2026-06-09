@@ -9,8 +9,13 @@ import { useThemeStore } from "@/stores/theme"
 
 use([CanvasRenderer, LineChart, GridComponent, TooltipComponent])
 
+interface MetricTrendPoint {
+  time: string
+  value: number
+}
+
 const props = defineProps<{
-  points: readonly number[]
+  points: readonly (number | MetricTrendPoint)[]
   tone?: "neutral" | "success" | "warning" | "danger" | "info"
   size?: "normal" | "large"
 }>()
@@ -18,7 +23,21 @@ const props = defineProps<{
 const themeStore = useThemeStore()
 const sourcePoints = computed(() => {
   const points = props.points.length > 1 ? props.points : [0, props.points[0] ?? 0]
-  return points.map((value) => Math.max(value, 0))
+  return points.map((point) => {
+    const value = typeof point === "number" ? point : point.value
+    return Math.max(value, 0)
+  })
+})
+const formatTrendTime = (value: string) => {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+  return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })
+}
+const sourceLabels = computed(() => {
+  const points = props.points.length > 1 ? props.points : [undefined, props.points[0]]
+  return points.map((point) => (point && typeof point !== "number" ? formatTrendTime(point.time) : ""))
 })
 const lineColor = computed(() => {
   if (props.tone === "success") {
@@ -35,7 +54,9 @@ const lineColor = computed(() => {
   }
   return themeStore.cssVars["--lw-accent"] || themeStore.chartPalette[0]
 })
-const axisLabels = computed(() => sourcePoints.value.map((_, index) => `T-${sourcePoints.value.length - index - 1}`))
+const axisLabels = computed(() =>
+  sourcePoints.value.map((_, index) => sourceLabels.value[index] || `#${index + 1}`)
+)
 const grid = computed(() =>
   props.size === "large"
     ? { left: 10, right: 10, top: 18, bottom: 18, containLabel: false }

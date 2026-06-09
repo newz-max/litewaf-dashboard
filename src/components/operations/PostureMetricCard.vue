@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue"
+import type { TimeSeriesPoint } from "@/api/litewaf"
 import MetricTrendChart from "@/components/operations/MetricTrendChart.vue"
 
 export interface PostureMetric {
@@ -9,7 +10,7 @@ export interface PostureMetric {
   tone?: "neutral" | "success" | "warning" | "danger" | "info"
   featured?: boolean
   featuredSize?: "normal" | "large"
-  trend?: readonly number[]
+  trend?: readonly (number | TimeSeriesPoint)[]
 }
 
 const props = defineProps<{
@@ -20,10 +21,10 @@ const cardClass = computed(() => [
   "posture-metric-card",
   `posture-metric-card--${props.metric.tone ?? "neutral"}`,
   {
-    "posture-metric-card--featured": props.metric.featured,
-    "posture-metric-card--large": props.metric.featuredSize === "large"
+    "posture-metric-card--featured": props.metric.featured && props.metric.trend && props.metric.trend.length > 0
   }
 ])
+const hasTrend = computed(() => Boolean(props.metric.featured && props.metric.trend && props.metric.trend.length > 0))
 </script>
 
 <template>
@@ -31,7 +32,7 @@ const cardClass = computed(() => [
     <div class="metric-head">
       <div class="metric-label">{{ metric.label }}</div>
       <MetricTrendChart
-        v-if="metric.featured"
+        v-if="hasTrend"
         class="metric-sparkline"
         :points="metric.trend ?? []"
         :tone="metric.tone ?? 'neutral'"
@@ -65,13 +66,8 @@ const cardClass = computed(() => [
 }
 
 .posture-metric-card--featured {
-  min-height: 154px;
+  min-height: 178px;
   border-color: color-mix(in srgb, var(--metric-tone) 52%, var(--lw-border));
-}
-
-.posture-metric-card--large {
-  grid-column: span 2;
-  min-height: 224px;
 }
 
 .posture-metric-card--neutral {
@@ -95,15 +91,10 @@ const cardClass = computed(() => [
 }
 
 .metric-head {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   align-items: center;
   gap: 12px;
-}
-
-.posture-metric-card--large .metric-head {
-  display: grid;
-  grid-template-columns: minmax(0, 0.42fr) minmax(260px, 1fr);
-  align-items: stretch;
 }
 
 .metric-label {
@@ -127,35 +118,18 @@ const cardClass = computed(() => [
 }
 
 .metric-sparkline {
-  flex: 0 0 min(42%, 132px);
-  height: 54px;
+  width: 100%;
+  height: 84px;
   margin-left: auto;
 }
 
-.posture-metric-card--large .metric-sparkline {
-  width: 100%;
-  height: 142px;
-  min-width: 0;
-}
-
-@media (max-width: 1180px) {
-  .posture-metric-card--large {
-    grid-column: span 2;
-  }
-}
-
 @media (max-width: 760px) {
-  .posture-metric-card--large {
-    grid-column: auto;
-    min-height: 190px;
-  }
-
-  .posture-metric-card--large .metric-head {
+  .metric-head {
     grid-template-columns: 1fr;
   }
 
-  .posture-metric-card--large .metric-sparkline {
-    height: 112px;
+  .metric-sparkline {
+    height: 76px;
   }
 }
 </style>
