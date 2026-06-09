@@ -341,13 +341,22 @@ onBeforeUnmount(() => {
 <style scoped>
 .app-shell {
   height: 100vh;
-  background: var(--lw-bg);
+  background:
+    radial-gradient(circle at 54% -18%, rgba(20, 62, 148, 0.28), transparent 26%),
+    linear-gradient(180deg, #020916 0%, #010613 48%, #00040c 100%),
+    var(--lw-bg);
 }
 
 .app-sider {
+  border-right: 1px solid rgba(38, 92, 190, 0.42);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--lw-accent) 12%, transparent), transparent 240px),
+    linear-gradient(90deg, rgba(48, 94, 214, 0.32), transparent 4px),
+    radial-gradient(circle at 26% 0, rgba(47, 124, 255, 0.18), transparent 160px),
+    linear-gradient(180deg, #06183c 0%, #020b21 42%, #010817 100%),
     var(--lw-sider);
+  box-shadow:
+    inset -1px 0 0 rgba(77, 142, 255, 0.18),
+    12px 0 36px rgba(0, 0, 0, 0.22);
 }
 
 .brand {
@@ -363,11 +372,13 @@ onBeforeUnmount(() => {
   width: 40px;
   height: 40px;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--lw-accent) 55%, var(--lw-border));
-  border-radius: var(--lw-radius);
-  background: color-mix(in srgb, var(--lw-accent) 18%, var(--lw-panel));
-  color: var(--lw-accent-strong);
-  box-shadow: 0 10px 28px color-mix(in srgb, var(--lw-accent) 20%, transparent);
+  border: 1px solid rgba(32, 209, 255, 0.72);
+  border-radius: 9px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(22, 214, 196, 0.28), transparent 58%),
+    rgba(4, 24, 63, 0.9);
+  color: #21d4ff;
+  box-shadow: 0 0 24px rgba(47, 124, 255, 0.34);
 }
 
 .brand-text {
@@ -381,7 +392,7 @@ onBeforeUnmount(() => {
 }
 
 .brand-text span {
-  color: var(--lw-text-muted);
+  color: #9eb5d8;
   font-size: 12px;
 }
 
@@ -392,9 +403,9 @@ onBeforeUnmount(() => {
   height: 34px;
   margin: 0 12px 10px;
   padding: 0 12px;
-  border: 1px solid var(--lw-border);
+  border: 1px solid rgba(44, 125, 255, 0.52);
   border-radius: var(--lw-radius);
-  background: var(--lw-panel-muted);
+  background: rgba(5, 24, 59, 0.9);
   color: var(--lw-text-muted);
   font-size: 12px;
 }
@@ -423,7 +434,10 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   min-height: 66px;
   padding: 0 20px;
-  background: var(--lw-header);
+  border-bottom: 1px solid rgba(44, 125, 255, 0.28);
+  background:
+    linear-gradient(180deg, rgba(4, 18, 47, 0.95), rgba(2, 8, 22, 0.9)),
+    var(--lw-header);
   backdrop-filter: blur(16px);
 }
 
@@ -469,7 +483,10 @@ onBeforeUnmount(() => {
   height: calc(100vh - 66px);
   padding: var(--lw-content-padding);
   overflow: auto;
-  background: var(--lw-bg);
+  background:
+    radial-gradient(circle at 56% -8%, rgba(47, 124, 255, 0.12), transparent 24%),
+    linear-gradient(180deg, #020916 0%, #010613 42%, #00040c 100%),
+    var(--lw-bg);
 }
 
 @media (max-width: 860px) {

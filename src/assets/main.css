@@ -1,34 +1,34 @@
 :root {
   color-scheme: light;
-  --lw-bg: #eef2f3;
-  --lw-bg-elevated: #f8fbfb;
-  --lw-panel: #ffffff;
-  --lw-panel-muted: #f6f8f8;
-  --lw-border: #d9e1df;
-  --lw-border-strong: #aec0bc;
-  --lw-text: #10201d;
-  --lw-text-muted: #63736f;
-  --lw-text-subtle: #879591;
-  --lw-accent: #0f766e;
-  --lw-accent-strong: #0b4f4a;
-  --lw-success: #16a34a;
-  --lw-danger: #b42318;
-  --lw-warning: #b7791f;
-  --lw-info: #2563eb;
-  --lw-header: rgba(255, 255, 255, 0.86);
-  --lw-sider: #ffffff;
+  --lw-bg: #010613;
+  --lw-bg-elevated: #020b1f;
+  --lw-panel: #051738;
+  --lw-panel-muted: #071f49;
+  --lw-border: #1b56b8;
+  --lw-border-strong: #2c7dff;
+  --lw-text: #f3f8ff;
+  --lw-text-muted: #a9bade;
+  --lw-text-subtle: #7186b3;
+  --lw-accent: #2f7cff;
+  --lw-accent-strong: #70b4ff;
+  --lw-success: #16d6c4;
+  --lw-danger: #ff4f92;
+  --lw-warning: #fbbf24;
+  --lw-info: #2f7cff;
+  --lw-header: rgba(2, 8, 22, 0.9);
+  --lw-sider: #01081a;
   --lw-radius: 8px;
-  --lw-shadow: 0 18px 42px rgba(15, 35, 31, 0.08);
+  --lw-shadow: 0 18px 42px rgba(0, 48, 132, 0.16);
   --lw-density-y: 16px;
   --lw-content-padding: 20px;
-  --lw-chart-text: #10201d;
-  --lw-chart-grid: #d9e1df;
-  --lw-chart-1: #0f766e;
-  --lw-chart-2: #2563eb;
-  --lw-chart-3: #b7791f;
-  --lw-chart-4: #b42318;
-  --lw-chart-5: #6d5dfc;
-  --lw-chart-6: #0891b2;
+  --lw-chart-text: #f3f8ff;
+  --lw-chart-grid: #1b56b8;
+  --lw-chart-1: #2f7cff;
+  --lw-chart-2: #16d6c4;
+  --lw-chart-3: #ff7a2f;
+  --lw-chart-4: #ff4f92;
+  --lw-chart-5: #7c5cff;
+  --lw-chart-6: #5bc0ff;
 }
 
 :root[data-theme-mode="dark"] {
@@ -45,7 +45,11 @@ body,
 
 body {
   min-width: 320px;
-  background: var(--lw-bg);
+  background:
+    radial-gradient(circle at 62% -18%, rgba(22, 71, 164, 0.28), transparent 24%),
+    radial-gradient(circle at 94% 16%, rgba(0, 177, 255, 0.08), transparent 22%),
+    linear-gradient(180deg, #020916 0%, #010613 42%, #00040d 100%),
+    var(--lw-bg);
   color: var(--lw-text);
   font-family:
     "Microsoft YaHei",
@@ -76,8 +80,10 @@ body {
 
 .page-title {
   margin: 0;
+  color: var(--lw-text);
   font-size: 22px;
   font-weight: 700;
+  letter-spacing: 0;
 }
 
 .page-subtitle {
@@ -87,10 +93,34 @@ body {
 }
 
 .section {
-  border: 1px solid var(--lw-border);
-  border-radius: var(--lw-radius);
-  background: var(--lw-panel);
-  box-shadow: var(--lw-shadow);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(44, 125, 255, 0.46);
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 92% 0, rgba(47, 124, 255, 0.16), transparent 34%),
+    linear-gradient(145deg, rgba(8, 38, 92, 0.92), rgba(3, 16, 44, 0.96)),
+    var(--lw-panel);
+  box-shadow:
+    inset 0 0 0 1px rgba(92, 173, 255, 0.08),
+    inset 0 0 38px rgba(47, 124, 255, 0.08),
+    var(--lw-shadow);
+}
+
+.section::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(47, 124, 255, 0.12), transparent 28%, transparent 72%, rgba(22, 214, 196, 0.08)),
+    repeating-linear-gradient(0deg, rgba(94, 169, 255, 0.055) 0 1px, transparent 1px 32px);
+  opacity: 0.42;
+}
+
+.section > * {
+  position: relative;
+  z-index: 1;
 }
 
 .section-pad {
@@ -105,10 +135,11 @@ body {
 
 .metric-card {
   min-height: 112px;
-  border: 1px solid var(--lw-border);
-  border-radius: var(--lw-radius);
+  border: 1px solid rgba(44, 125, 255, 0.46);
+  border-radius: 6px;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--lw-accent) 10%, transparent), transparent 44%),
+    radial-gradient(circle at 92% 8%, rgba(47, 124, 255, 0.18), transparent 38%),
+    linear-gradient(145deg, rgba(7, 31, 73, 0.94), rgba(3, 16, 44, 0.96)),
     var(--lw-panel);
   padding: var(--lw-density-y);
   box-shadow: var(--lw-shadow);
@@ -178,6 +209,20 @@ body {
   font-size: 12px;
   font-weight: 650;
   line-height: 1.25;
+}
+
+.n-button:not(.n-button--disabled) {
+  --n-border-radius: 6px;
+}
+
+.n-data-table {
+  --n-merged-th-color: color-mix(in srgb, var(--lw-panel-muted) 92%, #2f7cff);
+  --n-merged-td-color: var(--lw-panel);
+  --n-merged-border-color: rgba(44, 125, 255, 0.34);
+}
+
+.n-empty {
+  color: var(--lw-text-subtle);
 }
 
 .query-toolbar > .n-button {

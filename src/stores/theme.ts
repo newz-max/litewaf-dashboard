@@ -15,6 +15,7 @@ import {
 } from "@/theme/presets"
 
 const storageKey = "litewaf.theme.v1"
+const legacySafelineAccentColor = "#19d3b5"
 
 function cloneDefaultSettings(): ThemeSettings {
   return {
@@ -59,15 +60,23 @@ function loadSettings(): ThemeSettings {
     const fallback = cloneDefaultSettings()
     const presetId = isThemePresetId(parsed.presetId) ? parsed.presetId : fallback.presetId
     const preset = getThemePreset(presetId)
+    const shouldUpgradeLegacySafeline =
+      presetId === "safeline-inspired" && parsed.accentColor === legacySafelineAccentColor
     const accentColor =
-      typeof parsed.accentColor === "string" && parsed.accentColor.trim()
-        ? parsed.accentColor
-        : preset.accentColor
+      shouldUpgradeLegacySafeline
+        ? preset.accentColor
+        : typeof parsed.accentColor === "string" && parsed.accentColor.trim()
+          ? parsed.accentColor
+          : preset.accentColor
     const radius = typeof parsed.radius === "number" ? Math.min(Math.max(parsed.radius, 4), 12) : preset.radius
     const savedChartPalette = Array.isArray(parsed.chartPalette)
       ? parsed.chartPalette.filter((color): color is string => typeof color === "string" && color.trim().length > 0)
       : []
-    const chartPalette = savedChartPalette.length > 0 ? savedChartPalette : [...preset.chartPalette]
+    const chartPalette = shouldUpgradeLegacySafeline
+      ? [...preset.chartPalette]
+      : savedChartPalette.length > 0
+        ? savedChartPalette
+        : [...preset.chartPalette]
 
     return {
       mode: isThemeMode(parsed.mode) ? parsed.mode : fallback.mode,

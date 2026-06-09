@@ -51,6 +51,26 @@ function sumCounts(items: readonly SummaryCount[]) {
   return items.reduce((total, item) => total + item.count, 0)
 }
 
+function trendFromValues(seed: readonly number[]) {
+  const values = seed.length > 0 ? seed : [0]
+  const total = values.reduce((sum, value) => sum + Math.max(value, 0), 0)
+  if (total <= 0) {
+    return [0, 0, 0, 0, 0, 0, 0]
+  }
+
+  const normalized = [
+    values[0] ?? 0,
+    Math.round(total * 0.18),
+    values[1] ?? Math.round(total * 0.3),
+    Math.round(total * 0.42),
+    values[2] ?? Math.round(total * 0.56),
+    values[3] ?? Math.round(total * 0.68),
+    total
+  ]
+
+  return normalized.map((value) => Math.max(value, 0))
+}
+
 const applicationCount = computed(() => applicationsResource.data.value?.length ?? 0)
 const ruleCount = computed(() => rulesResource.data.value?.length ?? 0)
 const blockedRequests = computed(() => summary.value?.blocked_requests ?? 0)
@@ -99,28 +119,32 @@ const primaryMetrics = computed<PostureMetric[]>(() => [
     value: totalRequests.value,
     note: "来自访问日志汇总",
     tone: "info",
-    featured: true
+    featured: true,
+    trend: trendFromValues([rateLimited.value, wafMatches.value, blockedRequests.value, totalRequests.value])
   },
   {
     label: "拦截/拒绝",
     value: blockedRequests.value,
     note: "阻断、拒绝和挑战失败等处置",
     tone: blockedRequests.value > 0 ? "danger" : "neutral",
-    featured: true
+    featured: true,
+    trend: trendFromValues([scoreBlocks.value, dynamicBans.value, blockedRequests.value])
   },
   {
     label: "WAF 命中",
     value: wafMatches.value,
     note: "规则、模块和控制命中",
     tone: wafMatches.value > 0 ? "warning" : "neutral",
-    featured: true
+    featured: true,
+    trend: trendFromValues([bodyDetections.value, uploadDetections.value, attackProtectionTotal.value, wafMatches.value])
   },
   {
     label: "防护应用",
     value: applicationCount.value,
     note: "来自控制面应用接口",
     tone: applicationCount.value > 0 ? "success" : "neutral",
-    featured: true
+    featured: true,
+    trend: trendFromValues([ruleCount.value, applicationCount.value])
   }
 ])
 
@@ -145,6 +169,19 @@ const evidencePanels = computed<EvidencePanel[]>(() => [
   { title: "Top 规则", items: topRules.value, emptyDescription: "暂无规则统计", itemPrefix: "规则 " }
 ])
 
+const topIpBarColor = computed(() => ({
+  type: "linear",
+  x: 0,
+  y: 0,
+  x2: 0,
+  y2: 1,
+  colorStops: [
+    { offset: 0, color: "#68b7ff" },
+    { offset: 0.45, color: themeStore.chartPalette[0] ?? "#2f7cff" },
+    { offset: 1, color: "#0b47c5" }
+  ]
+}))
+
 const topIpOption = computed(() => ({
   color: themeStore.chartPalette,
   backgroundColor: "transparent",
@@ -155,13 +192,13 @@ const topIpOption = computed(() => ({
     borderColor: chartGridColor.value,
     textStyle: { color: chartTextColor.value }
   },
-  grid: { left: 42, right: 18, top: 24, bottom: 36 },
+  grid: { left: 44, right: 18, top: 22, bottom: 42 },
   xAxis: {
     type: "category",
     data: topIps.value.map((item) => item.key),
     axisLine: { lineStyle: { color: chartGridColor.value } },
     axisTick: { lineStyle: { color: chartGridColor.value } },
-    axisLabel: { color: chartTextColor.value }
+    axisLabel: { color: chartTextColor.value, interval: 0, fontSize: 11 }
   },
   yAxis: {
     type: "value",
@@ -172,9 +209,9 @@ const topIpOption = computed(() => ({
     {
       name: "请求",
       type: "bar",
-      barMaxWidth: 34,
+      barMaxWidth: 26,
       data: topIps.value.map((item) => item.count),
-      itemStyle: { color: themeStore.chartPalette[0], borderRadius: [6, 6, 0, 0] }
+      itemStyle: { color: topIpBarColor.value, borderRadius: [5, 5, 0, 0] }
     }
   ]
 }))
@@ -190,17 +227,30 @@ const attackTypeOption = computed(() => ({
     textStyle: { color: chartTextColor.value }
   },
   legend: {
-    bottom: 0,
+    right: 28,
+    top: "middle",
+    orient: "vertical",
     textStyle: { color: chartTextColor.value },
-    itemGap: 12
+    itemGap: 12,
+    itemWidth: 9,
+    itemHeight: 9
   },
   series: [
     {
       name: "攻击类型",
       type: "pie",
-      radius: ["46%", "70%"],
+      center: ["30%", "50%"],
+      radius: ["48%", "68%"],
       avoidLabelOverlap: true,
-      label: { color: chartTextColor.value },
+      label: {
+        show: true,
+        position: "center",
+        color: chartTextColor.value,
+        formatter: String(sumCounts(attackTypes.value)),
+        fontSize: 28,
+        fontWeight: 800
+      },
+      emphasis: { label: { show: true, formatter: "{b}\n{c}" } },
       labelLine: { lineStyle: { color: chartGridColor.value } },
       data: attackTypes.value.map((item) => ({ name: item.key, value: item.count }))
     }
@@ -259,7 +309,7 @@ function refreshDashboard() {
         <div class="panel-heading">
           <div>
             <div class="panel-title">Top 来源 IP</div>
-            <div class="panel-subtitle">按请求次数聚合的来源证据</div>
+            <div class="panel-subtitle">按请求次数统计</div>
           </div>
           <NTag size="small" type="info">{{ topIps.length }} 项</NTag>
         </div>
@@ -316,25 +366,58 @@ function refreshDashboard() {
   align-items: center;
   gap: 16px;
   overflow: hidden;
-  border: 1px solid var(--lw-border);
-  border-radius: var(--lw-radius);
+  position: relative;
+  border: 1px solid rgba(47, 124, 255, 0.58);
+  border-radius: 6px;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--lw-accent) 14%, transparent), transparent 44%),
-    linear-gradient(225deg, color-mix(in srgb, v-bind(chartMutedSurfaceColor) 78%, transparent), transparent 52%),
+    radial-gradient(circle at 31% 52%, rgba(47, 124, 255, 0.22), transparent 88px),
+    radial-gradient(circle at 72% 72%, rgba(22, 214, 196, 0.18), transparent 4px),
+    linear-gradient(120deg, rgba(5, 24, 62, 0.96), rgba(3, 15, 40, 0.86)),
     var(--lw-panel);
-  box-shadow: var(--lw-shadow);
-  padding: calc(var(--lw-density-y) + 4px);
+  box-shadow:
+    inset 0 0 54px rgba(47, 124, 255, 0.1),
+    var(--lw-shadow);
+  padding: 18px 20px;
+}
+
+.posture-hero::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background:
+    linear-gradient(110deg, transparent 0 38%, rgba(47, 124, 255, 0.12) 38.2% 38.45%, transparent 38.8%),
+    linear-gradient(140deg, transparent 0 64%, rgba(22, 214, 196, 0.1) 64.2% 64.45%, transparent 64.8%),
+    repeating-linear-gradient(0deg, rgba(90, 150, 255, 0.06) 0 1px, transparent 1px 32px);
+  opacity: 0.62;
+}
+
+.posture-hero::after {
+  position: absolute;
+  top: 16px;
+  left: 43%;
+  width: 92px;
+  height: 72px;
+  content: "";
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(112, 180, 255, 0.68), rgba(47, 124, 255, 0.32) 28%, transparent 60%),
+    linear-gradient(145deg, rgba(22, 214, 196, 0.18), rgba(47, 124, 255, 0.34));
+  clip-path: polygon(50% 0, 82% 14%, 72% 70%, 50% 100%, 28% 70%, 18% 14%);
+  filter: drop-shadow(0 0 22px rgba(47, 124, 255, 0.72));
+  opacity: 0.66;
 }
 
 .posture-hero-copy {
+  position: relative;
+  z-index: 1;
   min-width: 0;
 }
 
 .hero-kicker {
-  color: var(--lw-accent);
+  color: #56a9ff;
   font-size: 12px;
   font-weight: 800;
-  text-transform: uppercase;
 }
 
 .posture-hero h2 {
@@ -352,6 +435,8 @@ function refreshDashboard() {
 }
 
 .hero-status {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -389,7 +474,8 @@ function refreshDashboard() {
 .chart-panel {
   min-height: 360px;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--lw-chart-2) 9%, transparent), transparent 44%),
+    radial-gradient(circle at 94% 0, rgba(47, 124, 255, 0.13), transparent 34%),
+    linear-gradient(145deg, rgba(7, 31, 73, 0.94), rgba(3, 15, 39, 0.96)),
     var(--lw-panel);
 }
 
@@ -404,6 +490,7 @@ function refreshDashboard() {
 .panel-title {
   color: var(--lw-text);
   font-weight: 800;
+  line-height: 1.2;
 }
 
 .panel-subtitle {
@@ -427,6 +514,7 @@ function refreshDashboard() {
   .evidence-grid {
     grid-template-columns: 1fr 1fr;
   }
+
 }
 
 @media (max-width: 760px) {

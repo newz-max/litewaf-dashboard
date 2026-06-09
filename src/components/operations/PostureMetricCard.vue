@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue"
+import MetricTrendLine from "@/components/operations/MetricTrendLine.vue"
 
 export interface PostureMetric {
   label: string
@@ -7,6 +8,7 @@ export interface PostureMetric {
   note: string
   tone?: "neutral" | "success" | "warning" | "danger" | "info"
   featured?: boolean
+  trend?: readonly number[]
 }
 
 const props = defineProps<{
@@ -22,7 +24,10 @@ const cardClass = computed(() => [
 
 <template>
   <article :class="cardClass">
-    <div class="metric-label">{{ metric.label }}</div>
+    <div class="metric-head">
+      <div class="metric-label">{{ metric.label }}</div>
+      <MetricTrendLine v-if="metric.featured" class="metric-sparkline" :points="metric.trend ?? []" />
+    </div>
     <div class="metric-value">{{ metric.value }}</div>
     <div class="metric-note">{{ metric.note }}</div>
   </article>
@@ -36,18 +41,22 @@ const cardClass = computed(() => [
   justify-content: space-between;
   gap: 10px;
   overflow: hidden;
+  position: relative;
   border: 1px solid var(--lw-border);
-  border-radius: var(--lw-radius);
+  border-radius: 6px;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--metric-tone) 10%, transparent), transparent 52%),
+    radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--metric-tone) 22%, transparent), transparent 42%),
+    linear-gradient(135deg, color-mix(in srgb, var(--metric-tone) 12%, transparent), transparent 58%),
     var(--lw-panel);
-  box-shadow: var(--lw-shadow);
+  box-shadow:
+    inset 0 0 28px rgba(47, 124, 255, 0.08),
+    var(--lw-shadow);
   padding: var(--lw-density-y);
 }
 
 .posture-metric-card--featured {
   min-height: 154px;
-  border-color: color-mix(in srgb, var(--metric-tone) 38%, var(--lw-border));
+  border-color: color-mix(in srgb, var(--metric-tone) 52%, var(--lw-border));
 }
 
 .posture-metric-card--neutral {
@@ -70,8 +79,14 @@ const cardClass = computed(() => [
   --metric-tone: var(--lw-info);
 }
 
+.metric-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .metric-label {
-  color: var(--lw-text-muted);
+  color: color-mix(in srgb, var(--metric-tone) 62%, var(--lw-text-muted));
   font-size: 13px;
   font-weight: 700;
 }
@@ -88,5 +103,10 @@ const cardClass = computed(() => [
   color: var(--lw-text-subtle);
   font-size: 12px;
   line-height: 1.5;
+}
+
+.metric-sparkline {
+  flex: 0 0 min(38%, 118px);
+  margin-left: auto;
 }
 </style>

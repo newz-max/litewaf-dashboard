@@ -30,7 +30,7 @@ defineProps<{
 .count-list-title {
   margin-bottom: 10px;
   color: var(--lw-text);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .count-list {
@@ -47,9 +47,11 @@ defineProps<{
   align-items: center;
   gap: 12px;
   min-height: 40px;
-  border: 1px solid var(--lw-border);
-  border-radius: var(--lw-radius);
-  background: var(--lw-panel-muted);
+  border: 1px solid rgba(44, 125, 255, 0.36);
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, rgba(47, 124, 255, 0.08), transparent 54%),
+    rgba(7, 31, 73, 0.78);
   padding: 8px 10px;
 }
 
@@ -61,7 +63,7 @@ defineProps<{
 }
 
 .count-list-value {
-  color: var(--lw-accent);
+  color: #58a8ff;
   font-weight: 800;
 }
 </style>

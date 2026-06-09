@@ -96,11 +96,11 @@ export const themePresets: ThemePreset[] = [
   },
   {
     id: "safeline-inspired",
-    label: "安全运营深色",
-    description: "面向态势大屏和规则运营，参考雷池的深色安全产品气质。",
-    accentColor: "#19d3b5",
+    label: "蓝盾态势",
+    description: "面向安全态势和规则运营的深蓝科技风格。",
+    accentColor: "#2f7cff",
     radius: 8,
-    chartPalette: ["#19d3b5", "#4f8cff", "#f6c85f", "#ff6b6b", "#64d2ff", "#7dd87d"],
+    chartPalette: ["#2f7cff", "#16d6c4", "#ff8a3d", "#ff4f92", "#7c5cff", "#5bc0ff"],
     light: {
       bg: "#edf5f4",
       bgElevated: "#f6fbfa",
@@ -121,23 +121,23 @@ export const themePresets: ThemePreset[] = [
       info: "#2563eb"
     },
     dark: {
-      bg: "#060d10",
-      bgElevated: "#09171b",
-      panel: "#0d1f24",
-      panelMuted: "#102a30",
-      border: "#1e454d",
-      borderStrong: "#326470",
-      text: "#e8fbff",
-      textMuted: "#9dc4c9",
-      textSubtle: "#6f969d",
-      header: "rgba(8, 21, 25, 0.88)",
-      sider: "#071216",
-      shadow: "0 24px 64px rgba(0, 0, 0, 0.42)",
-      accentStrong: "#5eead4",
-      success: "#34d399",
-      warning: "#fbbf24",
-      danger: "#fb7185",
-      info: "#60a5fa"
+      bg: "#010613",
+      bgElevated: "#020b1f",
+      panel: "#051738",
+      panelMuted: "#071f49",
+      border: "#1b56b8",
+      borderStrong: "#2c7dff",
+      text: "#f3f8ff",
+      textMuted: "#a9bade",
+      textSubtle: "#7186b3",
+      header: "rgba(2, 8, 22, 0.9)",
+      sider: "#01081a",
+      shadow: "0 18px 42px rgba(0, 48, 132, 0.16)",
+      accentStrong: "#70b4ff",
+      success: "#16d6c4",
+      warning: "#ffcf57",
+      danger: "#ff4f92",
+      info: "#2f7cff"
     }
   },
   {
@@ -235,13 +235,13 @@ export const themePresets: ThemePreset[] = [
 ]
 
 export const defaultThemeSettings: ThemeSettings = {
-  mode: "system",
+  mode: "dark",
   presetId: "safeline-inspired",
   density: "comfortable",
-  accentColor: "#19d3b5",
+  accentColor: "#2f7cff",
   radius: 8,
   motion: "on",
-  chartPalette: ["#19d3b5", "#4f8cff", "#f6c85f", "#ff6b6b", "#64d2ff", "#7dd87d"]
+  chartPalette: ["#2f7cff", "#16d6c4", "#ff8a3d", "#ff4f92", "#7c5cff", "#5bc0ff"]
 }
 
 export function getThemePreset(id: ThemePresetId) {
@@ -258,6 +258,8 @@ export function buildThemeOverrides(
       primaryColorHover: tokens.accentStrong,
       primaryColorPressed: tokens.accentStrong,
       primaryColorSuppl: settings.accentColor,
+      hoverColor: `color-mix(in srgb, ${settings.accentColor} 12%, transparent)`,
+      pressedColor: `color-mix(in srgb, ${settings.accentColor} 16%, transparent)`,
       infoColor: tokens.info,
       successColor: tokens.success,
       warningColor: tokens.warning,
@@ -267,23 +269,66 @@ export function buildThemeOverrides(
       modalColor: tokens.panel,
       popoverColor: tokens.panel,
       tableColor: tokens.panel,
+      tableHeaderColor: tokens.panelMuted,
       borderColor: tokens.border,
       dividerColor: tokens.border,
       textColorBase: tokens.text,
+      textColor1: tokens.text,
+      textColor2: tokens.textMuted,
+      textColor3: tokens.textSubtle,
       borderRadius: `${settings.radius}px`
     },
     Button: {
-      borderRadiusMedium: `${settings.radius}px`,
-      borderRadiusLarge: `${settings.radius}px`
+      color: `color-mix(in srgb, ${tokens.panelMuted} 86%, transparent)`,
+      colorHover: `color-mix(in srgb, ${settings.accentColor} 16%, ${tokens.panelMuted})`,
+      colorPressed: `color-mix(in srgb, ${settings.accentColor} 22%, ${tokens.panelMuted})`,
+      colorFocus: `color-mix(in srgb, ${settings.accentColor} 16%, ${tokens.panelMuted})`,
+      textColor: tokens.text,
+      textColorHover: tokens.text,
+      textColorPressed: tokens.text,
+      textColorFocus: tokens.text,
+      border: `1px solid ${tokens.border}`,
+      borderHover: `1px solid ${tokens.borderStrong}`,
+      borderPressed: `1px solid ${tokens.borderStrong}`,
+      borderFocus: `1px solid ${tokens.borderStrong}`,
+      borderRadiusMedium: "6px",
+      borderRadiusLarge: "6px"
     },
     Card: {
-      borderRadius: `${settings.radius}px`
+      color: tokens.panel,
+      colorEmbedded: tokens.panelMuted,
+      borderColor: tokens.border,
+      borderRadius: "6px",
+      titleTextColor: tokens.text,
+      textColor: tokens.textMuted
     },
     DataTable: {
-      borderRadius: `${settings.radius}px`,
+      borderRadius: "6px",
       thColor: tokens.panelMuted,
       tdColor: tokens.panel,
-      borderColor: tokens.border
+      tdColorHover: `color-mix(in srgb, ${settings.accentColor} 8%, ${tokens.panel})`,
+      borderColor: tokens.border,
+      thTextColor: tokens.textMuted,
+      tdTextColor: tokens.text
+    },
+    Alert: {
+      borderRadius: "6px",
+      color: `color-mix(in srgb, ${tokens.panelMuted} 92%, transparent)`,
+      borderColor: tokens.border,
+      titleTextColor: tokens.text,
+      contentTextColor: tokens.textMuted
+    },
+    Tag: {
+      borderRadius: "5px"
+    },
+    Input: {
+      color: tokens.panel,
+      colorFocus: tokens.panel,
+      textColor: tokens.text,
+      placeholderColor: tokens.textSubtle,
+      border: `1px solid ${tokens.border}`,
+      borderHover: `1px solid ${tokens.borderStrong}`,
+      borderFocus: `1px solid ${settings.accentColor}`
     },
     Select: {
       peers: {
@@ -313,7 +358,19 @@ export function buildThemeOverrides(
       }
     },
     Menu: {
-      itemBorderRadius: `${settings.radius}px`
+      color: "transparent",
+      groupTextColor: tokens.textSubtle,
+      itemTextColor: tokens.textMuted,
+      itemTextColorHover: tokens.text,
+      itemTextColorActive: tokens.text,
+      itemTextColorActiveHover: tokens.text,
+      itemIconColor: tokens.textMuted,
+      itemIconColorHover: tokens.text,
+      itemIconColorActive: settings.accentColor,
+      itemColorHover: `color-mix(in srgb, ${settings.accentColor} 11%, transparent)`,
+      itemColorActive: `color-mix(in srgb, ${settings.accentColor} 18%, transparent)`,
+      itemColorActiveHover: `color-mix(in srgb, ${settings.accentColor} 22%, transparent)`,
+      itemBorderRadius: "6px"
     }
   }
 }
