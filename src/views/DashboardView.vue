@@ -33,7 +33,6 @@ const topRules = computed(() => summary.value?.top_rules ?? [])
 const chartTextColor = computed(() => themeStore.chartTextColor)
 const chartGridColor = computed(() => themeStore.chartGridColor)
 const chartSurfaceColor = computed(() => themeStore.cssVars["--lw-panel"])
-const chartMutedSurfaceColor = computed(() => themeStore.cssVars["--lw-panel-muted"])
 
 const isLoading = computed(
   () => applicationsResource.loading.value || rulesResource.loading.value || summaryResource.loading.value
@@ -120,6 +119,7 @@ const primaryMetrics = computed<PostureMetric[]>(() => [
     note: "来自访问日志汇总",
     tone: "info",
     featured: true,
+    featuredSize: "large",
     trend: trendFromValues([rateLimited.value, wafMatches.value, blockedRequests.value, totalRequests.value])
   },
   {
@@ -459,6 +459,7 @@ function refreshDashboard() {
 
 .primary-metric-grid {
   grid-template-columns: repeat(4, minmax(150px, 1fr));
+  align-items: stretch;
 }
 
 .secondary-metric-grid {
