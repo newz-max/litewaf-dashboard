@@ -1,8 +1,8 @@
 # LiteWaf Dashboard
 
-LiteWaf Dashboard 是 LiteWaf 的后台管理前端，基于 Vue 3、TypeScript、Vite 和 Naive UI。
+> 语言 / Language: [中文](README.md) | [English](README.en.md)
 
-English summary: LiteWaf Dashboard is the operator UI for LiteWaf. It is built with Vue 3, TypeScript, Vite, Naive UI, Pinia, Vue Router, ECharts, and Axios. It talks to the LiteWaf API through `/api`, and all API, deployment, rule, and operator documentation is maintained in the API repository.
+LiteWaf Dashboard 是 LiteWaf 的后台管理前端，基于 Vue 3、TypeScript、Vite 和 Naive UI。
 
 ## 相关仓库
 
@@ -10,34 +10,6 @@ English summary: LiteWaf Dashboard is the operator UI for LiteWaf. It is built w
 - 后端 API 与项目文档：[litewaf-api](https://github.com/newz-max/litewaf-api)
 - OpenResty 数据面网关：[litewaf-gateway](https://github.com/newz-max/litewaf-gateway)
 - API、部署、规则和公开文档维护在后端仓库的 `doc/`、`deploy/` 和 `rules/` 目录中；公开文档入口见 `doc/文档索引.md`，日常后台操作见 `doc/使用说明.md`。
-
-## English Guide
-
-Related repositories:
-
-- Dashboard: [litewaf-dashboard](https://github.com/newz-max/litewaf-dashboard)
-- API and project docs: [litewaf-api](https://github.com/newz-max/litewaf-api)
-- OpenResty data-plane gateway: [litewaf-gateway](https://github.com/newz-max/litewaf-gateway)
-
-Use this repository for dashboard source code only. Public API, deployment, rule, and operator documentation lives in the API repository under `doc/`, `deploy/`, and `rules/`. Start from `doc/文档索引.md`; day-to-day dashboard operation is covered in `doc/使用说明.md`.
-
-Local development:
-
-```bash
-npm install
-npm run dev
-```
-
-The Vite dev server defaults to `http://localhost:5173` and proxies `/api` to `http://localhost:8080`.
-
-Build and container image:
-
-```bash
-npm run build
-docker build -t litewaf-dashboard .
-```
-
-When contributing, keep page data connected to real API calls. If an API is unavailable, show loading, empty, or error states instead of hard-coded mock business data.
 
 ## 技术栈
 
