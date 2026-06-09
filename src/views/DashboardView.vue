@@ -9,7 +9,9 @@ import { getApplications, getObservabilitySummary, getRules, type SummaryCount, 
 import OperationsCountList from "@/components/operations/OperationsCountList.vue"
 import PostureMetricCard, { type PostureMetric } from "@/components/operations/PostureMetricCard.vue"
 import { useApiResource } from "@/composables/useApiResource"
+import { getActiveLocale } from "@/i18n"
 import { useThemeStore } from "@/stores/theme"
+import { useI18n } from "vue-i18n"
 
 use([CanvasRenderer, BarChart, PieChart, GridComponent, LegendComponent, TooltipComponent])
 
@@ -21,6 +23,7 @@ interface EvidencePanel {
 }
 
 const themeStore = useThemeStore()
+const { t } = useI18n()
 const applicationsResource = useApiResource(getApplications)
 const rulesResource = useApiResource(getRules)
 const summaryResource = useApiResource(getObservabilitySummary)
@@ -39,9 +42,9 @@ const isLoading = computed(
 )
 const apiErrors = computed(() =>
   [
-    { label: "防护应用", message: applicationsResource.error.value },
-    { label: "规则", message: rulesResource.error.value },
-    { label: "观测汇总", message: summaryResource.error.value }
+    { label: t("dashboard.applications"), message: applicationsResource.error.value },
+    { label: t("dashboard.rules"), message: rulesResource.error.value },
+    { label: t("dashboard.observability"), message: summaryResource.error.value }
   ].filter((item) => item.message)
 )
 const hasApiError = computed(() => apiErrors.value.length > 0)
@@ -101,57 +104,57 @@ const showGlobalEmptyState = computed(
 
 const primaryMetrics = computed<PostureMetric[]>(() => [
   {
-    label: "请求总数",
+    label: t("dashboard.totalRequests"),
     value: totalRequests.value,
-    note: "来自访问日志汇总",
+    note: t("dashboard.totalRequestsNote"),
     tone: "info",
     featured: true,
     trend: requestTrend.value
   },
   {
-    label: "拦截/拒绝",
+    label: t("dashboard.blockedRejected"),
     value: blockedRequests.value,
-    note: "阻断、拒绝和挑战失败等处置",
+    note: t("dashboard.blockedRejectedNote"),
     tone: blockedRequests.value > 0 ? "danger" : "neutral",
     featured: true,
     trend: blockedTrend.value
   },
   {
-    label: "WAF 命中",
+    label: t("dashboard.wafMatches"),
     value: wafMatches.value,
-    note: "规则、模块和控制命中",
+    note: t("dashboard.wafMatchesNote"),
     tone: wafMatches.value > 0 ? "warning" : "neutral",
     featured: true,
     trend: wafMatchTrend.value
   },
   {
-    label: "防护应用",
+    label: t("dashboard.applications"),
     value: applicationCount.value,
-    note: "来自控制面应用接口",
+    note: t("dashboard.applicationCountNote"),
     tone: applicationCount.value > 0 ? "success" : "neutral",
     featured: false
   }
 ])
 
 const secondaryMetrics = computed<PostureMetric[]>(() => [
-  { label: "规则数量", value: ruleCount.value, note: "当前加载规则", tone: "info" },
-  { label: "限流次数", value: rateLimited.value, note: "访问和事件日志累计", tone: "warning" },
-  { label: "评分阻断", value: scoreBlocks.value, note: "高级检测累计风险分", tone: "danger" },
-  { label: "Body 检测", value: bodyDetections.value, note: "请求体命中", tone: "warning" },
-  { label: "上传检测", value: uploadDetections.value, note: "上传元数据处置", tone: "warning" },
-  { label: "动态封禁", value: dynamicBans.value, note: "临时来源封禁", tone: "danger" },
-  { label: "IP 黑白名单", value: ipAccessListTotal.value, note: "白名单/黑名单处置", tone: "success" },
-  { label: "访问控制", value: accessControlTotal.value, note: "放行/观察/阻断", tone: "info" },
-  { label: "攻击防护", value: attackProtectionTotal.value, note: "SQL 注入、XSS 等命中", tone: "danger" },
-  { label: "上传防护", value: uploadProtectionTotal.value, note: "扩展名/大小处置", tone: "warning" },
-  { label: "Bot 验证", value: botProtectionTotal.value, note: "挑战/通过/失败", tone: "info" },
-  { label: "动态防护", value: dynamicProtectionTotal.value, note: "等候室/令牌/来源处置", tone: "success" }
+  { label: t("dashboard.ruleCount"), value: ruleCount.value, note: t("dashboard.ruleCountNote"), tone: "info" },
+  { label: t("dashboard.rateLimited"), value: rateLimited.value, note: t("dashboard.rateLimitedNote"), tone: "warning" },
+  { label: t("dashboard.scoreBlocks"), value: scoreBlocks.value, note: t("dashboard.scoreBlocksNote"), tone: "danger" },
+  { label: t("dashboard.bodyDetections"), value: bodyDetections.value, note: t("dashboard.bodyDetectionsNote"), tone: "warning" },
+  { label: t("dashboard.uploadDetections"), value: uploadDetections.value, note: t("dashboard.uploadDetectionsNote"), tone: "warning" },
+  { label: t("dashboard.dynamicBans"), value: dynamicBans.value, note: t("dashboard.dynamicBansNote"), tone: "danger" },
+  { label: t("dashboard.ipAccessList"), value: ipAccessListTotal.value, note: t("dashboard.ipAccessListNote"), tone: "success" },
+  { label: t("dashboard.accessControl"), value: accessControlTotal.value, note: t("dashboard.accessControlNote"), tone: "info" },
+  { label: t("dashboard.attackProtection"), value: attackProtectionTotal.value, note: t("dashboard.attackProtectionNote"), tone: "danger" },
+  { label: t("dashboard.uploadProtection"), value: uploadProtectionTotal.value, note: t("dashboard.uploadProtectionNote"), tone: "warning" },
+  { label: t("dashboard.botProtection"), value: botProtectionTotal.value, note: t("dashboard.botProtectionNote"), tone: "info" },
+  { label: t("dashboard.dynamicProtection"), value: dynamicProtectionTotal.value, note: t("dashboard.dynamicProtectionNote"), tone: "success" }
 ])
 
 const evidencePanels = computed<EvidencePanel[]>(() => [
-  { title: "Top 来源 IP", items: topIps.value, emptyDescription: "暂无来源统计" },
-  { title: "Top URI", items: topUris.value, emptyDescription: "暂无 URI 统计" },
-  { title: "Top 规则", items: topRules.value, emptyDescription: "暂无规则统计", itemPrefix: "规则 " }
+  { title: t("dashboard.topSourceIp"), items: topIps.value, emptyDescription: t("dashboard.noSourceStats") },
+  { title: t("dashboard.topUri"), items: topUris.value, emptyDescription: t("dashboard.noUriStats") },
+  { title: t("dashboard.topRules"), items: topRules.value, emptyDescription: t("dashboard.noRuleStats"), itemPrefix: t("dashboard.rulePrefix") }
 ])
 
 const topIpBarColor = computed(() => ({
@@ -192,7 +195,7 @@ const topIpOption = computed(() => ({
   },
   series: [
     {
-      name: "请求",
+      name: t("dashboard.requestSeries"),
       type: "bar",
       barMaxWidth: 26,
       data: topIps.value.map((item) => item.count),
@@ -222,7 +225,7 @@ const attackTypeOption = computed(() => ({
   },
   series: [
     {
-      name: "攻击类型",
+      name: t("dashboard.attackTypeSeries"),
       type: "pie",
       center: ["30%", "50%"],
       radius: ["48%", "68%"],
@@ -245,27 +248,31 @@ const attackTypeOption = computed(() => ({
 function refreshDashboard() {
   void Promise.all([applicationsResource.refresh(), rulesResource.refresh(), summaryResource.refresh()])
 }
+
+function formatCount(value: number) {
+  return new Intl.NumberFormat(getActiveLocale()).format(value)
+}
 </script>
 
 <template>
   <main class="page posture-home">
     <div class="page-header posture-header">
       <div>
-        <h1 class="page-title">安全态势</h1>
-        <p class="page-subtitle">观察 LiteWaf 网关流量、防护效果、攻击分布和跨模块处置证据。</p>
+        <h1 class="page-title">{{ t("dashboard.title") }}</h1>
+        <p class="page-subtitle">{{ t("dashboard.subtitle") }}</p>
       </div>
-      <NButton type="primary" :loading="isLoading" @click="refreshDashboard">刷新态势</NButton>
+      <NButton type="primary" :loading="isLoading" @click="refreshDashboard">{{ t("common.refreshDashboard") }}</NButton>
     </div>
 
     <section class="posture-hero">
       <div class="posture-hero-copy">
-        <div class="hero-kicker">Security Operations Home</div>
-        <h2>核心风险、处置和命中证据优先呈现</h2>
-        <p>所有指标来自现有控制面与观测接口；接口为空时展示零值和空状态，不生成演示数据。</p>
+        <div class="hero-kicker">{{ t("dashboard.heroKicker") }}</div>
+        <h2>{{ t("dashboard.heroTitle") }}</h2>
+        <p>{{ t("dashboard.heroText") }}</p>
       </div>
       <div class="hero-status">
         <NTag :type="hasApiError ? 'error' : hasSummaryData ? 'success' : 'default'" size="small">
-          {{ hasApiError ? "接口异常" : hasSummaryData ? "已有观测数据" : "等待真实流量" }}
+          {{ hasApiError ? t("common.apiError") : hasSummaryData ? t("dashboard.hasObservability") : t("dashboard.waitingTraffic") }}
         </NTag>
         <span>{{ themeStore.activePreset.label }} · {{ themeStore.activeModeLabel }}</span>
       </div>
@@ -278,7 +285,7 @@ function refreshDashboard() {
     </NAlert>
 
     <NAlert v-if="showGlobalEmptyState" type="info">
-      当前没有防护应用、规则或观测汇总数据。页面保持空态展示，等待真实配置或网关流量进入。
+      {{ t("dashboard.empty") }}
     </NAlert>
 
     <section class="primary-metric-grid">
@@ -293,33 +300,33 @@ function refreshDashboard() {
       <section class="section section-pad chart-panel">
         <div class="panel-heading">
           <div>
-            <div class="panel-title">Top 来源 IP</div>
-            <div class="panel-subtitle">按请求次数统计</div>
+            <div class="panel-title">{{ t("dashboard.topSourceIp") }}</div>
+            <div class="panel-subtitle">{{ t("dashboard.byRequests") }}</div>
           </div>
-          <NTag size="small" type="info">{{ topIps.length }} 项</NTag>
+          <NTag size="small" type="info">{{ t("dashboard.items", { count: formatCount(topIps.length) }) }}</NTag>
         </div>
         <VChart v-if="topIps.length > 0" class="chart" :option="topIpOption" autoresize />
-        <NEmpty v-else description="暂无来源统计" />
+        <NEmpty v-else :description="t('dashboard.noSourceStats')" />
       </section>
 
       <section class="section section-pad chart-panel">
         <div class="panel-heading">
           <div>
-            <div class="panel-title">攻击类型分布</div>
-            <div class="panel-subtitle">按攻击分类展示命中占比</div>
+            <div class="panel-title">{{ t("dashboard.attackTypeDistribution") }}</div>
+            <div class="panel-subtitle">{{ t("dashboard.attackTypeSubtitle") }}</div>
           </div>
-          <NTag size="small" type="warning">{{ attackTypes.length }} 类</NTag>
+          <NTag size="small" type="warning">{{ t("dashboard.categories", { count: formatCount(attackTypes.length) }) }}</NTag>
         </div>
         <VChart v-if="attackTypes.length > 0" class="chart" :option="attackTypeOption" autoresize />
-        <NEmpty v-else description="暂无攻击类型统计" />
+        <NEmpty v-else :description="t('dashboard.noAttackTypeStats')" />
       </section>
     </div>
 
     <section class="section section-pad evidence-section">
       <div class="panel-heading">
         <div>
-          <div class="panel-title">运营证据</div>
-          <div class="panel-subtitle">URI、规则和来源维度的最近统计</div>
+          <div class="panel-title">{{ t("dashboard.operationEvidence") }}</div>
+          <div class="panel-subtitle">{{ t("dashboard.evidenceSubtitle") }}</div>
         </div>
       </div>
       <div class="evidence-grid">

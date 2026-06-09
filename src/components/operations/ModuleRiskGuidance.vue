@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n"
+
 export interface ModuleRiskGuidanceItem {
   title: string
   message?: string
@@ -10,6 +12,8 @@ defineProps<{
   items: readonly ModuleRiskGuidanceItem[]
   emptyDescription?: string
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -21,7 +25,7 @@ defineProps<{
         <span v-if="item.message">{{ item.message }}</span>
       </NAlert>
     </div>
-    <NEmpty v-else :description="emptyDescription ?? '暂无高风险提示'" />
+    <NEmpty v-else :description="emptyDescription ?? t('risk.emptyGuidance')" />
   </section>
 </template>
 

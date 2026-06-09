@@ -2,7 +2,9 @@
 import { computed } from "vue"
 import { themePresets, type ThemeDensity, type ThemeMode, type ThemeMotion } from "@/theme/presets"
 import { useThemeStore } from "@/stores/theme"
+import { useI18n } from "vue-i18n"
 
+const { t } = useI18n()
 const themeStore = useThemeStore()
 
 const presetOptions = computed(() =>
@@ -12,11 +14,11 @@ const presetOptions = computed(() =>
   }))
 )
 
-const previewRows = [
-  { label: "SQL 注入", value: "已阻断", tone: "danger" },
-  { label: "高频访问", value: "观察中", tone: "warning" },
-  { label: "规则发布", value: "就绪", tone: "success" }
-]
+const previewRows = computed(() => [
+  { label: t("settings.preview.sqlInjection"), value: t("settings.preview.blocked"), tone: "danger" },
+  { label: t("settings.preview.highFrequency"), value: t("settings.preview.observing"), tone: "warning" },
+  { label: t("settings.preview.release"), value: t("settings.preview.ready"), tone: "success" }
+])
 
 function updateMode(value: string | number) {
   themeStore.setMode(value as ThemeMode)
@@ -41,16 +43,16 @@ function updateRadius(value: number | null) {
   <section class="section section-pad appearance-section">
     <div class="section-head">
       <div>
-        <h2 class="section-title">外观与主题</h2>
-        <p class="section-subtitle">主题配置仅保存在当前浏览器，适合先验证后台视觉和操作密度。</p>
+        <h2 class="section-title">{{ t("settings.appearanceTitle") }}</h2>
+        <p class="section-subtitle">{{ t("settings.appearanceSubtitle") }}</p>
       </div>
-      <NButton secondary @click="themeStore.resetTheme">恢复默认</NButton>
+      <NButton secondary @click="themeStore.resetTheme">{{ t("settings.resetDefault") }}</NButton>
     </div>
 
     <div class="appearance-grid">
       <div class="control-panel">
         <NForm label-placement="top">
-          <NFormItem label="主题预设">
+          <NFormItem :label="t('settings.preset')">
             <NSelect
               :value="themeStore.settings.presetId"
               :options="presetOptions"
@@ -58,23 +60,23 @@ function updateRadius(value: number | null) {
             />
           </NFormItem>
 
-          <NFormItem label="显示模式">
+          <NFormItem :label="t('settings.displayMode')">
             <NRadioGroup :value="themeStore.settings.mode" @update:value="updateMode">
-              <NRadioButton value="system">跟随系统</NRadioButton>
-              <NRadioButton value="light">浅色</NRadioButton>
-              <NRadioButton value="dark">深色</NRadioButton>
+              <NRadioButton value="system">{{ t("settings.systemMode") }}</NRadioButton>
+              <NRadioButton value="light">{{ t("settings.lightMode") }}</NRadioButton>
+              <NRadioButton value="dark">{{ t("settings.darkMode") }}</NRadioButton>
             </NRadioGroup>
           </NFormItem>
 
-          <NFormItem label="操作密度">
+          <NFormItem :label="t('settings.density')">
             <NRadioGroup :value="themeStore.settings.density" @update:value="updateDensity">
-              <NRadioButton value="comfortable">舒适</NRadioButton>
-              <NRadioButton value="compact">紧凑</NRadioButton>
+              <NRadioButton value="comfortable">{{ t("common.comfortable") }}</NRadioButton>
+              <NRadioButton value="compact">{{ t("common.compact") }}</NRadioButton>
             </NRadioGroup>
           </NFormItem>
 
           <div class="inline-controls">
-            <NFormItem label="强调色">
+            <NFormItem :label="t('settings.accentColor')">
               <NColorPicker
                 :value="themeStore.settings.accentColor"
                 :show-alpha="false"
@@ -82,7 +84,7 @@ function updateRadius(value: number | null) {
               />
             </NFormItem>
 
-            <NFormItem label="圆角">
+            <NFormItem :label="t('settings.radius')">
               <NInputNumber
                 :value="themeStore.settings.radius"
                 :min="4"
@@ -93,10 +95,10 @@ function updateRadius(value: number | null) {
             </NFormItem>
           </div>
 
-          <NFormItem label="动效">
+          <NFormItem :label="t('settings.motion')">
             <NRadioGroup :value="themeStore.settings.motion" @update:value="updateMotion">
-              <NRadioButton value="on">开启</NRadioButton>
-              <NRadioButton value="reduced">减少</NRadioButton>
+              <NRadioButton value="on">{{ t("settings.motionOn") }}</NRadioButton>
+              <NRadioButton value="reduced">{{ t("settings.motionReduced") }}</NRadioButton>
             </NRadioGroup>
           </NFormItem>
         </NForm>
@@ -105,28 +107,28 @@ function updateRadius(value: number | null) {
       <div class="preview-panel">
         <div class="preview-card">
           <div class="preview-topline">
-            <span>实时预览</span>
+            <span>{{ t("settings.livePreview") }}</span>
             <NTag type="success" size="small">{{ themeStore.activeModeLabel }}</NTag>
           </div>
-          <div class="preview-title">LiteWaf 安全态势</div>
+          <div class="preview-title">{{ t("settings.previewTitle") }}</div>
           <div class="preview-metrics">
             <div class="preview-metric">
-              <span>WAF 命中</span>
+              <span>{{ t("settings.wafHits") }}</span>
               <strong>1,286</strong>
             </div>
             <div class="preview-metric danger">
-              <span>阻断</span>
+              <span>{{ t("settings.blocked") }}</span>
               <strong>312</strong>
             </div>
             <div class="preview-metric">
-              <span>观察</span>
+              <span>{{ t("settings.observed") }}</span>
               <strong>74</strong>
             </div>
           </div>
           <NAlert type="warning" :bordered="false">
-            当前预设会影响菜单、表格、图表和规则页面的视觉密度。
+            {{ t("settings.previewNotice") }}
           </NAlert>
-          <div class="preview-rows" aria-label="主题预览扫描行">
+          <div class="preview-rows" :aria-label="t('settings.previewRowsLabel')">
             <div
               v-for="row in previewRows"
               :key="row.label"
@@ -138,8 +140,8 @@ function updateRadius(value: number | null) {
             </div>
           </div>
           <div class="preview-actions">
-            <NButton type="primary">主操作</NButton>
-            <NButton secondary>次操作</NButton>
+            <NButton type="primary">{{ t("settings.primaryAction") }}</NButton>
+            <NButton secondary>{{ t("settings.secondaryAction") }}</NButton>
           </div>
           <div class="palette-row">
             <span

@@ -13,7 +13,9 @@ import ModuleStateBlock from "@/components/operations/ModuleStateBlock.vue"
 import ModuleStatusSummary from "@/components/operations/ModuleStatusSummary.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
+import { useI18n } from "vue-i18n"
 
+const { t } = useI18n()
 const message = useMessage()
 const authStore = useAuthStore()
 const resource = useApiResource(getAttackProtectionGroups)
@@ -27,38 +29,38 @@ const form = reactive<AttackProtectionGroupInput>({
   priority: 100
 })
 
-const actionOptions = [
-  { label: "观察", value: "log-only" },
-  { label: "阻断", value: "block" }
-]
+const actionOptions = computed(() => [
+  { label: t("common.observation"), value: "log-only" },
+  { label: t("common.block"), value: "block" }
+])
 
 const enabledCount = computed(() => groups.value.filter((group) => group.enabled).length)
 const blockingCount = computed(() => groups.value.filter((group) => group.action === "block").length)
 const enabledRuleCount = computed(() => groups.value.reduce((total, group) => total + group.enabled_rule_count, 0))
 const headerTags = computed(() => [
-  { label: "防护组", value: groups.value.length, tone: "info" as const },
-  { label: "启用", value: enabledCount.value, tone: "success" as const },
-  { label: "阻断", value: blockingCount.value, tone: "warning" as const }
+  { label: t("modules.attack.group"), value: groups.value.length, tone: "info" as const },
+  { label: t("common.enabled"), value: enabledCount.value, tone: "success" as const },
+  { label: t("common.block"), value: blockingCount.value, tone: "warning" as const }
 ])
 const statusItems = computed(() => [
-  { label: "防护组", value: groups.value.length, note: "来自攻击防护 API", tone: "info" as const },
-  { label: "启用组", value: enabledCount.value, note: "参与托管规则组处置", tone: "success" as const },
-  { label: "启用规则", value: enabledRuleCount.value, note: "托管规则组中的启用规则", tone: enabledRuleCount.value > 0 ? "warning" as const : "neutral" as const },
-  { label: "阻断组", value: blockingCount.value, note: "动作设置为阻断", tone: blockingCount.value > 0 ? "danger" as const : "neutral" as const }
+  { label: t("modules.attack.group"), value: groups.value.length, note: t("modules.attack.apiSource"), tone: "info" as const },
+  { label: t("modules.attack.enabledGroups"), value: enabledCount.value, note: t("modules.attack.enabledGroupsNote"), tone: "success" as const },
+  { label: t("common.enabledRules"), value: enabledRuleCount.value, note: t("modules.attack.enabledRulesNote"), tone: enabledRuleCount.value > 0 ? "warning" as const : "neutral" as const },
+  { label: t("modules.attack.blockingGroups"), value: blockingCount.value, note: t("modules.attack.blockingGroupsNote"), tone: blockingCount.value > 0 ? "danger" as const : "neutral" as const }
 ])
 const guidanceAlerts = computed(() => [
-  { title: "托管规则组", message: "攻击防护按攻击类型配置托管规则组动作和优先级，不改变具体规则签名内容。", tone: "info" as const },
-  { title: "阻断前复核", message: "将防护组切换为阻断会影响该攻击类型下的启用规则，应结合攻击日志确认误报风险。", tone: "warning" as const }
+  { title: t("modules.attack.managedGroupsTitle"), message: t("modules.attack.managedGroupsMessage"), tone: "info" as const },
+  { title: t("modules.attack.reviewBeforeBlockTitle"), message: t("modules.attack.reviewBeforeBlockMessage"), tone: "warning" as const }
 ])
 
-const columns: DataTableColumns<AttackProtectionGroup> = [
+const columns = computed<DataTableColumns<AttackProtectionGroup>>(() => [
   {
-    title: "防护组",
+    title: t("table.group"),
     key: "name",
     minWidth: 160
   },
   {
-    title: "攻击类型",
+    title: t("table.attackType"),
     key: "attack_type",
     width: 128,
     render(row) {
@@ -66,7 +68,7 @@ const columns: DataTableColumns<AttackProtectionGroup> = [
     }
   },
   {
-    title: "规则数量",
+    title: t("table.ruleCount"),
     key: "rule_count",
     width: 108,
     render(row) {
@@ -74,7 +76,7 @@ const columns: DataTableColumns<AttackProtectionGroup> = [
     }
   },
   {
-    title: "动作",
+    title: t("common.action"),
     key: "action",
     width: 96,
     render(row) {
@@ -86,24 +88,24 @@ const columns: DataTableColumns<AttackProtectionGroup> = [
     }
   },
   {
-    title: "启用",
+    title: t("common.enabled"),
     key: "enabled",
     width: 84,
     render(row) {
       return h(
         NTag,
         { type: row.enabled ? "success" : "default", size: "small" },
-        { default: () => (row.enabled ? "启用" : "停用") }
+        { default: () => (row.enabled ? t("common.enabled") : t("common.disabled")) }
       )
     }
   },
   {
-    title: "优先级",
+    title: t("common.priority"),
     key: "priority",
     width: 92
   },
   {
-    title: "更新时间",
+    title: t("common.updatedAt"),
     key: "updated_at",
     minWidth: 160,
     render(row) {
@@ -111,7 +113,7 @@ const columns: DataTableColumns<AttackProtectionGroup> = [
     }
   },
   {
-    title: "操作",
+    title: t("common.actions"),
     key: "actions",
     fixed: "right",
     width: 96,
@@ -119,11 +121,11 @@ const columns: DataTableColumns<AttackProtectionGroup> = [
       return h(
         NButton,
         { size: "small", disabled: !authStore.canWrite, onClick: () => openEdit(row) },
-        { default: () => "配置" }
+        { default: () => t("common.configure") }
       )
     }
   }
-]
+])
 
 function openEdit(group: AttackProtectionGroup) {
   editing.value = group
@@ -135,10 +137,10 @@ function openEdit(group: AttackProtectionGroup) {
 
 function validateForm() {
   if (!["log-only", "block"].includes(form.action)) {
-    return "动作只能是观察或阻断"
+    return t("common.action")
   }
   if (form.priority <= 0) {
-    return "优先级必须大于 0"
+    return t("common.invalidPriorityPositive")
   }
   return ""
 }
@@ -155,7 +157,7 @@ async function save() {
   saving.value = true
   try {
     await updateAttackProtectionGroup(editing.value.attack_type, form)
-    message.success("攻击防护配置已更新")
+    message.success(t("common.updated", { name: t("modules.attack.title") }))
     drawerVisible.value = false
     await resource.refresh()
   } finally {
@@ -165,18 +167,18 @@ async function save() {
 
 function formatAttackType(value: string) {
   const labels: Record<string, string> = {
-    sqli: "SQL 注入",
+    sqli: t("modules.attack.sqli"),
     xss: "XSS",
     rce: "RCE",
-    "path-traversal": "路径穿越"
+    "path-traversal": t("modules.attack.pathTraversal")
   }
   return labels[value] ?? value
 }
 
 function formatAction(value: string) {
   const labels: Record<string, string> = {
-    "log-only": "观察",
-    block: "阻断"
+    "log-only": t("common.observation"),
+    block: t("common.block")
   }
   return labels[value] ?? value
 }
@@ -192,29 +194,29 @@ function formatTime(value?: string) {
 <template>
   <main class="page">
     <ModulePageHeader
-      title="攻击防护"
-      subtitle="按攻击类型管理托管规则组的观察、阻断和启用状态。"
-      eyebrow="Protection Module"
+      :title="t('modules.attack.title')"
+      :subtitle="t('modules.attack.subtitle')"
+      :eyebrow="t('moduleCommon.protectionModule')"
       :tags="headerTags"
     >
       <template #actions>
-      <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
+      <NButton :loading="resource.loading.value" @click="resource.refresh">{{ t("common.refresh") }}</NButton>
       </template>
     </ModulePageHeader>
 
     <ModuleStateBlock
       v-if="resource.error.value"
       state="error"
-      title="攻击防护加载失败"
+      :title="t('modules.attack.loadingFailed')"
       :description="resource.error.value"
-      action-label="重试"
+      :action-label="t('common.retry')"
       @retry="resource.refresh"
     />
 
     <ModuleStatusSummary :items="statusItems" />
 
     <section class="section section-pad guidance-section">
-      <ModuleRiskGuidance title="运营指引" :items="guidanceAlerts" />
+      <ModuleRiskGuidance :title="t('common.operationGuidance')" :items="guidanceAlerts" />
     </section>
 
     <section class="section section-pad">
@@ -229,30 +231,30 @@ function formatTime(value?: string) {
       <ModuleStateBlock
         v-if="!resource.loading.value && !resource.error.value && groups.length === 0"
         state="empty"
-        description="暂无攻击防护规则组"
+        :description="t('modules.attack.emptyRules')"
       />
     </section>
 
     <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="drawerVisible" :width="460">
-      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? editing.name : '攻击防护配置'" closable>
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? editing.name : t('moduleCommon.configTitle', { name: t('modules.attack.title') })" closable>
         <NForm class="group-form" label-placement="top">
-          <NFormItem label="攻击类型">
+          <NFormItem :label="t('table.attackType')">
             <NInput :value="editing ? formatAttackType(editing.attack_type) : ''" disabled />
           </NFormItem>
-          <NFormItem label="动作">
+          <NFormItem :label="t('common.action')">
             <NSelect v-model:value="form.action" :options="actionOptions" :disabled="!authStore.canWrite" />
           </NFormItem>
-          <NFormItem label="优先级">
+          <NFormItem :label="t('common.priority')">
             <NInputNumber v-model:value="form.priority" :min="1" :disabled="!authStore.canWrite" />
           </NFormItem>
-          <NFormItem label="启用">
+          <NFormItem :label="t('common.enabled')">
             <NSwitch v-model:value="form.enabled" :disabled="!authStore.canWrite" />
           </NFormItem>
         </NForm>
         <template #footer>
           <NSpace justify="end">
-            <NButton @click="drawerVisible = false">取消</NButton>
-            <NButton type="primary" :disabled="!authStore.canWrite" :loading="saving" @click="save">保存</NButton>
+            <NButton @click="drawerVisible = false">{{ t("common.cancel") }}</NButton>
+            <NButton type="primary" :disabled="!authStore.canWrite" :loading="saving" @click="save">{{ t("common.save") }}</NButton>
           </NSpace>
         </template>
       </NDrawerContent>

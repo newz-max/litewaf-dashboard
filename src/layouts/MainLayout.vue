@@ -26,13 +26,16 @@ import {
   SunnyOutline,
   WarningOutline
 } from "@vicons/ionicons5"
+import LanguageSwitcher from "@/components/system/LanguageSwitcher.vue"
 import { useThemeStore } from "@/stores/theme"
 import { useAuthStore } from "@/stores/auth"
+import { useI18n } from "vue-i18n"
 
 const route = useRoute()
 const router = useRouter()
 const themeStore = useThemeStore()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 const siderCollapsed = shallowRef(false)
 let removeViewportListener: (() => void) | undefined
@@ -41,34 +44,34 @@ function renderIcon(icon: Component) {
   return () => h(NIcon, null, { default: () => h(icon) })
 }
 
-function renderLabel(label: string, to: string) {
-  return () => h(RouterLink, { to }, { default: () => label })
+function renderLabel(labelKey: string, to: string) {
+  return () => h(RouterLink, { to }, { default: () => t(labelKey) })
 }
 
 const menuOptions = computed<MenuOption[]>(() => [
   {
     type: "group",
     key: "nav-overview",
-    label: "态势",
+    label: t("shell.nav.overview"),
     children: [
       {
         key: "dashboard",
-        label: renderLabel("安全态势", "/"),
+        label: renderLabel("shell.nav.dashboard", "/"),
         icon: renderIcon(AnalyticsOutline)
       },
       {
         key: "statisticsReport",
-        label: renderLabel("统计报表", "/statistics-report"),
+        label: renderLabel("shell.nav.statisticsReport", "/statistics-report"),
         icon: renderIcon(DocumentTextOutline)
       },
       {
         key: "protectionOverview",
-        label: renderLabel("防护概览", "/protection-overview"),
+        label: renderLabel("shell.nav.protectionOverview", "/protection-overview"),
         icon: renderIcon(ShieldOutline)
       },
       {
         key: "applications",
-        label: renderLabel("防护应用", "/applications"),
+        label: renderLabel("shell.nav.applications", "/applications"),
         icon: renderIcon(GlobeOutline)
       }
     ]
@@ -76,41 +79,41 @@ const menuOptions = computed<MenuOption[]>(() => [
   {
     type: "group",
     key: "nav-protection",
-    label: "防护模块",
+    label: t("shell.nav.protection"),
     children: [
       {
         key: "ccProtection",
-        label: renderLabel("CC 防护", "/cc-protection"),
+        label: renderLabel("shell.nav.ccProtection", "/cc-protection"),
         icon: renderIcon(RocketOutline)
       },
       {
         key: "attackProtection",
-        label: renderLabel("攻击防护", "/attack-protection"),
+        label: renderLabel("shell.nav.attackProtection", "/attack-protection"),
         icon: renderIcon(SkullOutline)
       },
       {
         key: "ipAccessLists",
-        label: renderLabel("IP 黑白名单", "/ip-access-lists"),
+        label: renderLabel("shell.nav.ipAccessLists", "/ip-access-lists"),
         icon: renderIcon(ShieldCheckmarkOutline)
       },
       {
         key: "accessControl",
-        label: renderLabel("访问控制", "/access-control"),
+        label: renderLabel("shell.nav.accessControl", "/access-control"),
         icon: renderIcon(LockClosedOutline)
       },
       {
         key: "uploadProtection",
-        label: renderLabel("上传防护", "/upload-protection"),
+        label: renderLabel("shell.nav.uploadProtection", "/upload-protection"),
         icon: renderIcon(CloudUploadOutline)
       },
       {
         key: "botProtection",
-        label: renderLabel("Bot / 人机验证", "/bot-protection"),
+        label: renderLabel("shell.nav.botProtection", "/bot-protection"),
         icon: renderIcon(PersonCircleOutline)
       },
       {
         key: "dynamicProtection",
-        label: renderLabel("动态防护 / 等候室", "/dynamic-protection"),
+        label: renderLabel("shell.nav.dynamicProtection", "/dynamic-protection"),
         icon: renderIcon(RepeatOutline)
       }
     ]
@@ -118,26 +121,26 @@ const menuOptions = computed<MenuOption[]>(() => [
   {
     type: "group",
     key: "nav-rule-ops",
-    label: "规则与发布",
+    label: t("shell.nav.ruleOps"),
     children: [
       {
         key: "rules",
-        label: renderLabel("规则管理", "/rules"),
+        label: renderLabel("shell.nav.rules", "/rules"),
         icon: renderIcon(ShieldCheckmarkOutline)
       },
       {
         key: "ruleEcosystem",
-        label: renderLabel("高级规则生态", "/rule-ecosystem"),
+        label: renderLabel("shell.nav.ruleEcosystem", "/rule-ecosystem"),
         icon: renderIcon(PricetagsOutline)
       },
       {
         key: "policies",
-        label: renderLabel("防护策略", "/policies"),
+        label: renderLabel("shell.nav.policies", "/policies"),
         icon: renderIcon(LayersOutline)
       },
       {
         key: "releases",
-        label: renderLabel("发布记录", "/releases"),
+        label: renderLabel("shell.nav.releases", "/releases"),
         icon: renderIcon(CloudUploadOutline)
       }
     ]
@@ -145,33 +148,33 @@ const menuOptions = computed<MenuOption[]>(() => [
   {
     type: "group",
     key: "nav-logs",
-    label: "日志审计",
+    label: t("shell.nav.logs"),
     children: [
       {
         key: "attackLogs",
-        label: renderLabel("攻击日志", "/attack-logs"),
+        label: renderLabel("shell.nav.attackLogs", "/attack-logs"),
         icon: renderIcon(WarningOutline)
       },
       {
         key: "blockedRejectedRecords",
-        label: renderLabel("拦截 / 拒绝记录", "/blocked-rejected-records"),
+        label: renderLabel("shell.nav.blockedRejectedRecords", "/blocked-rejected-records"),
         icon: renderIcon(FlashOutline)
       },
       {
         key: "dynamicBans",
-        label: renderLabel("动态封禁", "/dynamic-bans"),
+        label: renderLabel("shell.nav.dynamicBans", "/dynamic-bans"),
         icon: renderIcon(WarningOutline)
       },
       {
         key: "accessLogs",
-        label: renderLabel("访问日志", "/access-logs"),
+        label: renderLabel("shell.nav.accessLogs", "/access-logs"),
         icon: renderIcon(PulseOutline)
       },
       ...(authStore.canAudit
         ? [
             {
               key: "auditLogs",
-              label: renderLabel("审计日志", "/audit-logs"),
+              label: renderLabel("shell.nav.auditLogs", "/audit-logs"),
               icon: renderIcon(ReaderOutline)
             }
           ]
@@ -181,27 +184,27 @@ const menuOptions = computed<MenuOption[]>(() => [
   {
     type: "group",
     key: "nav-system",
-    label: "系统",
+    label: t("shell.nav.system"),
     children: [
       {
         key: "protectionMigrationHealth",
-        label: renderLabel("迁移健康检查", "/protection-migration-health"),
+        label: renderLabel("shell.nav.protectionMigrationHealth", "/protection-migration-health"),
         icon: renderIcon(MedkitOutline)
       },
       {
         key: "legacyCompatibility",
-        label: "兼容入口",
+        label: t("shell.nav.legacyCompatibility"),
         icon: renderIcon(ListOutline),
         children: [
           {
             key: "rateLimits",
-            label: renderLabel("限流配置（已废弃）", "/rate-limits")
+            label: renderLabel("shell.nav.rateLimits", "/rate-limits")
           }
         ]
       },
       {
         key: "settings",
-        label: renderLabel("系统设置", "/settings"),
+        label: renderLabel("shell.nav.settings", "/settings"),
         icon: renderIcon(OptionsOutline)
       }
     ]
@@ -210,7 +213,11 @@ const menuOptions = computed<MenuOption[]>(() => [
 
 const activeKey = computed(() => String(route.name || "dashboard"))
 const themeIcon = computed(() => (themeStore.isDark ? SunnyOutline : MoonOutline))
-const densityLabel = computed(() => (themeStore.settings.density === "compact" ? "紧凑" : "舒适"))
+const densityLabel = computed(() => t(themeStore.settings.density === "compact" ? "common.compact" : "common.comfortable"))
+const pageTitle = computed(() => {
+  const titleKey = typeof route.meta.titleKey === "string" ? route.meta.titleKey : "common.console"
+  return t(titleKey)
+})
 
 function updateSiderCollapsed(value: boolean) {
   siderCollapsed.value = value
@@ -270,9 +277,9 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div class="sider-status">
+        <div class="sider-status">
         <span class="status-dot" />
-        <span>控制面在线</span>
+        <span>{{ t("shell.statusOnline") }}</span>
       </div>
 
       <NMenu class="litewaf-menu" :value="activeKey" :options="menuOptions" :indent="18" />
@@ -285,14 +292,20 @@ onBeforeUnmount(() => {
             <DocumentTextOutline />
           </NIcon>
           <div>
-            <span>{{ route.meta.title || "控制台" }}</span>
+            <span>{{ pageTitle }}</span>
             <small>{{ themeStore.activePreset.label }} · {{ densityLabel }}</small>
           </div>
         </div>
 
         <div class="header-actions">
-          <NTag type="success" size="small" round>Debian 12</NTag>
-          <NTag type="info" size="small" round>{{ authStore.user?.role || "未登录" }}</NTag>
+          <NTag type="success" size="small" round>{{ t("shell.runtimeBaseline") }}</NTag>
+          <NTag type="info" size="small" round>{{ authStore.user?.role || t("shell.unauthenticated") }}</NTag>
+          <NTooltip trigger="hover">
+            <template #trigger>
+              <LanguageSwitcher />
+            </template>
+            {{ t("language.label") }}
+          </NTooltip>
           <NTooltip trigger="hover">
             <template #trigger>
               <NButton circle quaternary @click="themeStore.toggleDensity">
@@ -303,7 +316,7 @@ onBeforeUnmount(() => {
                 </template>
               </NButton>
             </template>
-            切换操作密度
+            {{ t("shell.densityTooltip") }}
           </NTooltip>
           <NTooltip trigger="hover">
             <template #trigger>
@@ -315,7 +328,7 @@ onBeforeUnmount(() => {
                 </template>
               </NButton>
             </template>
-            切换深浅色
+            {{ t("shell.themeTooltip") }}
           </NTooltip>
           <NTooltip trigger="hover">
             <template #trigger>
@@ -327,9 +340,9 @@ onBeforeUnmount(() => {
                 </template>
               </NButton>
             </template>
-            外观设置
+            {{ t("shell.appearanceTooltip") }}
           </NTooltip>
-          <NButton quaternary @click="signOut">退出</NButton>
+          <NButton quaternary @click="signOut">{{ t("shell.signOut") }}</NButton>
         </div>
       </NLayoutHeader>
 

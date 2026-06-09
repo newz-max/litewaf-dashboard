@@ -2,6 +2,7 @@
 import { computed } from "vue"
 import { RouterLink } from "vue-router"
 import type { ProtectionModuleOverview } from "@/api/litewaf"
+import { useI18n } from "vue-i18n"
 
 const props = defineProps<{
   module: ProtectionModuleOverview
@@ -10,8 +11,9 @@ const props = defineProps<{
   logQuery: Record<string, string>
 }>()
 
+const { t } = useI18n()
 const statusType = computed(() => (props.module.enabled > 0 ? "success" : "default"))
-const statusLabel = computed(() => (props.module.enabled > 0 ? "已启用" : "空状态"))
+const statusLabel = computed(() => (props.module.enabled > 0 ? t("moduleCard.enabled") : t("moduleCard.emptyState")))
 const primaryWarning = computed(() => props.module.warnings[0] ?? "")
 const hasRiskDetails = computed(() => (props.module.risk_details ?? []).length > 0)
 const hasEvidence = computed(() => props.module.evidence.length > 0)
@@ -25,7 +27,7 @@ const showAllow = computed(() => typeof props.module.allow === "number")
         <div class="module-title">{{ module.label }}</div>
         <div class="module-meta">
           {{ module.category }}
-          <template v-if="module.compatibility_source"> · 兼容 {{ module.compatibility_source }}</template>
+          <template v-if="module.compatibility_source"> · {{ t("moduleCard.compatibility", { source: module.compatibility_source }) }}</template>
         </div>
       </div>
       <NTag :type="statusType" size="small">{{ statusLabel }}</NTag>
@@ -33,23 +35,23 @@ const showAllow = computed(() => typeof props.module.allow === "number")
 
     <div class="module-stats">
       <div class="module-stat">
-        <span>规则</span>
+        <span>{{ t("moduleCard.rules") }}</span>
         <strong>{{ module.rules }}</strong>
       </div>
       <div class="module-stat">
-        <span>启用</span>
+        <span>{{ t("moduleCard.enabledRules") }}</span>
         <strong>{{ module.enabled }}</strong>
       </div>
       <div class="module-stat">
-        <span>观察</span>
+        <span>{{ t("moduleCard.observe") }}</span>
         <strong>{{ module.observe }}</strong>
       </div>
       <div class="module-stat">
-        <span>阻断</span>
+        <span>{{ t("moduleCard.block") }}</span>
         <strong>{{ module.block }}</strong>
       </div>
       <div v-if="showAllow" class="module-stat">
-        <span>放行</span>
+        <span>{{ t("moduleCard.allow") }}</span>
         <strong>{{ module.allow }}</strong>
       </div>
     </div>
@@ -66,18 +68,18 @@ const showAllow = computed(() => typeof props.module.allow === "number")
     </div>
 
     <div v-if="hasEvidence" class="module-evidence">
-      <div class="module-section-title">最近命中证据</div>
+      <div class="module-section-title">{{ t("moduleCard.recentEvidence") }}</div>
       <div v-for="item in module.evidence" :key="item.key" class="module-evidence-row">
         <span>{{ item.key }}</span>
         <strong>{{ item.count }}</strong>
       </div>
     </div>
 
-    <NEmpty v-else-if="isEmpty" description="暂无规则和命中" />
+    <NEmpty v-else-if="isEmpty" :description="t('moduleCard.noRulesAndHits')" />
 
     <div class="module-actions">
-      <RouterLink :to="module.route">查看规则</RouterLink>
-      <RouterLink :to="{ path: '/attack-logs', query: logQuery }">查看日志</RouterLink>
+      <RouterLink :to="module.route">{{ t("moduleCard.viewRules") }}</RouterLink>
+      <RouterLink :to="{ path: '/attack-logs', query: logQuery }">{{ t("moduleCard.viewLogs") }}</RouterLink>
     </div>
   </article>
 </template>

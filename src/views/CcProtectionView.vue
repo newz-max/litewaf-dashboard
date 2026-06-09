@@ -17,8 +17,10 @@ import ModuleStateBlock from "@/components/operations/ModuleStateBlock.vue"
 import ModuleStatusSummary from "@/components/operations/ModuleStatusSummary.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
+import { useI18n } from "vue-i18n"
 import { protectionGuides, protectionRiskPrompts, riskPromptText } from "@/utils/protectionGuidance"
 
+const { t } = useI18n()
 const message = useMessage()
 const dialog = useDialog()
 const authStore = useAuthStore()
@@ -45,50 +47,50 @@ const previewForm = reactive({
   include_disabled: false
 })
 
-const templateOptions = [
-  { label: "登录接口防爆破", value: "login" },
-  { label: "API 调用频率限制", value: "api" },
-  { label: "全站基础 CC 防护", value: "site" },
-  { label: "404 扫描频率", value: "glob404" },
-  { label: "会话级限制", value: "session" }
-]
+const templateOptions = computed(() => [
+  { label: t("modules.cc.loginBruteforce"), value: "login" },
+  { label: t("modules.cc.apiRateLimit"), value: "api" },
+  { label: t("modules.cc.siteCcProtection"), value: "site" },
+  { label: t("modules.cc.notFoundScanRate"), value: "glob404" },
+  { label: t("modules.cc.sessionLimit"), value: "session" }
+])
 
-const pathMatchOptions = [
-  { label: "精确", value: "exact" },
-  { label: "前缀", value: "prefix" },
+const pathMatchOptions = computed(() => [
+  { label: t("common.exact"), value: "exact" },
+  { label: t("common.prefix"), value: "prefix" },
   { label: "Glob", value: "glob" }
-]
+])
 
 const methodOptions = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].map((method) => ({
   label: method,
   value: method
 }))
 
-const counterOptions = [
-  { label: "客户端 IP", value: "client_ip" },
-  { label: "IP + 路径", value: "client_ip_path" },
-  { label: "全局", value: "global" },
-  { label: "404 频率", value: "not_found_frequency" },
-  { label: "攻击命中频率", value: "attack_frequency" },
-  { label: "会话", value: "session" },
-  { label: "粗粒度设备", value: "device" }
-]
+const counterOptions = computed(() => [
+  { label: t("common.clientIp"), value: "client_ip" },
+  { label: t("modules.cc.clientIpPath"), value: "client_ip_path" },
+  { label: t("common.global"), value: "global" },
+  { label: t("modules.cc.notFoundFrequency"), value: "not_found_frequency" },
+  { label: t("modules.cc.attackFrequency"), value: "attack_frequency" },
+  { label: t("modules.cc.session"), value: "session" },
+  { label: t("modules.cc.device"), value: "device" }
+])
 
 const sessionSourceOptions = [
   { label: "Cookie", value: "cookie" },
   { label: "Header", value: "header" }
 ]
 
-const deviceStrategyOptions = [
-  { label: "粗粒度信号", value: "coarse" }
-]
+const deviceStrategyOptions = computed(() => [
+  { label: t("modules.cc.coarseSignal"), value: "coarse" }
+])
 
-const actionOptions = [
-  { label: "观察", value: "log-only" },
-  { label: "阻断", value: "block" },
-  { label: "限流", value: "rate-limit" },
-  { label: "临时封禁", value: "ban" }
-]
+const actionOptions = computed(() => [
+  { label: t("common.observation"), value: "log-only" },
+  { label: t("common.block"), value: "block" },
+  { label: t("modules.cc.rateLimit"), value: "rate-limit" },
+  { label: t("modules.cc.temporaryBan"), value: "ban" }
+])
 
 type CCRiskRule = {
   readonly name: string
@@ -98,18 +100,18 @@ type CCRiskRule = {
   readonly match: { readonly path?: string; readonly path_match?: string }
 }
 
-const columns: DataTableColumns<ProtectionRule> = [
-  { title: "名称", key: "name", minWidth: 160 },
+const columns = computed<DataTableColumns<ProtectionRule>>(() => [
+  { title: t("common.name"), key: "name", minWidth: 160 },
   {
-    title: "生效应用",
+    title: t("common.effectiveApplication"),
     key: "application_id",
     width: 92,
     render(row) {
-      return row.application_id > 0 ? `#${row.application_id}` : "全局"
+      return row.application_id > 0 ? `#${row.application_id}` : t("common.global")
     }
   },
   {
-    title: "路径",
+    title: t("common.path"),
     key: "match.path",
     minWidth: 160,
     render(row) {
@@ -117,7 +119,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "匹配方式",
+    title: t("table.pathMatch"),
     key: "match.path_match",
     width: 96,
     render(row) {
@@ -125,15 +127,15 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "方法",
+    title: t("common.methods"),
     key: "match.methods",
     minWidth: 120,
     render(row) {
-      return row.match.methods.length > 0 ? row.match.methods.join(", ") : "全部"
+      return row.match.methods.length > 0 ? row.match.methods.join(", ") : t("common.all")
     }
   },
   {
-    title: "统计对象",
+    title: t("table.counter"),
     key: "limit.counter",
     width: 120,
     render(row) {
@@ -141,15 +143,15 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "阈值和窗口",
+    title: t("table.thresholdWindow"),
     key: "limit.threshold",
     minWidth: 120,
     render(row) {
-      return `${row.limit.threshold} 次 / ${row.limit.window_sec} 秒`
+      return t("common.timesPerSeconds", { times: row.limit.threshold, seconds: row.limit.window_sec })
     }
   },
   {
-    title: "动作",
+    title: t("common.action"),
     key: "action.type",
     width: 108,
     render(row) {
@@ -157,7 +159,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "启用",
+    title: t("common.enabled"),
     key: "enabled",
     width: 84,
     render(row) {
@@ -165,7 +167,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "来源",
+    title: t("common.source"),
     key: "migration_status",
     width: 104,
     render(row) {
@@ -173,7 +175,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "更新时间",
+    title: t("common.updatedAt"),
     key: "updated_at",
     minWidth: 160,
     render(row) {
@@ -181,7 +183,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "操作",
+    title: t("common.actions"),
     key: "actions",
     fixed: "right",
     width: 150,
@@ -194,7 +196,7 @@ const columns: DataTableColumns<ProtectionRule> = [
             h(
               NButton,
               { size: "small", disabled: !authStore.canWrite, onClick: () => startEdit(row) },
-              { default: () => "编辑" }
+              { default: () => t("common.edit") }
             ),
             h(
               NButton,
@@ -204,19 +206,19 @@ const columns: DataTableColumns<ProtectionRule> = [
                 disabled: !authStore.canWrite,
                 onClick: () => remove(row)
               },
-              { default: () => "删除" }
+              { default: () => t("common.delete") }
             )
           ]
         }
       )
     }
   }
-]
+])
 
-const previewColumns: DataTableColumns<CCProtectionPreviewMatch> = [
-  { title: "规则", key: "rule_name", minWidth: 160 },
+const previewColumns = computed<DataTableColumns<CCProtectionPreviewMatch>>(() => [
+  { title: t("common.rule"), key: "rule_name", minWidth: 160 },
   {
-    title: "统计对象",
+    title: t("table.counter"),
     key: "counter",
     width: 128,
     render(row) {
@@ -224,7 +226,7 @@ const previewColumns: DataTableColumns<CCProtectionPreviewMatch> = [
     }
   },
   {
-    title: "阈值窗口",
+    title: t("table.thresholdWindow"),
     key: "threshold",
     width: 120,
     render(row) {
@@ -232,7 +234,7 @@ const previewColumns: DataTableColumns<CCProtectionPreviewMatch> = [
     }
   },
   {
-    title: "动作",
+    title: t("common.action"),
     key: "action",
     width: 92,
     render(row) {
@@ -240,19 +242,19 @@ const previewColumns: DataTableColumns<CCProtectionPreviewMatch> = [
     }
   },
   {
-    title: "预览状态",
+    title: t("table.previewStatus"),
     key: "partial",
     width: 108,
     render(row) {
       return h(
         NTag,
         { size: "small", type: row.partial ? "warning" : "success" },
-        { default: () => (row.partial ? "部分" : "完整") }
+        { default: () => (row.partial ? t("moduleCommon.partial") : t("moduleCommon.complete")) }
       )
     }
   },
-  { title: "计数键", key: "counter_key", minWidth: 220 }
-]
+  { title: t("table.counterKey"), key: "counter_key", minWidth: 220 }
+])
 
 const activeRiskWarnings = computed(() => {
   const warnings: string[] = []
@@ -265,15 +267,15 @@ const activeRiskWarnings = computed(() => {
 const enabledCount = computed(() => items.value.filter((item) => item.enabled).length)
 const blockingCount = computed(() => items.value.filter((item) => ["block", "ban", "rate-limit"].includes(item.action.type)).length)
 const headerTags = computed(() => [
-  { label: "规则", value: items.value.length, tone: "info" as const },
-  { label: "启用", value: enabledCount.value, tone: "success" as const },
-  { label: "风险", value: activeRiskWarnings.value.length, tone: activeRiskWarnings.value.length > 0 ? "warning" as const : "default" as const }
+  { label: t("common.rules"), value: items.value.length, tone: "info" as const },
+  { label: t("common.enabled"), value: enabledCount.value, tone: "success" as const },
+  { label: t("modules.cc.risk"), value: activeRiskWarnings.value.length, tone: activeRiskWarnings.value.length > 0 ? "warning" as const : "default" as const }
 ])
 const statusItems = computed(() => [
-  { label: "规则总数", value: items.value.length, note: "来自 CC 防护 API", tone: "info" as const },
-  { label: "启用规则", value: enabledCount.value, note: "参与当前发布配置", tone: "success" as const },
-  { label: "阻断/限流", value: blockingCount.value, note: "包含阻断、限流和临时封禁", tone: blockingCount.value > 0 ? "warning" as const : "neutral" as const },
-  { label: "高风险提示", value: activeRiskWarnings.value.length, note: "由当前规则配置派生", tone: activeRiskWarnings.value.length > 0 ? "danger" as const : "neutral" as const }
+  { label: t("common.totalRules"), value: items.value.length, note: t("modules.cc.totalRulesNote"), tone: "info" as const },
+  { label: t("common.enabledRules"), value: enabledCount.value, note: t("modules.cc.enabledRulesNote"), tone: "success" as const },
+  { label: t("modules.cc.blockingRateLimit"), value: blockingCount.value, note: t("modules.cc.blockingRateLimitNote"), tone: blockingCount.value > 0 ? "warning" as const : "neutral" as const },
+  { label: t("modules.cc.highRiskHints"), value: activeRiskWarnings.value.length, note: t("modules.cc.highRiskHintsNote"), tone: activeRiskWarnings.value.length > 0 ? "danger" as const : "neutral" as const }
 ])
 const guidanceAlerts = computed(() => guidanceItems.map((item) => ({ title: item.title, message: item.description, tone: "info" as const })))
 const activeRiskAlerts = computed(() => activeRiskWarnings.value.map((warning) => ({ title: warning, tone: "warning" as const })))
@@ -342,35 +344,35 @@ function applyTemplate(value: string) {
   const templates: Record<string, ProtectionRuleInput> = {
     login: {
       ...emptyForm(),
-      name: "登录接口防爆破",
+      name: t("modules.cc.loginBruteforce"),
       match: { path: "/api/login", path_match: "exact", methods: ["POST"] },
       limit: { counter: "client_ip", threshold: 10, window_sec: 60, ban_duration_sec: 600 },
       action: { type: "ban" }
     },
     api: {
       ...emptyForm(),
-      name: "API 调用频率限制",
+      name: t("modules.cc.apiRateLimit"),
       match: { path: "/api/", path_match: "prefix", methods: [] },
       limit: { counter: "client_ip_path", threshold: 120, window_sec: 60, ban_duration_sec: 60 },
       action: { type: "rate-limit" }
     },
     site: {
       ...emptyForm(),
-      name: "全站基础 CC 防护",
+      name: t("modules.cc.siteCcProtection"),
       match: { path: "/", path_match: "prefix", methods: [] },
       limit: { counter: "client_ip", threshold: 300, window_sec: 60, ban_duration_sec: 300 },
       action: { type: "rate-limit" }
     },
     glob404: {
       ...emptyForm(),
-      name: "404 扫描频率限制",
+      name: t("modules.cc.notFoundScanRate"),
       match: { path: "/api/*", path_match: "glob", methods: [] },
       limit: { counter: "not_found_frequency", threshold: 20, window_sec: 60, ban_duration_sec: 300 },
       action: { type: "rate-limit" }
     },
     session: {
       ...emptyForm(),
-      name: "会话级登录频率限制",
+      name: t("modules.cc.sessionLimit"),
       match: { path: "/api/login", path_match: "exact", methods: ["POST"] },
       limit: { counter: "session", session_source: "cookie", session_name: "sid", threshold: 8, window_sec: 60, ban_duration_sec: 300 },
       action: { type: "block" }
@@ -381,29 +383,29 @@ function applyTemplate(value: string) {
 
 function validateForm() {
   if (!form.name.trim()) {
-    return "规则名称不能为空"
+    return t("common.ruleNameRequired")
   }
   if (!String(form.match.path || "").startsWith("/")) {
-    return "路径必须以 / 开头"
+    return t("common.pathMustStartSlash")
   }
   if (form.match.path_match === "glob" && String(form.match.path || "").includes("**")) {
-    return "Glob 路径不支持 **"
+    return t("modules.cc.globPathInvalid")
   }
   if (form.limit.counter === "session" && !form.limit.session_name?.trim()) {
-    return "会话统计需要 Cookie 或 Header 名称"
+    return t("modules.cc.sessionNameRequired")
   }
   if (form.limit.threshold <= 0 || form.limit.window_sec <= 0) {
-    return "阈值和窗口必须大于 0"
+    return t("modules.cc.thresholdWindowInvalid")
   }
   if (form.limit.ban_duration_sec < 0) {
-    return "封禁时间不能小于 0"
+    return t("modules.cc.banDurationInvalid")
   }
   return ""
 }
 
 async function runPreview() {
   if (!previewForm.path.startsWith("/")) {
-    message.error("预览路径必须以 / 开头")
+    message.error(t("modules.cc.previewPathInvalid"))
     return
   }
   previewing.value = true
@@ -438,10 +440,10 @@ async function save() {
   try {
     if (editing.value) {
       await updateCCProtectionRule(editing.value.id, form)
-      message.success("CC 防护规则已更新")
+      message.success(t("common.updated", { name: t("modules.cc.title") }))
     } else {
       await createCCProtectionRule(form)
-      message.success("CC 防护规则已创建")
+      message.success(t("common.created", { name: t("modules.cc.title") }))
     }
     formVisible.value = false
     await resource.refresh()
@@ -457,10 +459,10 @@ function confirmRiskIfNeeded() {
   }
   return new Promise<boolean>((resolve) => {
     dialog.warning({
-      title: "确认高风险 CC 配置",
+      title: t("common.highRiskConfirm", { name: t("modules.cc.title") }),
       content: () => h("div", { class: "risk-confirm" }, risks.map((risk) => h("p", { key: risk.message }, riskPromptText(risk)))),
-      positiveText: "确认保存",
-      negativeText: "取消",
+      positiveText: t("common.confirmSave"),
+      negativeText: t("common.cancel"),
       onPositiveClick: () => resolve(true),
       onNegativeClick: () => resolve(false),
       onClose: () => resolve(false)
@@ -470,7 +472,7 @@ function confirmRiskIfNeeded() {
 
 async function remove(item: ProtectionRule) {
   await deleteCCProtectionRule(item.id)
-  message.success("CC 防护规则已删除")
+  message.success(t("common.deleted", { name: t("modules.cc.title") }))
   await resource.refresh()
 }
 
@@ -478,21 +480,21 @@ function hStatus(enabled: boolean) {
   return h(
     NTag,
     { type: enabled ? "success" : "default", size: "small" },
-    { default: () => (enabled ? "启用" : "停用") }
+    { default: () => (enabled ? t("common.enabled") : t("common.disabled")) }
   )
 }
 
 function hSource(row: ProtectionRule) {
   const status = row.migration_status ?? ""
-  const label = status === "legacy-only" ? "兼容" : status === "migrated" ? "已迁移" : "原生"
+  const label = status === "legacy-only" ? t("common.legacy") : status === "migrated" ? t("common.migrated") : t("common.native")
   const type = status === "legacy-only" ? "warning" : status === "migrated" ? "info" : "success"
   return h(NTag, { type, size: "small" }, { default: () => label })
 }
 
 function formatPathMatch(value: string) {
   const labels: Record<string, string> = {
-    exact: "精确",
-    prefix: "前缀",
+    exact: t("common.exact"),
+    prefix: t("common.prefix"),
     glob: "Glob"
   }
   return labels[value] ?? value
@@ -500,13 +502,13 @@ function formatPathMatch(value: string) {
 
 function formatCounter(value: string) {
   const labels: Record<string, string> = {
-    client_ip: "客户端 IP",
-    client_ip_path: "IP + 路径",
-    global: "全局",
-    not_found_frequency: "404 频率",
-    attack_frequency: "攻击命中频率",
-    session: "会话",
-    device: "粗粒度设备"
+    client_ip: t("common.clientIp"),
+    client_ip_path: t("modules.cc.clientIpPath"),
+    global: t("common.global"),
+    not_found_frequency: t("modules.cc.notFoundFrequency"),
+    attack_frequency: t("modules.cc.attackFrequency"),
+    session: t("modules.cc.session"),
+    device: t("modules.cc.device")
   }
   return labels[value] ?? value
 }
@@ -519,20 +521,20 @@ function ruleWarnings(item: CCRiskRule) {
   const blocking = ["block", "ban", "rate-limit"].includes(item.action.type)
   const lowThreshold = item.limit.threshold > 0 && item.limit.threshold < 60 && item.limit.window_sec <= 60
   if (blocking && lowThreshold && item.match.path === "/" && ["prefix", "glob"].includes(item.match.path_match ?? "exact")) {
-    warnings.push(`规则 ${item.name} 对全站路径使用较低阈值`)
+    warnings.push(t("modules.cc.lowThresholdRisk", { name: item.name }))
   }
   if (blocking && lowThreshold && item.match.path_match === "glob" && String(item.match.path).startsWith("/*")) {
-    warnings.push(`规则 ${item.name} 使用较宽泛 Glob 匹配`)
+    warnings.push(t("modules.cc.broadGlobRisk", { name: item.name }))
   }
   return warnings
 }
 
 function formatAction(value: string) {
   const labels: Record<string, string> = {
-    "log-only": "观察",
-    block: "阻断",
-    "rate-limit": "限流",
-    ban: "临时封禁"
+    "log-only": t("common.observation"),
+    block: t("common.block"),
+    "rate-limit": t("modules.cc.rateLimit"),
+    ban: t("modules.cc.temporaryBan")
   }
   return labels[value] ?? value
 }
@@ -548,15 +550,15 @@ function formatTime(value?: string) {
 <template>
   <main class="page">
     <ModulePageHeader
-      title="CC 防护"
-      subtitle="查看 URL 访问频率限制、登录防爆破和 API 调用限流规则。"
-      eyebrow="Protection Module"
+      :title="t('modules.cc.title')"
+      :subtitle="t('modules.cc.subtitle')"
+      :eyebrow="t('moduleCommon.protectionModule')"
       :tags="headerTags"
     >
       <template #actions>
       <NSpace>
-        <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
-        <NButton type="primary" :disabled="!authStore.canWrite" @click="openCreate">新增规则</NButton>
+        <NButton :loading="resource.loading.value" @click="resource.refresh">{{ t("common.refresh") }}</NButton>
+        <NButton type="primary" :disabled="!authStore.canWrite" @click="openCreate">{{ t("common.createRule") }}</NButton>
       </NSpace>
       </template>
     </ModulePageHeader>
@@ -564,20 +566,20 @@ function formatTime(value?: string) {
     <ModuleStateBlock
       v-if="resource.error.value"
       state="error"
-      title="CC 防护加载失败"
+      :title="t('modules.cc.loadingFailed')"
       :description="resource.error.value"
-      action-label="重试"
+      :action-label="t('common.retry')"
       @retry="resource.refresh"
     />
 
     <ModuleStatusSummary :items="statusItems" />
 
     <section v-if="activeRiskAlerts.length" class="section section-pad guidance-section">
-      <ModuleRiskGuidance title="当前配置风险" :items="activeRiskAlerts" />
+      <ModuleRiskGuidance :title="t('moduleCommon.currentConfigRisk')" :items="activeRiskAlerts" />
     </section>
 
     <section class="section section-pad guidance-section">
-      <ModuleRiskGuidance title="运营指引" :items="guidanceAlerts" empty-description="暂无 CC 防护运营指引" />
+      <ModuleRiskGuidance :title="t('common.operationGuidance')" :items="guidanceAlerts" :empty-description="t('modules.cc.emptyGuidance')" />
     </section>
 
     <section class="section section-pad">
@@ -592,40 +594,40 @@ function formatTime(value?: string) {
       <ModuleStateBlock
         v-if="!resource.loading.value && !resource.error.value && items.length === 0"
         state="empty"
-        description="暂无 CC 防护规则"
+        :description="t('modules.cc.emptyRules')"
       />
     </section>
 
     <section class="section section-pad preview-section">
       <div class="section-head">
         <div>
-          <h2 class="section-title">模拟预览</h2>
+          <h2 class="section-title">{{ t("moduleCommon.simulatePreview") }}</h2>
         </div>
-        <NButton :loading="previewing" @click="runPreview">运行预览</NButton>
+        <NButton :loading="previewing" @click="runPreview">{{ t("moduleCommon.runPreview") }}</NButton>
       </div>
       <NForm class="preview-form" label-placement="top">
-        <NFormItem label="应用 ID">
+        <NFormItem :label="t('common.applicationId')">
           <NInputNumber v-model:value="previewForm.application_id" :min="0" />
         </NFormItem>
-        <NFormItem label="路径">
+        <NFormItem :label="t('common.path')">
           <NInput v-model:value="previewForm.path" />
         </NFormItem>
-        <NFormItem label="方法">
+        <NFormItem :label="t('common.methods')">
           <NSelect v-model:value="previewForm.method" :options="methodOptions" />
         </NFormItem>
-        <NFormItem label="客户端 IP">
+        <NFormItem :label="t('common.clientIp')">
           <NInput v-model:value="previewForm.client_ip" />
         </NFormItem>
-        <NFormItem label="会话样本">
+        <NFormItem :label="t('modules.cc.sessionSample')">
           <NInput v-model:value="previewForm.session_id" />
         </NFormItem>
-        <NFormItem label="设备样本">
+        <NFormItem :label="t('modules.cc.deviceSample')">
           <NInput v-model:value="previewForm.device_id" />
         </NFormItem>
-        <NFormItem label="响应状态">
+        <NFormItem :label="t('modules.cc.responseStatus')">
           <NInputNumber v-model:value="previewForm.status" :min="0" />
         </NFormItem>
-        <NFormItem label="攻击命中">
+        <NFormItem :label="t('modules.cc.attackMatched')">
           <NSwitch v-model:value="previewForm.attack_matched" />
         </NFormItem>
       </NForm>
@@ -637,77 +639,77 @@ function formatTime(value?: string) {
         :bordered="false"
         :scroll-x="820"
       />
-      <NEmpty v-else-if="previewResult" description="没有匹配的 CC 规则" />
+      <NEmpty v-else-if="previewResult" :description="t('moduleCommon.noMatchedCcRules')" />
       <div v-if="previewResult?.some((item) => item.partial)" class="preview-warnings">
         <NAlert
           v-for="item in previewResult.filter((row) => row.partial)"
           :key="`${item.rule_id}-${item.counter}`"
           type="warning"
         >
-          {{ item.rule_name }} 的 {{ formatCounter(item.counter) }} 预览缺少完整样本字段
+          {{ t("modules.cc.previewPartial", { rule: item.rule_name, counter: formatCounter(item.counter) }) }}
         </NAlert>
       </div>
     </section>
 
     <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="formVisible" :width="520">
-      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? '编辑 CC 防护规则' : '新增 CC 防护规则'" closable>
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? t('moduleCommon.editRule', { name: t('modules.cc.title') }) : t('moduleCommon.createRule', { name: t('modules.cc.title') })" closable>
         <NForm class="rule-form" label-placement="top">
-          <NFormItem v-if="!editing" label="模板">
-            <NSelect :options="templateOptions" placeholder="选择模板快速填充" @update:value="applyTemplate" />
+          <NFormItem v-if="!editing" :label="t('common.template')">
+            <NSelect :options="templateOptions" :placeholder="t('moduleCommon.chooseTemplate')" @update:value="applyTemplate" />
           </NFormItem>
-          <NFormItem label="规则名称">
+          <NFormItem :label="t('common.ruleName')">
             <NInput v-model:value="form.name" />
           </NFormItem>
-          <NFormItem label="应用 ID">
+          <NFormItem :label="t('common.applicationId')">
             <NInputNumber v-model:value="form.application_id" :min="0" />
           </NFormItem>
-          <NFormItem label="路径">
+          <NFormItem :label="t('common.path')">
             <NInput v-model:value="form.match.path" />
           </NFormItem>
-          <NFormItem label="匹配方式">
+          <NFormItem :label="t('table.pathMatch')">
             <NSelect v-model:value="form.match.path_match" :options="pathMatchOptions" />
           </NFormItem>
-          <NFormItem label="请求方法">
-            <NSelect v-model:value="form.match.methods" multiple :options="methodOptions" placeholder="全部方法" />
+          <NFormItem :label="t('common.methods')">
+            <NSelect v-model:value="form.match.methods" multiple :options="methodOptions" :placeholder="t('common.allMethods')" />
           </NFormItem>
-          <NFormItem label="统计对象">
+          <NFormItem :label="t('table.counter')">
             <NSelect v-model:value="form.limit.counter" :options="counterOptions" />
           </NFormItem>
-          <NFormItem v-if="form.limit.counter === 'session'" label="会话来源">
+          <NFormItem v-if="form.limit.counter === 'session'" :label="t('modules.cc.sessionSource')">
             <NSelect v-model:value="form.limit.session_source" :options="sessionSourceOptions" />
           </NFormItem>
-          <NFormItem v-if="form.limit.counter === 'session'" label="Cookie / Header 名称">
+          <NFormItem v-if="form.limit.counter === 'session'" :label="t('common.cookieHeaderName')">
             <NInput v-model:value="form.limit.session_name" />
           </NFormItem>
-          <NFormItem v-if="form.limit.counter === 'device'" label="设备策略">
+          <NFormItem v-if="form.limit.counter === 'device'" :label="t('modules.cc.deviceStrategy')">
             <NSelect v-model:value="form.limit.device_strategy" :options="deviceStrategyOptions" />
           </NFormItem>
-          <NFormItem label="频率阈值">
+          <NFormItem :label="t('modules.cc.frequencyThreshold')">
             <NInputNumber v-model:value="form.limit.threshold" :min="1" />
           </NFormItem>
-          <NFormItem label="统计窗口秒">
+          <NFormItem :label="t('modules.cc.windowSeconds')">
             <NInputNumber v-model:value="form.limit.window_sec" :min="1" />
           </NFormItem>
-          <NFormItem label="动作">
+          <NFormItem :label="t('common.action')">
             <NSelect v-model:value="form.action.type" :options="actionOptions" />
           </NFormItem>
-          <NFormItem label="封禁/缓解秒">
+          <NFormItem :label="t('modules.cc.banMitigationSeconds')">
             <NInputNumber v-model:value="form.limit.ban_duration_sec" :min="0" />
           </NFormItem>
-          <NFormItem label="启用">
+          <NFormItem :label="t('common.enabled')">
             <NSwitch v-model:value="form.enabled" />
           </NFormItem>
           <ModuleRiskGuidance
             v-if="formRiskAlerts.length > 0"
             class="risk-prompt-list"
-            title="保存前风险确认"
+            :title="t('common.saveBeforeRiskConfirm')"
             :items="formRiskAlerts"
           />
         </NForm>
         <template #footer>
           <NSpace justify="end">
-            <NButton @click="formVisible = false">取消</NButton>
-            <NButton type="primary" :loading="saving" @click="save">保存</NButton>
+            <NButton @click="formVisible = false">{{ t("common.cancel") }}</NButton>
+            <NButton type="primary" :loading="saving" @click="save">{{ t("common.save") }}</NButton>
           </NSpace>
         </template>
       </NDrawerContent>

@@ -1,28 +1,31 @@
 <script setup lang="ts">
 import { computed } from "vue"
 import type { StatisticsReportCards } from "@/api/litewaf"
+import { getActiveLocale } from "@/i18n"
+import { useI18n } from "vue-i18n"
 
 const props = defineProps<{
   cards?: StatisticsReportCards
 }>()
+const { t } = useI18n()
 
 const metrics = computed(() => {
   const cards = props.cards
   return [
-    { label: "请求次数", value: cards?.requests ?? 0, accent: "primary" },
-    { label: "访问次数 (PV)", value: cards?.pv ?? 0, accent: "info" },
-    { label: "独立访客 (UV)", value: cards?.uv ?? 0, accent: "success" },
-    { label: "独立 IP", value: cards?.unique_ips ?? 0, accent: "warning" },
-    { label: "拦截次数", value: cards?.blocked ?? 0, accent: "danger" },
-    { label: "攻击 IP", value: cards?.attack_ips ?? 0, accent: "danger" },
-    { label: "4xx 错误数", value: cards?.errors_4xx ?? 0, note: `${formatRate(cards?.error_rate_4xx)} 错误率`, accent: "warning" },
-    { label: "4xx 拦截数", value: cards?.blocked_4xx ?? 0, note: `${formatRate(cards?.block_rate_4xx)} 拦截率`, accent: "danger" },
-    { label: "5xx 错误数", value: cards?.errors_5xx ?? 0, note: `${formatRate(cards?.error_rate_5xx)} 错误率`, accent: "danger" }
+    { label: t("statistics.requests"), value: cards?.requests ?? 0, accent: "primary" },
+    { label: t("statistics.pv"), value: cards?.pv ?? 0, accent: "info" },
+    { label: t("statistics.uv"), value: cards?.uv ?? 0, accent: "success" },
+    { label: t("statistics.uniqueIps"), value: cards?.unique_ips ?? 0, accent: "warning" },
+    { label: t("statistics.blocked"), value: cards?.blocked ?? 0, accent: "danger" },
+    { label: t("statistics.attackIps"), value: cards?.attack_ips ?? 0, accent: "danger" },
+    { label: t("statistics.errors4xx"), value: cards?.errors_4xx ?? 0, note: t("statistics.errorRate", { rate: formatRate(cards?.error_rate_4xx) }), accent: "warning" },
+    { label: t("statistics.blocked4xx"), value: cards?.blocked_4xx ?? 0, note: t("statistics.blockRate", { rate: formatRate(cards?.block_rate_4xx) }), accent: "danger" },
+    { label: t("statistics.errors5xx"), value: cards?.errors_5xx ?? 0, note: t("statistics.errorRate", { rate: formatRate(cards?.error_rate_5xx) }), accent: "danger" }
   ]
 })
 
 function formatNumber(value: number) {
-  return new Intl.NumberFormat("en-US", { notation: value >= 10000 ? "compact" : "standard", maximumFractionDigits: 1 }).format(value)
+  return new Intl.NumberFormat(getActiveLocale(), { notation: value >= 10000 ? "compact" : "standard", maximumFractionDigits: 1 }).format(value)
 }
 
 function formatRate(value?: number) {

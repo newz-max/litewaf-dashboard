@@ -15,8 +15,10 @@ import ModuleStateBlock from "@/components/operations/ModuleStateBlock.vue"
 import ModuleStatusSummary from "@/components/operations/ModuleStatusSummary.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
+import { useI18n } from "vue-i18n"
 import { protectionGuides, protectionRiskPrompts, riskPromptText } from "@/utils/protectionGuidance"
 
+const { t } = useI18n()
 const message = useMessage()
 const dialog = useDialog()
 const authStore = useAuthStore()
@@ -33,59 +35,59 @@ const enabledCount = computed(() => items.value.filter((item) => item.enabled).l
 const captchaCount = computed(() => items.value.filter((item) => item.challenge?.mode === "captcha").length)
 const behaviorCount = computed(() => items.value.filter((item) => item.challenge?.behavior_enabled).length)
 const headerTags = computed(() => [
-  { label: "规则", value: items.value.length, tone: "info" as const },
-  { label: "启用", value: enabledCount.value, tone: "success" as const },
+  { label: t("common.rules"), value: items.value.length, tone: "info" as const },
+  { label: t("common.enabled"), value: enabledCount.value, tone: "success" as const },
   { label: "Captcha", value: captchaCount.value, tone: "warning" as const }
 ])
 const statusItems = computed(() => [
-  { label: "规则总数", value: items.value.length, note: "来自 Bot 防护 API", tone: "info" as const },
-  { label: "启用规则", value: enabledCount.value, note: "参与挑战或观察", tone: "success" as const },
-  { label: "本地 Captcha", value: captchaCount.value, note: "启用交互式验证", tone: captchaCount.value > 0 ? "warning" as const : "neutral" as const },
-  { label: "行为评分", value: behaviorCount.value, note: "使用可解释 Bot 信号", tone: behaviorCount.value > 0 ? "warning" as const : "neutral" as const }
+  { label: t("common.totalRules"), value: items.value.length, note: t("modules.bot.totalRulesNote"), tone: "info" as const },
+  { label: t("common.enabledRules"), value: enabledCount.value, note: t("modules.bot.enabledRulesNote"), tone: "success" as const },
+  { label: t("modules.bot.localCaptcha"), value: captchaCount.value, note: t("modules.bot.localCaptchaNote"), tone: captchaCount.value > 0 ? "warning" as const : "neutral" as const },
+  { label: t("modules.bot.behaviorScore"), value: behaviorCount.value, note: t("modules.bot.behaviorScoreNote"), tone: behaviorCount.value > 0 ? "warning" as const : "neutral" as const }
 ])
 const guidanceAlerts = computed(() => guidanceItems.map((item) => ({ title: item.title, message: item.description, tone: "info" as const })))
 const formRiskAlerts = computed(() => formRiskPrompts.value.map((risk) => ({ title: risk.message, message: riskPromptText(risk), tone: "warning" as const })))
 
-const templateOptions = [
-  { label: "后台路径挑战", value: "admin" },
-  { label: "登录路径挑战", value: "login" },
-  { label: "本地 Captcha", value: "captcha" },
-  { label: "搜索引擎绕过", value: "crawler" },
-  { label: "观察 Bot 行为", value: "observe" }
-]
+const templateOptions = computed(() => [
+  { label: t("modules.bot.adminPathChallenge"), value: "admin" },
+  { label: t("modules.bot.loginPathChallenge"), value: "login" },
+  { label: t("modules.bot.localCaptcha"), value: "captcha" },
+  { label: t("modules.bot.searchEngineBypass"), value: "crawler" },
+  { label: t("modules.bot.observeBotBehavior"), value: "observe" }
+])
 
-const pathMatchOptions = [
-  { label: "精确", value: "exact" },
-  { label: "前缀", value: "prefix" }
-]
+const pathMatchOptions = computed(() => [
+  { label: t("common.exact"), value: "exact" },
+  { label: t("common.prefix"), value: "prefix" }
+])
 
 const methodOptions = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].map((method) => ({
   label: method,
   value: method
 }))
 
-const failureActionOptions = [
-  { label: "观察", value: "log-only" },
-  { label: "阻断", value: "block" }
-]
+const failureActionOptions = computed(() => [
+  { label: t("common.observation"), value: "log-only" },
+  { label: t("common.block"), value: "block" }
+])
 
 const challengeModeOptions = [
   { label: "JS Challenge", value: "js-challenge" },
-  { label: "本地 Captcha", value: "captcha" }
+  { label: t("modules.bot.localCaptcha"), value: "captcha" }
 ]
 
-const columns: DataTableColumns<ProtectionRule> = [
-  { title: "名称", key: "name", minWidth: 170 },
+const columns = computed<DataTableColumns<ProtectionRule>>(() => [
+  { title: t("common.name"), key: "name", minWidth: 170 },
   {
-    title: "生效应用",
+    title: t("common.effectiveApplication"),
     key: "application_id",
     width: 92,
     render(row) {
-      return row.application_id > 0 ? `#${row.application_id}` : "全局"
+      return row.application_id > 0 ? `#${row.application_id}` : t("common.global")
     }
   },
   {
-    title: "路径",
+    title: t("common.path"),
     key: "match.path",
     minWidth: 160,
     render(row) {
@@ -93,23 +95,23 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "匹配方式",
+    title: t("table.pathMatch"),
     key: "match.path_match",
     width: 96,
     render(row) {
-      return row.match.path_match === "exact" ? "精确" : "前缀"
+      return row.match.path_match === "exact" ? t("common.exact") : t("common.prefix")
     }
   },
   {
-    title: "方法",
+    title: t("common.methods"),
     key: "match.methods",
     minWidth: 120,
     render(row) {
-      return row.match.methods.length > 0 ? row.match.methods.join(", ") : "全部"
+      return row.match.methods.length > 0 ? row.match.methods.join(", ") : t("common.all")
     }
   },
   {
-    title: "挑战方式",
+    title: t("table.challengeMode"),
     key: "challenge.mode",
     width: 126,
     render(row) {
@@ -117,7 +119,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "增强项",
+    title: t("table.enhancements"),
     key: "challenge.enhancements",
     minWidth: 210,
     render(row) {
@@ -125,7 +127,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "有效期",
+    title: t("table.ttl"),
     key: "challenge.verify_ttl_sec",
     width: 104,
     render(row) {
@@ -133,7 +135,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "失败动作",
+    title: t("table.failureAction"),
     key: "challenge.failure_action",
     width: 96,
     render(row) {
@@ -141,7 +143,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "启用",
+    title: t("common.enabled"),
     key: "enabled",
     width: 84,
     render(row) {
@@ -149,7 +151,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "来源",
+    title: t("common.source"),
     key: "migration_status",
     width: 104,
     render(row) {
@@ -157,7 +159,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "更新时间",
+    title: t("common.updatedAt"),
     key: "updated_at",
     minWidth: 160,
     render(row) {
@@ -165,7 +167,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "操作",
+    title: t("common.actions"),
     key: "actions",
     fixed: "right",
     width: 150,
@@ -178,7 +180,7 @@ const columns: DataTableColumns<ProtectionRule> = [
             h(
               NButton,
               { size: "small", disabled: !authStore.canWrite, onClick: () => startEdit(row) },
-              { default: () => "编辑" }
+              { default: () => t("common.edit") }
             ),
             h(
               NButton,
@@ -188,14 +190,14 @@ const columns: DataTableColumns<ProtectionRule> = [
                 disabled: !authStore.canWrite,
                 onClick: () => remove(row)
               },
-              { default: () => "删除" }
+              { default: () => t("common.delete") }
             )
           ]
         }
       )
     }
   }
-]
+])
 
 function emptyForm(): ProtectionRuleInput {
   return {
@@ -284,21 +286,21 @@ function applyTemplate(value: string) {
   const templates: Record<string, ProtectionRuleInput> = {
     admin: {
       ...emptyForm(),
-      name: "后台路径 JS Challenge",
+      name: t("modules.bot.adminPathJsChallenge"),
       match: { path: "/admin", path_match: "prefix", methods: [] },
       challenge: { ...emptyForm().challenge!, mode: "js-challenge", verify_ttl_sec: 600, failure_action: "block" },
       action: { type: "block" }
     },
     login: {
       ...emptyForm(),
-      name: "登录路径 JS Challenge",
+      name: t("modules.bot.loginPathJsChallenge"),
       match: { path: "/login", path_match: "exact", methods: ["GET", "POST"] },
       challenge: { ...emptyForm().challenge!, mode: "js-challenge", verify_ttl_sec: 300, failure_action: "block" },
       action: { type: "block" }
     },
     captcha: {
       ...emptyForm(),
-      name: "敏感路径本地 Captcha",
+      name: t("modules.bot.sensitivePathCaptcha"),
       match: { path: "/checkout", path_match: "prefix", methods: ["GET", "POST"] },
       challenge: {
         ...emptyForm().challenge!,
@@ -308,21 +310,21 @@ function applyTemplate(value: string) {
         behavior_enabled: true,
         behavior_threshold: 60,
         device_binding: true,
-        failure_message: "验证失败，请稍后重试。",
-        privacy_notice: "LiteWaf 仅使用本地挑战和粗粒度浏览器信号完成验证。"
+        failure_message: t("modules.bot.captchaFailureMessage"),
+        privacy_notice: t("modules.bot.captchaPrivacyNotice")
       },
       action: { type: "block" }
     },
     crawler: {
       ...emptyForm(),
-      name: "搜索引擎访问绕过",
+      name: t("modules.bot.searchEngineBypass"),
       match: { path: "/", path_match: "prefix", methods: [] },
       challenge: { ...emptyForm().challenge!, search_engine_bypass: true, failure_action: "log-only" },
       action: { type: "log-only" }
     },
     observe: {
       ...emptyForm(),
-      name: "Bot 行为观察",
+      name: t("modules.bot.observeBotBehavior"),
       match: { path: "/", path_match: "prefix", methods: [] },
       challenge: { ...emptyForm().challenge!, mode: "js-challenge", verify_ttl_sec: 300, failure_action: "log-only" },
       action: { type: "log-only" }
@@ -333,28 +335,28 @@ function applyTemplate(value: string) {
 
 function validateForm() {
   if (!form.name.trim()) {
-    return "规则名称不能为空"
+    return t("common.ruleNameRequired")
   }
   if (!String(form.match.path || "").startsWith("/")) {
-    return "路径必须以 / 开头"
+    return t("common.pathMustStartSlash")
   }
   if (Number(form.priority ?? 0) < 0) {
-    return "优先级不能小于 0"
+    return t("common.invalidPriorityZero")
   }
   if (!["js-challenge", "captcha"].includes(form.challenge?.mode ?? "")) {
-    return "挑战方式必须是 JS Challenge 或本地 Captcha"
+    return t("modules.bot.challengeModeInvalid")
   }
   if (Number(form.challenge?.verify_ttl_sec ?? 0) <= 0 || Number(form.challenge?.verify_ttl_sec ?? 0) > 86400) {
-    return "验证有效期必须在 1 到 86400 秒之间"
+    return t("modules.bot.challengeTtlInvalid")
   }
   if (form.challenge?.behavior_enabled && (Number(form.challenge.behavior_threshold ?? 0) <= 0 || Number(form.challenge.behavior_threshold ?? 0) > 100)) {
-    return "行为评分阈值必须在 1 到 100 之间"
+    return t("modules.bot.behaviorThresholdInvalid")
   }
   if ((form.challenge?.failure_message?.length ?? 0) > 240) {
-    return "失败说明不能超过 240 个字符"
+    return t("modules.bot.failureMessageTooLong")
   }
   if ((form.challenge?.privacy_notice?.length ?? 0) > 360) {
-    return "隐私提示不能超过 360 个字符"
+    return t("modules.bot.privacyNoticeTooLong")
   }
   return ""
 }
@@ -374,10 +376,10 @@ async function save() {
   try {
     if (editing.value) {
       await updateBotProtectionRule(editing.value.id, form)
-      message.success("Bot 防护规则已更新")
+      message.success(t("common.updated", { name: t("modules.bot.title") }))
     } else {
       await createBotProtectionRule(form)
-      message.success("Bot 防护规则已创建")
+      message.success(t("common.created", { name: t("modules.bot.title") }))
     }
     formVisible.value = false
     await resource.refresh()
@@ -393,10 +395,10 @@ function confirmRiskIfNeeded() {
   }
   return new Promise<boolean>((resolve) => {
     dialog.warning({
-      title: "确认高风险 Bot 防护配置",
+      title: t("common.highRiskConfirm", { name: t("modules.bot.title") }),
       content: () => h("div", { class: "risk-confirm" }, risks.map((risk) => h("p", { key: risk.message }, riskPromptText(risk)))),
-      positiveText: "确认保存",
-      negativeText: "取消",
+      positiveText: t("common.confirmSave"),
+      negativeText: t("common.cancel"),
       onPositiveClick: () => resolve(true),
       onNegativeClick: () => resolve(false),
       onClose: () => resolve(false)
@@ -406,7 +408,7 @@ function confirmRiskIfNeeded() {
 
 async function remove(item: ProtectionRule) {
   await deleteBotProtectionRule(item.id)
-  message.success("Bot 防护规则已删除")
+  message.success(t("common.deleted", { name: t("modules.bot.title") }))
   await resource.refresh()
 }
 
@@ -414,13 +416,13 @@ function hStatus(enabled: boolean) {
   return h(
     NTag,
     { type: enabled ? "success" : "default", size: "small" },
-    { default: () => (enabled ? "启用" : "停用") }
+    { default: () => (enabled ? t("common.enabled") : t("common.disabled")) }
   )
 }
 
 function hSource(row: ProtectionRule) {
   const status = row.migration_status ?? ""
-  const label = status === "legacy-only" ? "兼容" : status === "migrated" ? "已迁移" : "原生"
+  const label = status === "legacy-only" ? t("common.legacy") : status === "migrated" ? t("common.migrated") : t("common.native")
   const type = status === "legacy-only" ? "warning" : status === "migrated" ? "info" : "success"
   return h(NTag, { type, size: "small" }, { default: () => label })
 }
@@ -430,7 +432,7 @@ function formatChallengeMode(value?: string) {
     return "JS Challenge"
   }
   if (value === "captcha") {
-    return "本地 Captcha"
+    return t("modules.bot.localCaptcha")
   }
   return value || "-"
 }
@@ -438,27 +440,27 @@ function formatChallengeMode(value?: string) {
 function formatEnhancements(challenge?: ProtectionRule["challenge"]) {
   const items: string[] = []
   if (challenge?.behavior_enabled) {
-    items.push(`行为评分>=${challenge.behavior_threshold ?? 0}`)
+    items.push(t("modules.bot.behaviorScoreThreshold", { threshold: challenge.behavior_threshold ?? 0 }))
   }
   if (challenge?.device_binding) {
-    items.push("设备绑定")
+    items.push(t("modules.bot.deviceBinding"))
   }
   if (challenge?.search_engine_bypass) {
-    items.push("搜索引擎绕过")
+    items.push(t("modules.bot.searchEngineBypass"))
   }
   if (challenge?.failure_message) {
-    items.push("失败说明")
+    items.push(t("modules.bot.failureMessage"))
   }
   if (challenge?.privacy_notice) {
-    items.push("隐私提示")
+    items.push(t("modules.bot.privacyNotice"))
   }
-  return items.length > 0 ? items.join(" / ") : "未启用"
+  return items.length > 0 ? items.join(" / ") : t("common.noneEnabled")
 }
 
 function formatAction(value: string) {
   const labels: Record<string, string> = {
-    "log-only": "观察",
-    block: "阻断"
+    "log-only": t("common.observation"),
+    block: t("common.block")
   }
   return labels[value] ?? value
 }
@@ -474,15 +476,15 @@ function formatTime(value?: string) {
 <template>
   <main class="page">
     <ModulePageHeader
-      title="Bot / 人机验证"
-      subtitle="按路径启用 JS Challenge、本地 Captcha 和可解释 Bot 信号，拦截或观察自动化访问。"
-      eyebrow="Protection Module"
+      :title="t('modules.bot.title')"
+      :subtitle="t('modules.bot.subtitle')"
+      :eyebrow="t('moduleCommon.protectionModule')"
       :tags="headerTags"
     >
       <template #actions>
       <NSpace>
-        <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
-        <NButton type="primary" :disabled="!authStore.canWrite" @click="openCreate">新增规则</NButton>
+        <NButton :loading="resource.loading.value" @click="resource.refresh">{{ t("common.refresh") }}</NButton>
+        <NButton type="primary" :disabled="!authStore.canWrite" @click="openCreate">{{ t("common.createRule") }}</NButton>
       </NSpace>
       </template>
     </ModulePageHeader>
@@ -490,16 +492,16 @@ function formatTime(value?: string) {
     <ModuleStateBlock
       v-if="resource.error.value"
       state="error"
-      title="Bot 防护加载失败"
+      :title="t('modules.bot.loadingFailed')"
       :description="resource.error.value"
-      action-label="重试"
+      :action-label="t('common.retry')"
       @retry="resource.refresh"
     />
 
     <ModuleStatusSummary :items="statusItems" />
 
     <section class="section section-pad guidance-section">
-      <ModuleRiskGuidance title="运营指引" :items="guidanceAlerts" empty-description="暂无 Bot 防护运营指引" />
+      <ModuleRiskGuidance :title="t('common.operationGuidance')" :items="guidanceAlerts" :empty-description="t('modules.bot.emptyGuidance')" />
     </section>
 
     <section class="section section-pad">
@@ -514,44 +516,44 @@ function formatTime(value?: string) {
       <ModuleStateBlock
         v-if="!resource.loading.value && !resource.error.value && items.length === 0"
         state="empty"
-        description="暂无 Bot 防护规则"
+        :description="t('modules.bot.emptyRules')"
       />
     </section>
 
     <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="formVisible" :width="520">
-      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? '编辑 Bot 防护规则' : '新增 Bot 防护规则'" closable>
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? t('moduleCommon.editRule', { name: t('modules.bot.title') }) : t('moduleCommon.createRule', { name: t('modules.bot.title') })" closable>
         <NForm class="rule-form" label-placement="top">
-          <NFormItem v-if="!editing" label="模板">
-            <NSelect :options="templateOptions" placeholder="选择模板快速填充" @update:value="applyTemplate" />
+          <NFormItem v-if="!editing" :label="t('common.template')">
+            <NSelect :options="templateOptions" :placeholder="t('moduleCommon.chooseTemplate')" @update:value="applyTemplate" />
           </NFormItem>
-          <NFormItem label="规则名称">
+          <NFormItem :label="t('common.ruleName')">
             <NInput v-model:value="form.name" />
           </NFormItem>
-          <NFormItem label="应用 ID">
+          <NFormItem :label="t('common.applicationId')">
             <NInputNumber v-model:value="form.application_id" :min="0" />
           </NFormItem>
-          <NFormItem label="路径">
+          <NFormItem :label="t('common.path')">
             <NInput v-model:value="form.match.path" />
           </NFormItem>
-          <NFormItem label="路径匹配">
+          <NFormItem :label="t('table.pathMatch')">
             <NSelect v-model:value="form.match.path_match" :options="pathMatchOptions" />
           </NFormItem>
-          <NFormItem label="请求方法">
-            <NSelect v-model:value="form.match.methods" multiple :options="methodOptions" placeholder="全部方法" />
+          <NFormItem :label="t('common.methods')">
+            <NSelect v-model:value="form.match.methods" multiple :options="methodOptions" :placeholder="t('common.allMethods')" />
           </NFormItem>
-          <NFormItem label="挑战方式">
+          <NFormItem :label="t('table.challengeMode')">
             <NSelect
               v-model:value="form.challenge!.mode"
               :options="challengeModeOptions"
             />
           </NFormItem>
-          <NFormItem label="验证有效期秒">
+          <NFormItem :label="t('modules.bot.challengeTtlSeconds')">
             <NInputNumber v-model:value="form.challenge!.verify_ttl_sec" :min="1" :max="86400" />
           </NFormItem>
-          <NFormItem label="失败动作">
+          <NFormItem :label="t('table.failureAction')">
             <NSelect v-model:value="form.challenge!.failure_action" :options="failureActionOptions" />
           </NFormItem>
-          <NFormItem label="行为评分">
+          <NFormItem :label="t('modules.bot.behaviorScore')">
             <NSpace align="center">
               <NSwitch v-model:value="form.challenge!.behavior_enabled" />
               <NInputNumber
@@ -562,13 +564,13 @@ function formatTime(value?: string) {
               />
             </NSpace>
           </NFormItem>
-          <NFormItem label="设备信号绑定">
+          <NFormItem :label="t('modules.bot.deviceBinding')">
             <NSwitch v-model:value="form.challenge!.device_binding" />
           </NFormItem>
-          <NFormItem label="搜索引擎绕过">
+          <NFormItem :label="t('modules.bot.searchEngineBypass')">
             <NSwitch v-model:value="form.challenge!.search_engine_bypass" />
           </NFormItem>
-          <NFormItem label="失败说明">
+          <NFormItem :label="t('modules.bot.failureMessage')">
             <NInput
               v-model:value="form.challenge!.failure_message"
               type="textarea"
@@ -577,7 +579,7 @@ function formatTime(value?: string) {
               show-count
             />
           </NFormItem>
-          <NFormItem label="隐私提示">
+          <NFormItem :label="t('modules.bot.privacyNotice')">
             <NInput
               v-model:value="form.challenge!.privacy_notice"
               type="textarea"
@@ -586,23 +588,23 @@ function formatTime(value?: string) {
               show-count
             />
           </NFormItem>
-          <NFormItem label="优先级">
+          <NFormItem :label="t('common.priority')">
             <NInputNumber v-model:value="form.priority" :min="0" />
           </NFormItem>
-          <NFormItem label="启用">
+          <NFormItem :label="t('common.enabled')">
             <NSwitch v-model:value="form.enabled" />
           </NFormItem>
           <ModuleRiskGuidance
             v-if="formRiskAlerts.length > 0"
             class="risk-prompt-list"
-            title="保存前风险确认"
+            :title="t('common.saveBeforeRiskConfirm')"
             :items="formRiskAlerts"
           />
         </NForm>
         <template #footer>
           <NSpace justify="end">
-            <NButton @click="formVisible = false">取消</NButton>
-            <NButton type="primary" :loading="saving" @click="save">保存</NButton>
+            <NButton @click="formVisible = false">{{ t("common.cancel") }}</NButton>
+            <NButton type="primary" :loading="saving" @click="save">{{ t("common.save") }}</NButton>
           </NSpace>
         </template>
       </NDrawerContent>

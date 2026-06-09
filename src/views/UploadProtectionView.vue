@@ -15,8 +15,10 @@ import ModuleStateBlock from "@/components/operations/ModuleStateBlock.vue"
 import ModuleStatusSummary from "@/components/operations/ModuleStatusSummary.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
+import { useI18n } from "vue-i18n"
 import { protectionGuides, protectionRiskPrompts, riskPromptText } from "@/utils/protectionGuidance"
 
+const { t } = useI18n()
 const message = useMessage()
 const dialog = useDialog()
 const authStore = useAuthStore()
@@ -33,52 +35,52 @@ const enabledCount = computed(() => items.value.filter((item) => item.enabled).l
 const extensionRuleCount = computed(() => items.value.filter((item) => (item.upload?.extensions ?? []).length > 0).length)
 const sizeLimitCount = computed(() => items.value.filter((item) => Number(item.upload?.max_bytes ?? 0) > 0).length)
 const headerTags = computed(() => [
-  { label: "规则", value: items.value.length, tone: "info" as const },
-  { label: "启用", value: enabledCount.value, tone: "success" as const },
-  { label: "扩展名", value: extensionRuleCount.value, tone: "warning" as const }
+  { label: t("common.rules"), value: items.value.length, tone: "info" as const },
+  { label: t("common.enabled"), value: enabledCount.value, tone: "success" as const },
+  { label: t("modules.upload.extensionRules"), value: extensionRuleCount.value, tone: "warning" as const }
 ])
 const statusItems = computed(() => [
-  { label: "规则总数", value: items.value.length, note: "来自上传防护 API", tone: "info" as const },
-  { label: "启用规则", value: enabledCount.value, note: "参与上传处置", tone: "success" as const },
-  { label: "扩展名规则", value: extensionRuleCount.value, note: "检查危险文件类型", tone: extensionRuleCount.value > 0 ? "warning" as const : "neutral" as const },
-  { label: "大小限制", value: sizeLimitCount.value, note: "限制上传体积", tone: sizeLimitCount.value > 0 ? "warning" as const : "neutral" as const }
+  { label: t("common.totalRules"), value: items.value.length, note: t("modules.upload.totalRulesNote"), tone: "info" as const },
+  { label: t("common.enabledRules"), value: enabledCount.value, note: t("modules.upload.enabledRulesNote"), tone: "success" as const },
+  { label: t("modules.upload.extensionRules"), value: extensionRuleCount.value, note: t("modules.upload.extensionRulesNote"), tone: extensionRuleCount.value > 0 ? "warning" as const : "neutral" as const },
+  { label: t("modules.upload.sizeLimitRules"), value: sizeLimitCount.value, note: t("modules.upload.sizeLimitRulesNote"), tone: sizeLimitCount.value > 0 ? "warning" as const : "neutral" as const }
 ])
 const guidanceAlerts = computed(() => guidanceItems.map((item) => ({ title: item.title, message: item.description, tone: "info" as const })))
 const formRiskAlerts = computed(() => formRiskPrompts.value.map((risk) => ({ title: risk.message, message: riskPromptText(risk), tone: "warning" as const })))
 
-const templateOptions = [
-  { label: "危险脚本扩展名", value: "script" },
-  { label: "头像上传大小限制", value: "avatar" },
-  { label: "观察上传行为", value: "observe" }
-]
+const templateOptions = computed(() => [
+  { label: t("modules.upload.dangerousScriptExtensions"), value: "script" },
+  { label: t("modules.upload.avatarSizeLimit"), value: "avatar" },
+  { label: t("modules.upload.observeUploads"), value: "observe" }
+])
 
-const pathMatchOptions = [
-  { label: "精确", value: "exact" },
-  { label: "前缀", value: "prefix" }
-]
+const pathMatchOptions = computed(() => [
+  { label: t("common.exact"), value: "exact" },
+  { label: t("common.prefix"), value: "prefix" }
+])
 
 const methodOptions = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].map((method) => ({
   label: method,
   value: method
 }))
 
-const actionOptions = [
-  { label: "观察", value: "log-only" },
-  { label: "阻断", value: "block" }
-]
+const actionOptions = computed(() => [
+  { label: t("common.observation"), value: "log-only" },
+  { label: t("common.block"), value: "block" }
+])
 
-const columns: DataTableColumns<ProtectionRule> = [
-  { title: "名称", key: "name", minWidth: 170 },
+const columns = computed<DataTableColumns<ProtectionRule>>(() => [
+  { title: t("common.name"), key: "name", minWidth: 170 },
   {
-    title: "生效应用",
+    title: t("common.effectiveApplication"),
     key: "application_id",
     width: 92,
     render(row) {
-      return row.application_id > 0 ? `#${row.application_id}` : "全局"
+      return row.application_id > 0 ? `#${row.application_id}` : t("common.global")
     }
   },
   {
-    title: "上传路径",
+    title: t("table.uploadPath"),
     key: "match.path",
     minWidth: 160,
     render(row) {
@@ -86,23 +88,23 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "匹配方式",
+    title: t("table.pathMatch"),
     key: "match.path_match",
     width: 96,
     render(row) {
-      return row.match.path_match === "exact" ? "精确" : "前缀"
+      return row.match.path_match === "exact" ? t("common.exact") : t("common.prefix")
     }
   },
   {
-    title: "方法",
+    title: t("common.methods"),
     key: "match.methods",
     minWidth: 120,
     render(row) {
-      return row.match.methods.length > 0 ? row.match.methods.join(", ") : "全部"
+      return row.match.methods.length > 0 ? row.match.methods.join(", ") : t("common.all")
     }
   },
   {
-    title: "危险扩展名",
+    title: t("table.dangerousExtensions"),
     key: "upload.extensions",
     minWidth: 150,
     render(row) {
@@ -110,7 +112,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "大小限制",
+    title: t("table.sizeLimit"),
     key: "upload.max_bytes",
     width: 118,
     render(row) {
@@ -118,7 +120,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "动作",
+    title: t("common.action"),
     key: "action.type",
     width: 96,
     render(row) {
@@ -126,7 +128,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "启用",
+    title: t("common.enabled"),
     key: "enabled",
     width: 84,
     render(row) {
@@ -134,7 +136,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "来源",
+    title: t("common.source"),
     key: "migration_status",
     width: 104,
     render(row) {
@@ -142,7 +144,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "更新时间",
+    title: t("common.updatedAt"),
     key: "updated_at",
     minWidth: 160,
     render(row) {
@@ -150,7 +152,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "操作",
+    title: t("common.actions"),
     key: "actions",
     fixed: "right",
     width: 150,
@@ -163,7 +165,7 @@ const columns: DataTableColumns<ProtectionRule> = [
             h(
               NButton,
               { size: "small", disabled: !authStore.canWrite, onClick: () => startEdit(row) },
-              { default: () => "编辑" }
+              { default: () => t("common.edit") }
             ),
             h(
               NButton,
@@ -173,14 +175,14 @@ const columns: DataTableColumns<ProtectionRule> = [
                 disabled: !authStore.canWrite,
                 onClick: () => remove(row)
               },
-              { default: () => "删除" }
+              { default: () => t("common.delete") }
             )
           ]
         }
       )
     }
   }
-]
+])
 
 function emptyForm(): ProtectionRuleInput {
   return {
@@ -258,21 +260,21 @@ function applyTemplate(value: string) {
   const templates: Record<string, ProtectionRuleInput> = {
     script: {
       ...emptyForm(),
-      name: "危险脚本扩展名阻断",
+      name: t("modules.upload.dangerousScriptExtensionsBlock"),
       match: { path: "/upload", path_match: "prefix", methods: ["POST"] },
       upload: { extensions: ["php", "jsp", "asp", "aspx", "jspx"], max_bytes: 0 },
       action: { type: "block" }
     },
     avatar: {
       ...emptyForm(),
-      name: "头像上传大小限制",
+      name: t("modules.upload.avatarSizeLimit"),
       match: { path: "/upload/avatar", path_match: "prefix", methods: ["POST", "PUT"] },
       upload: { extensions: [], max_bytes: 1048576 },
       action: { type: "block" }
     },
     observe: {
       ...emptyForm(),
-      name: "上传行为观察",
+      name: t("modules.upload.observeUploads"),
       match: { path: "/upload", path_match: "prefix", methods: ["POST", "PUT"] },
       upload: { extensions: ["php", "jsp", "exe"], max_bytes: 10485760 },
       action: { type: "log-only" }
@@ -283,22 +285,22 @@ function applyTemplate(value: string) {
 
 function validateForm() {
   if (!form.name.trim()) {
-    return "规则名称不能为空"
+    return t("common.ruleNameRequired")
   }
   if (!String(form.match.path || "").startsWith("/")) {
-    return "上传路径必须以 / 开头"
+    return t("modules.upload.uploadPathMustStartSlash")
   }
   if (Number(form.priority ?? 0) < 0) {
-    return "优先级不能小于 0"
+    return t("common.invalidPriorityZero")
   }
   if (!form.upload?.extensions.length && Number(form.upload?.max_bytes ?? 0) <= 0) {
-    return "危险扩展名和大小限制至少填写一项"
+    return t("modules.upload.extensionOrSizeRequired")
   }
   if (Number(form.upload?.max_bytes ?? 0) < 0) {
-    return "大小限制不能小于 0"
+    return t("modules.upload.sizeLimitInvalid")
   }
   if ((form.upload?.extensions ?? []).some((item) => item.includes("/") || item.includes("\\") || item.includes(".."))) {
-    return "扩展名不能包含路径字符"
+    return t("modules.upload.extensionInvalid")
   }
   return ""
 }
@@ -316,10 +318,10 @@ async function save() {
   try {
     if (editing.value) {
       await updateUploadProtectionRule(editing.value.id, form)
-      message.success("上传防护规则已更新")
+      message.success(t("common.updated", { name: t("modules.upload.title") }))
     } else {
       await createUploadProtectionRule(form)
-      message.success("上传防护规则已创建")
+      message.success(t("common.created", { name: t("modules.upload.title") }))
     }
     formVisible.value = false
     await resource.refresh()
@@ -335,10 +337,10 @@ function confirmRiskIfNeeded() {
   }
   return new Promise<boolean>((resolve) => {
     dialog.warning({
-      title: "确认高风险上传防护配置",
+      title: t("common.highRiskConfirm", { name: t("modules.upload.title") }),
       content: () => h("div", { class: "risk-confirm" }, risks.map((risk) => h("p", { key: risk.message }, riskPromptText(risk)))),
-      positiveText: "确认保存",
-      negativeText: "取消",
+      positiveText: t("common.confirmSave"),
+      negativeText: t("common.cancel"),
       onPositiveClick: () => resolve(true),
       onNegativeClick: () => resolve(false),
       onClose: () => resolve(false)
@@ -348,7 +350,7 @@ function confirmRiskIfNeeded() {
 
 async function remove(item: ProtectionRule) {
   await deleteUploadProtectionRule(item.id)
-  message.success("上传防护规则已删除")
+  message.success(t("common.deleted", { name: t("modules.upload.title") }))
   await resource.refresh()
 }
 
@@ -356,21 +358,21 @@ function hStatus(enabled: boolean) {
   return h(
     NTag,
     { type: enabled ? "success" : "default", size: "small" },
-    { default: () => (enabled ? "启用" : "停用") }
+    { default: () => (enabled ? t("common.enabled") : t("common.disabled")) }
   )
 }
 
 function hSource(row: ProtectionRule) {
   const status = row.migration_status ?? ""
-  const label = status === "legacy-only" ? "兼容" : status === "migrated" ? "已迁移" : "原生"
+  const label = status === "legacy-only" ? t("common.legacy") : status === "migrated" ? t("common.migrated") : t("common.native")
   const type = status === "legacy-only" ? "warning" : status === "migrated" ? "info" : "success"
   return h(NTag, { type, size: "small" }, { default: () => label })
 }
 
 function formatAction(value: string) {
   const labels: Record<string, string> = {
-    "log-only": "观察",
-    block: "阻断"
+    "log-only": t("common.observation"),
+    block: t("common.block")
   }
   return labels[value] ?? value
 }
@@ -396,15 +398,15 @@ function formatTime(value?: string) {
 <template>
   <main class="page">
     <ModulePageHeader
-      title="上传防护"
-      subtitle="按上传路径、危险扩展名和大小限制管理上传请求处置。"
-      eyebrow="Protection Module"
+      :title="t('modules.upload.title')"
+      :subtitle="t('modules.upload.subtitle')"
+      :eyebrow="t('moduleCommon.protectionModule')"
       :tags="headerTags"
     >
       <template #actions>
       <NSpace>
-        <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
-        <NButton type="primary" :disabled="!authStore.canWrite" @click="openCreate">新增规则</NButton>
+        <NButton :loading="resource.loading.value" @click="resource.refresh">{{ t("common.refresh") }}</NButton>
+        <NButton type="primary" :disabled="!authStore.canWrite" @click="openCreate">{{ t("common.createRule") }}</NButton>
       </NSpace>
       </template>
     </ModulePageHeader>
@@ -412,16 +414,16 @@ function formatTime(value?: string) {
     <ModuleStateBlock
       v-if="resource.error.value"
       state="error"
-      title="上传防护加载失败"
+      :title="t('modules.upload.loadingFailed')"
       :description="resource.error.value"
-      action-label="重试"
+      :action-label="t('common.retry')"
       @retry="resource.refresh"
     />
 
     <ModuleStatusSummary :items="statusItems" />
 
     <section class="section section-pad guidance-section">
-      <ModuleRiskGuidance title="运营指引" :items="guidanceAlerts" empty-description="暂无上传防护运营指引" />
+      <ModuleRiskGuidance :title="t('common.operationGuidance')" :items="guidanceAlerts" :empty-description="t('modules.upload.emptyGuidance')" />
     </section>
 
     <section class="section section-pad">
@@ -436,57 +438,57 @@ function formatTime(value?: string) {
       <ModuleStateBlock
         v-if="!resource.loading.value && !resource.error.value && items.length === 0"
         state="empty"
-        description="暂无上传防护规则"
+        :description="t('modules.upload.emptyRules')"
       />
     </section>
 
     <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="formVisible" :width="520">
-      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? '编辑上传防护规则' : '新增上传防护规则'" closable>
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? t('moduleCommon.editRule', { name: t('modules.upload.title') }) : t('moduleCommon.createRule', { name: t('modules.upload.title') })" closable>
         <NForm class="rule-form" label-placement="top">
-          <NFormItem v-if="!editing" label="模板">
-            <NSelect :options="templateOptions" placeholder="选择模板快速填充" @update:value="applyTemplate" />
+          <NFormItem v-if="!editing" :label="t('common.template')">
+            <NSelect :options="templateOptions" :placeholder="t('moduleCommon.chooseTemplate')" @update:value="applyTemplate" />
           </NFormItem>
-          <NFormItem label="规则名称">
+          <NFormItem :label="t('common.ruleName')">
             <NInput v-model:value="form.name" />
           </NFormItem>
-          <NFormItem label="应用 ID">
+          <NFormItem :label="t('common.applicationId')">
             <NInputNumber v-model:value="form.application_id" :min="0" />
           </NFormItem>
-          <NFormItem label="上传路径">
+          <NFormItem :label="t('table.uploadPath')">
             <NInput v-model:value="form.match.path" />
           </NFormItem>
-          <NFormItem label="路径匹配">
+          <NFormItem :label="t('table.pathMatch')">
             <NSelect v-model:value="form.match.path_match" :options="pathMatchOptions" />
           </NFormItem>
-          <NFormItem label="请求方法">
-            <NSelect v-model:value="form.match.methods" multiple :options="methodOptions" placeholder="全部方法" />
+          <NFormItem :label="t('common.methods')">
+            <NSelect v-model:value="form.match.methods" multiple :options="methodOptions" :placeholder="t('common.allMethods')" />
           </NFormItem>
-          <NFormItem label="危险扩展名">
+          <NFormItem :label="t('table.dangerousExtensions')">
             <NDynamicTags v-model:value="form.upload!.extensions" />
           </NFormItem>
-          <NFormItem label="大小限制字节">
+          <NFormItem :label="t('modules.upload.sizeLimitBytes')">
             <NInputNumber v-model:value="form.upload!.max_bytes" :min="0" :max="1073741824" />
           </NFormItem>
-          <NFormItem label="动作">
+          <NFormItem :label="t('common.action')">
             <NSelect v-model:value="form.action.type" :options="actionOptions" />
           </NFormItem>
-          <NFormItem label="优先级">
+          <NFormItem :label="t('common.priority')">
             <NInputNumber v-model:value="form.priority" :min="0" />
           </NFormItem>
-          <NFormItem label="启用">
+          <NFormItem :label="t('common.enabled')">
             <NSwitch v-model:value="form.enabled" />
           </NFormItem>
           <ModuleRiskGuidance
             v-if="formRiskAlerts.length > 0"
             class="risk-prompt-list"
-            title="保存前风险确认"
+            :title="t('common.saveBeforeRiskConfirm')"
             :items="formRiskAlerts"
           />
         </NForm>
         <template #footer>
           <NSpace justify="end">
-            <NButton @click="formVisible = false">取消</NButton>
-            <NButton type="primary" :loading="saving" @click="save">保存</NButton>
+            <NButton @click="formVisible = false">{{ t("common.cancel") }}</NButton>
+            <NButton type="primary" :loading="saving" @click="save">{{ t("common.save") }}</NButton>
           </NSpace>
         </template>
       </NDrawerContent>

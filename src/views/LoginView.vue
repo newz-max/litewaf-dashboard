@@ -4,12 +4,15 @@ import { useMessage } from "naive-ui"
 import { useRoute, useRouter } from "vue-router"
 import { FlashOutline, PulseOutline, ShieldCheckmarkOutline } from "@vicons/ionicons5"
 import { extractApiErrorMessage } from "@/api/errors"
+import LanguageSwitcher from "@/components/system/LanguageSwitcher.vue"
 import { useAuthStore } from "@/stores/auth"
+import { useI18n } from "vue-i18n"
 
 const authStore = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
+const { t } = useI18n()
 const loading = shallowRef(false)
 const form = reactive({
   username: "",
@@ -23,7 +26,7 @@ async function submit() {
     const redirect = typeof route.query.redirect === "string" ? route.query.redirect : "/"
     await router.push(redirect)
   } catch (error) {
-    message.error(extractApiErrorMessage(error, "登录失败"))
+    message.error(extractApiErrorMessage(error, t("auth.loginFailed")))
   } finally {
     loading.value = false
   }
@@ -40,10 +43,14 @@ async function submit() {
           </NIcon>
         </div>
         <div>
-          <span class="login-kicker">OpenResty WAF 控制面</span>
-          <h1>LiteWaf</h1>
-          <p>管理控制台</p>
+          <span class="login-kicker">{{ t("auth.kicker") }}</span>
+          <h1>{{ t("auth.title") }}</h1>
+          <p>{{ t("auth.subtitle") }}</p>
         </div>
+      </div>
+
+      <div class="login-language">
+        <LanguageSwitcher />
       </div>
 
       <div class="login-status-grid" aria-hidden="true">
@@ -51,7 +58,7 @@ async function submit() {
           <NIcon>
             <ShieldCheckmarkOutline />
           </NIcon>
-          安全运营
+          {{ t("auth.securityOps") }}
         </span>
         <span>
           <NIcon>
@@ -62,18 +69,18 @@ async function submit() {
       </div>
 
       <NForm class="login-form" @submit.prevent="submit">
-        <NFormItem label="账号">
-          <NInput v-model:value="form.username" placeholder="请输入账号" />
+        <NFormItem :label="t('auth.username')">
+          <NInput v-model:value="form.username" :placeholder="t('auth.usernamePlaceholder')" />
         </NFormItem>
-        <NFormItem label="密码">
+        <NFormItem :label="t('auth.password')">
           <NInput
             v-model:value="form.password"
             type="password"
             show-password-on="click"
-            placeholder="请输入密码"
+            :placeholder="t('auth.passwordPlaceholder')"
           />
         </NFormItem>
-        <NButton type="primary" block attr-type="submit" :loading="loading">登录</NButton>
+        <NButton type="primary" block attr-type="submit" :loading="loading">{{ t("auth.submit") }}</NButton>
       </NForm>
     </section>
   </main>
@@ -105,6 +112,12 @@ async function submit() {
   align-items: center;
   gap: 12px;
   margin-bottom: 24px;
+}
+
+.login-language {
+  display: flex;
+  justify-content: flex-end;
+  margin: -10px 0 18px;
 }
 
 .brand-mark {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue"
+import { useI18n } from "vue-i18n"
 
 export interface ModuleStatusItem {
   label: string
@@ -12,11 +13,12 @@ const props = defineProps<{
   items: readonly ModuleStatusItem[]
 }>()
 
+const { t } = useI18n()
 const visibleItems = computed(() => props.items.filter((item) => item.value !== "" && item.value !== null && item.value !== undefined))
 </script>
 
 <template>
-  <section v-if="visibleItems.length" class="module-status-summary" aria-label="模块状态摘要">
+  <section v-if="visibleItems.length" class="module-status-summary" :aria-label="t('aria.moduleStatusSummary')">
     <article v-for="item in visibleItems" :key="item.label" :class="['module-status-summary__item', `module-status-summary__item--${item.tone ?? 'neutral'}`]">
       <span class="module-status-summary__label">{{ item.label }}</span>
       <strong class="module-status-summary__value">{{ item.value }}</strong>

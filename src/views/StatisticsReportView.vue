@@ -7,13 +7,21 @@ import StatisticsMetricGrid from "@/components/statistics/StatisticsMetricGrid.v
 import StatisticsTrendPanel from "@/components/statistics/StatisticsTrendPanel.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useStatisticsReport, type StatisticsMapView, type StatisticsMetric, type StatisticsScope } from "@/composables/useStatisticsReport"
+import { useI18n } from "vue-i18n"
 
+const { t } = useI18n()
 const applicationsResource = useApiResource(getApplications)
 const { filters, report, resource, refresh } = useStatisticsReport()
 
 const applicationOptions = computed(() => [
-  { label: "全部应用", value: 0 },
+  { label: t("statistics.allApplications"), value: 0 },
   ...(applicationsResource.data.value ?? []).map((item) => ({ label: item.name, value: item.id }))
+])
+const rangeOptions = computed(() => [
+  { label: t("statistics.range1h"), value: "1h" },
+  { label: t("statistics.range24h"), value: "24h" },
+  { label: t("statistics.range7d"), value: "7d" },
+  { label: t("statistics.range30d"), value: "30d" }
 ])
 
 const isLoading = computed(() => applicationsResource.loading.value || resource.loading.value)
@@ -57,35 +65,30 @@ function setMetric(value: StatisticsMetric) {
   <main class="page statistics-page">
     <div class="page-header report-header">
       <div>
-        <h1 class="page-title">统计报表</h1>
-        <p class="page-subtitle">流量、地域、客户端、响应状态和来源维度的真实统计。</p>
+        <h1 class="page-title">{{ t("statistics.reportTitle") }}</h1>
+        <p class="page-subtitle">{{ t("statistics.reportSubtitle") }}</p>
       </div>
-      <NButton type="primary" :loading="isLoading" @click="refresh">刷新</NButton>
+      <NButton type="primary" :loading="isLoading" @click="refresh">{{ t("common.refresh") }}</NButton>
     </div>
 
     <section class="report-tabs">
-      <NButton type="primary" size="small">流量分析</NButton>
-      <NButton size="small" quaternary disabled>安全态势</NButton>
-      <NButton size="small" quaternary disabled>防护报告</NButton>
-      <NButton size="small" quaternary disabled>防护大屏</NButton>
+      <NButton type="primary" size="small">{{ t("statistics.trafficAnalysis") }}</NButton>
+      <NButton size="small" quaternary disabled>{{ t("statistics.securityPosture") }}</NButton>
+      <NButton size="small" quaternary disabled>{{ t("statistics.protectionReport") }}</NButton>
+      <NButton size="small" quaternary disabled>{{ t("statistics.protectionScreen") }}</NButton>
     </section>
 
     <section class="filter-bar">
       <NSelect v-model:value="filters.applicationId" :options="applicationOptions" class="filter-control" />
       <NSelect
         v-model:value="filters.range"
-        :options="[
-          { label: '近 1 小时', value: '1h' },
-          { label: '近 24 小时', value: '24h' },
-          { label: '近 7 天', value: '7d' },
-          { label: '近 30 天', value: '30d' }
-        ]"
+        :options="rangeOptions"
         class="filter-control"
       />
     </section>
 
     <NAlert v-if="errorMessage" type="error">{{ errorMessage }}</NAlert>
-    <NAlert v-else-if="!isLoading && !hasAnyData" type="info">当前筛选条件下暂无统计数据。</NAlert>
+    <NAlert v-else-if="!isLoading && !hasAnyData" type="info">{{ t("statistics.emptyFiltered") }}</NAlert>
 
     <StatisticsMetricGrid :cards="report?.cards" />
 
@@ -102,19 +105,19 @@ function setMetric(value: StatisticsMetric) {
         @update-metric="setMetric"
       />
       <div class="side-trends">
-        <StatisticsTrendPanel title="实时 QPS" :points="report?.qps ?? []" kind="bar" empty-description="暂无 QPS 数据" />
-        <StatisticsTrendPanel title="访问情况" :points="report?.visits ?? []" kind="line" tone="blue" empty-description="暂无访问趋势" />
-        <StatisticsTrendPanel title="拦截情况" :points="report?.blocks ?? []" kind="line" tone="red" empty-description="暂无拦截趋势" />
+        <StatisticsTrendPanel :title="t('statistics.realtimeQps')" :points="report?.qps ?? []" kind="bar" :empty-description="t('statistics.noQps')" />
+        <StatisticsTrendPanel :title="t('statistics.visitsTrend')" :points="report?.visits ?? []" kind="line" tone="blue" :empty-description="t('statistics.noVisits')" />
+        <StatisticsTrendPanel :title="t('statistics.blocksTrend')" :points="report?.blocks ?? []" kind="line" tone="red" :empty-description="t('statistics.noBlocks')" />
       </div>
     </section>
 
     <section class="breakdown-grid">
-      <StatisticsBreakdownPanel title="客户端系统" :items="report?.clients.os ?? []" empty-description="暂无客户端系统统计" />
-      <StatisticsBreakdownPanel title="浏览器 / 客户端" :items="report?.clients.browsers ?? []" empty-description="暂无浏览器统计" />
-      <StatisticsBreakdownPanel title="响应状态" :items="report?.statuses ?? []" empty-description="暂无响应状态统计" />
-      <StatisticsBreakdownPanel title="外部来源域名" :items="report?.referers.domains ?? []" mode="list" empty-description="暂无来源域名" />
-      <StatisticsBreakdownPanel title="外部来源页面" :items="report?.referers.pages ?? []" mode="list" empty-description="暂无来源页面" />
-      <StatisticsBreakdownPanel title="User-Agent" :items="report?.clients.user_agents ?? []" mode="list" empty-description="暂无 User-Agent 统计" />
+      <StatisticsBreakdownPanel :title="t('statistics.clientOs')" :items="report?.clients.os ?? []" :empty-description="t('statistics.noClientOs')" />
+      <StatisticsBreakdownPanel :title="t('statistics.browserClient')" :items="report?.clients.browsers ?? []" :empty-description="t('statistics.noBrowser')" />
+      <StatisticsBreakdownPanel :title="t('statistics.responseStatus')" :items="report?.statuses ?? []" :empty-description="t('statistics.noResponseStatus')" />
+      <StatisticsBreakdownPanel :title="t('statistics.externalRefererDomains')" :items="report?.referers.domains ?? []" mode="list" :empty-description="t('statistics.noRefererDomains')" />
+      <StatisticsBreakdownPanel :title="t('statistics.externalRefererPages')" :items="report?.referers.pages ?? []" mode="list" :empty-description="t('statistics.noRefererPages')" />
+      <StatisticsBreakdownPanel :title="t('statistics.userAgent')" :items="report?.clients.user_agents ?? []" mode="list" :empty-description="t('statistics.noUserAgent')" />
     </section>
   </main>
 </template>

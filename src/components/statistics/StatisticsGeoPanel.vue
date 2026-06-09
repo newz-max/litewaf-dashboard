@@ -11,7 +11,9 @@ import worldMap from "@geo-maps/countries-land-10km/map.geo.json"
 import chinaMap from "china-geojson/src/geojson/china.json"
 import type { GeoPoint, GeoRank, StatisticsGeoReport } from "@/api/litewaf"
 import type { StatisticsMapView, StatisticsMetric, StatisticsScope } from "@/composables/useStatisticsReport"
+import { getActiveLocale } from "@/i18n"
 import { useThemeStore } from "@/stores/theme"
+import { useI18n } from "vue-i18n"
 
 use([CanvasRenderer, MapChart, ScatterChart, GeoComponent, TooltipComponent, VisualMapComponent])
 
@@ -89,9 +91,10 @@ const emit = defineEmits<{
 }>()
 
 const themeStore = useThemeStore()
+const { t } = useI18n()
 const canUse3D = computed(() => props.scope === "world")
 const ranking = computed(() => props.geo?.ranking ?? [])
-const emptyDescription = computed(() => (props.geo?.diagnostics?.length ? "GeoIP 未解析出可用地理数据" : "暂无地理统计"))
+const emptyDescription = computed(() => (props.geo?.diagnostics?.length ? t("statistics.geoNoResolved") : t("statistics.geoEmpty")))
 const chartMapName = computed(() => (props.scope === "china" ? "litewaf-china" : "litewaf-world"))
 const activeRegions = computed(() => (props.scope === "china" ? chinaRegions : worldRegions))
 const chartData = computed(() => ranking.value.map((item) => toMapDatum(item, activeRegions.value)))
@@ -213,7 +216,7 @@ const chartOption = computed(() => {
 })
 
 function formatNumber(value: number) {
-  return new Intl.NumberFormat("en-US", { notation: value >= 10000 ? "compact" : "standard", maximumFractionDigits: 1 }).format(value)
+  return new Intl.NumberFormat(getActiveLocale(), { notation: value >= 10000 ? "compact" : "standard", maximumFractionDigits: 1 }).format(value)
 }
 
 function normalizeWorldMap(input: unknown): GeoJsonFeatureCollection {
@@ -279,19 +282,20 @@ function collectRegions(collection: GeoJsonFeatureCollection): MapRegion[] {
 
 function toMapDatum(item: GeoRank, regions: readonly MapRegion[]): MapDatum {
   const region = findRegion(item, regions)
+  const fallbackName = safeGeoRankName(item)
   return {
-    name: region?.name ?? item.name,
+    name: region?.name ?? fallbackName,
     value: item.count,
     count: item.count,
     blocked: item.blocked,
-    code: item.code,
-    displayName: region?.name ?? item.name
+    code: safeGeoRankCode(item),
+    displayName: region?.name ?? fallbackName
   }
 }
 
 function findRegion(item: GeoRank, regions: readonly MapRegion[]) {
-  const code = normalizeKey(item.code)
-  const name = normalizeRegionName(item.name)
+  const code = normalizeKey(safeGeoRankCode(item))
+  const name = normalizeRegionName(safeGeoRankName(item))
   const countryCode = findCountry(item)?.alpha3
   const normalizedCountryCode = countryCode ? normalizeKey(countryCode) : ""
   return (
@@ -302,8 +306,8 @@ function findRegion(item: GeoRank, regions: readonly MapRegion[]) {
 }
 
 function findCountry(item: GeoRank) {
-  const code = item.code.trim()
-  return whereAlpha3(code) ?? whereAlpha2(code) ?? whereCountry(item.name)
+  const code = safeGeoRankCode(item)
+  return whereAlpha3(code) ?? whereAlpha2(code) ?? whereCountry(safeGeoRankName(item))
 }
 
 function normalizeRegionName(value: string) {
@@ -318,6 +322,16 @@ function normalizeKey(value: string) {
   return value.trim().toLowerCase()
 }
 
+function safeGeoRankCode(item: GeoRank) {
+  const raw = item as unknown as Record<string, unknown>
+  return String(item.code ?? raw.key ?? "").trim()
+}
+
+function safeGeoRankName(item: GeoRank) {
+  const raw = item as unknown as Record<string, unknown>
+  return String(item.name ?? raw.key ?? item.code ?? "").trim()
+}
+
 function stringFrom(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined
 }
@@ -326,10 +340,10 @@ function formatTooltip(params: TooltipParams) {
   const value = Array.isArray(params.value) ? Number(params.value[2] ?? 0) : Number(params.data?.count ?? params.value ?? 0)
   const name = Array.isArray(params.value) ? String(params.value[3] ?? params.name ?? "") : params.data?.displayName ?? params.name ?? ""
   const blocked = Number(params.data?.blocked ?? 0)
-  const metricLabel = props.metric === "blocked" ? "拦截数量" : "访问数量"
-  const lines = [`${name || "未知地区"}`, `${metricLabel}: ${formatNumber(Number.isFinite(value) ? value : 0)}`]
+  const metricLabel = props.metric === "blocked" ? t("statistics.blockedCount") : t("statistics.accessCount")
+  const lines = [`${name || t("common.unknownRegion")}`, `${metricLabel}: ${formatNumber(Number.isFinite(value) ? value : 0)}`]
   if (blocked > 0 && props.metric !== "blocked") {
-    lines.push(`拦截数量: ${formatNumber(blocked)}`)
+    lines.push(`${t("statistics.blockedCount")}: ${formatNumber(blocked)}`)
   }
   return lines.join("<br />")
 }
@@ -452,8 +466,8 @@ function withAlpha(color: string, alpha: number) {
   <section class="geo-panel">
     <div class="panel-heading">
       <div>
-        <div class="panel-title">地理位置</div>
-        <div class="panel-subtitle">{{ scope === "china" ? "中国省级分布" : "世界访问分布" }}</div>
+        <div class="panel-title">{{ t("statistics.geoTitle") }}</div>
+        <div class="panel-subtitle">{{ scope === "china" ? t("statistics.chinaDistribution") : t("statistics.worldDistribution") }}</div>
       </div>
       <div class="geo-controls">
         <NButtonGroup size="small">
@@ -461,12 +475,12 @@ function withAlpha(color: string, alpha: number) {
           <NButton :type="mapView === '2d' ? 'primary' : 'default'" @click="emit('updateMapView', '2d')">2D</NButton>
         </NButtonGroup>
         <NButtonGroup size="small">
-          <NButton :type="scope === 'world' ? 'primary' : 'default'" @click="emit('updateScope', 'world')">世界</NButton>
-          <NButton :type="scope === 'china' ? 'primary' : 'default'" @click="emit('updateScope', 'china')">中国</NButton>
+          <NButton :type="scope === 'world' ? 'primary' : 'default'" @click="emit('updateScope', 'world')">{{ t("statistics.world") }}</NButton>
+          <NButton :type="scope === 'china' ? 'primary' : 'default'" @click="emit('updateScope', 'china')">{{ t("statistics.china") }}</NButton>
         </NButtonGroup>
         <NButtonGroup size="small">
-          <NButton :type="metric === 'requests' ? 'primary' : 'default'" @click="emit('updateMetric', 'requests')">访问</NButton>
-          <NButton :type="metric === 'blocked' ? 'primary' : 'default'" @click="emit('updateMetric', 'blocked')">仅拦截</NButton>
+          <NButton :type="metric === 'requests' ? 'primary' : 'default'" @click="emit('updateMetric', 'requests')">{{ t("statistics.requestsMetric") }}</NButton>
+          <NButton :type="metric === 'blocked' ? 'primary' : 'default'" @click="emit('updateMetric', 'blocked')">{{ t("statistics.blockedMetric") }}</NButton>
         </NButtonGroup>
       </div>
     </div>

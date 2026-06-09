@@ -15,8 +15,10 @@ import ModuleStateBlock from "@/components/operations/ModuleStateBlock.vue"
 import ModuleStatusSummary from "@/components/operations/ModuleStatusSummary.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
+import { useI18n } from "vue-i18n"
 import { protectionGuides, protectionRiskPrompts, riskPromptText } from "@/utils/protectionGuidance"
 
+const { t } = useI18n()
 const message = useMessage()
 const dialog = useDialog()
 const authStore = useAuthStore()
@@ -33,46 +35,46 @@ const enabledCount = computed(() => items.value.filter((item) => item.enabled).l
 const blockCount = computed(() => items.value.filter((item) => item.action.type === "block").length)
 const allowCount = computed(() => items.value.filter((item) => item.action.type === "allow").length)
 const headerTags = computed(() => [
-  { label: "规则", value: items.value.length, tone: "info" as const },
-  { label: "启用", value: enabledCount.value, tone: "success" as const },
-  { label: "放行", value: allowCount.value, tone: allowCount.value > 0 ? "warning" as const : "default" as const }
+  { label: t("common.rules"), value: items.value.length, tone: "info" as const },
+  { label: t("common.enabled"), value: enabledCount.value, tone: "success" as const },
+  { label: t("common.allow"), value: allowCount.value, tone: allowCount.value > 0 ? "warning" as const : "default" as const }
 ])
 const statusItems = computed(() => [
-  { label: "规则总数", value: items.value.length, note: "来自访问控制 API", tone: "info" as const },
-  { label: "启用规则", value: enabledCount.value, note: "参与当前访问控制策略", tone: "success" as const },
-  { label: "阻断规则", value: blockCount.value, note: "阻断路径、Header 或 Host", tone: blockCount.value > 0 ? "warning" as const : "neutral" as const },
-  { label: "放行规则", value: allowCount.value, note: "高优先级放行需复核", tone: allowCount.value > 0 ? "danger" as const : "neutral" as const }
+  { label: t("common.totalRules"), value: items.value.length, note: t("modules.access.totalRulesNote"), tone: "info" as const },
+  { label: t("common.enabledRules"), value: enabledCount.value, note: t("modules.access.enabledRulesNote"), tone: "success" as const },
+  { label: t("modules.access.blockRules"), value: blockCount.value, note: t("modules.access.blockRulesNote"), tone: blockCount.value > 0 ? "warning" as const : "neutral" as const },
+  { label: t("modules.access.allowRules"), value: allowCount.value, note: t("modules.access.allowRulesNote"), tone: allowCount.value > 0 ? "danger" as const : "neutral" as const }
 ])
 const guidanceAlerts = computed(() => guidanceItems.map((item) => ({ title: item.title, message: item.description, tone: "info" as const })))
 const formRiskAlerts = computed(() => formRiskPrompts.value.map((risk) => ({ title: risk.message, message: riskPromptText(risk), tone: "warning" as const })))
 
-const templateOptions = [
-  { label: "管理后台路径阻断", value: "admin" },
-  { label: "Host 限制", value: "host" }
-]
+const templateOptions = computed(() => [
+  { label: t("modules.access.adminPathBlock"), value: "admin" },
+  { label: t("modules.access.hostRestriction"), value: "host" }
+])
 
-const targetOptions = [
-  { label: "路径", value: "path" },
-  { label: "Header", value: "header" },
-  { label: "Host", value: "host" }
-]
+const targetOptions = computed(() => [
+  { label: t("modules.access.matchPath"), value: "path" },
+  { label: t("common.header"), value: "header" },
+  { label: t("common.host"), value: "host" }
+])
 
-const pathMatchOptions = [
-  { label: "精确", value: "exact" },
-  { label: "前缀", value: "prefix" }
-]
+const pathMatchOptions = computed(() => [
+  { label: t("common.exact"), value: "exact" },
+  { label: t("common.prefix"), value: "prefix" }
+])
 
 const operatorOptions = computed(() => {
   switch (form.match.target) {
     case "header":
       return [
-        { label: "精确", value: "exact" },
-        { label: "包含", value: "contains" }
+        { label: t("common.exact"), value: "exact" },
+        { label: t("common.contains"), value: "contains" }
       ]
     case "host":
       return [
-        { label: "精确", value: "exact" },
-        { label: "后缀", value: "suffix" }
+        { label: t("common.exact"), value: "exact" },
+        { label: t("common.suffix"), value: "suffix" }
       ]
     default:
       return []
@@ -84,24 +86,24 @@ const methodOptions = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS
   value: method
 }))
 
-const actionOptions = [
-  { label: "放行", value: "allow" },
-  { label: "观察", value: "log-only" },
-  { label: "阻断", value: "block" }
-]
+const actionOptions = computed(() => [
+  { label: t("common.allow"), value: "allow" },
+  { label: t("common.observation"), value: "log-only" },
+  { label: t("common.block"), value: "block" }
+])
 
-const columns: DataTableColumns<ProtectionRule> = [
-  { title: "名称", key: "name", minWidth: 160 },
+const columns = computed<DataTableColumns<ProtectionRule>>(() => [
+  { title: t("common.name"), key: "name", minWidth: 160 },
   {
-    title: "生效应用",
+    title: t("common.effectiveApplication"),
     key: "application_id",
     width: 92,
     render(row) {
-      return row.application_id > 0 ? `#${row.application_id}` : "全局"
+      return row.application_id > 0 ? `#${row.application_id}` : t("common.global")
     }
   },
   {
-    title: "匹配对象",
+    title: t("table.target"),
     key: "match.target",
     minWidth: 180,
     render(row) {
@@ -109,15 +111,15 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "方法",
+    title: t("common.methods"),
     key: "match.methods",
     minWidth: 120,
     render(row) {
-      return row.match.methods.length > 0 ? row.match.methods.join(", ") : "全部"
+      return row.match.methods.length > 0 ? row.match.methods.join(", ") : t("common.all")
     }
   },
   {
-    title: "动作",
+    title: t("common.action"),
     key: "action.type",
     width: 100,
     render(row) {
@@ -125,12 +127,12 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "优先级",
+    title: t("common.priority"),
     key: "priority",
     width: 88
   },
   {
-    title: "启用",
+    title: t("common.enabled"),
     key: "enabled",
     width: 84,
     render(row) {
@@ -138,7 +140,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "来源",
+    title: t("common.source"),
     key: "migration_status",
     width: 104,
     render(row) {
@@ -146,7 +148,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "更新时间",
+    title: t("common.updatedAt"),
     key: "updated_at",
     minWidth: 160,
     render(row) {
@@ -154,7 +156,7 @@ const columns: DataTableColumns<ProtectionRule> = [
     }
   },
   {
-    title: "操作",
+    title: t("common.actions"),
     key: "actions",
     fixed: "right",
     width: 150,
@@ -167,7 +169,7 @@ const columns: DataTableColumns<ProtectionRule> = [
             h(
               NButton,
               { size: "small", disabled: !authStore.canWrite, onClick: () => startEdit(row) },
-              { default: () => "编辑" }
+              { default: () => t("common.edit") }
             ),
             h(
               NButton,
@@ -177,14 +179,14 @@ const columns: DataTableColumns<ProtectionRule> = [
                 disabled: !authStore.canWrite,
                 onClick: () => remove(row)
               },
-              { default: () => "删除" }
+              { default: () => t("common.delete") }
             )
           ]
         }
       )
     }
   }
-]
+])
 
 function emptyForm(): ProtectionRuleInput {
   return {
@@ -260,13 +262,13 @@ function applyTemplate(value: string) {
   const templates: Record<string, ProtectionRuleInput> = {
     admin: {
       ...emptyForm(),
-      name: "管理后台路径阻断",
+      name: t("modules.access.adminPathBlock"),
       match: { target: "path", path: "/admin", path_match: "prefix", operator: "prefix", methods: [] },
       action: { type: "block" }
     },
     host: {
       ...emptyForm(),
-      name: "Host 限制",
+      name: t("modules.access.hostRestriction"),
       match: { target: "host", host: "example.com", value: "example.com", operator: "exact", methods: [] },
       action: { type: "block" }
     }
@@ -297,22 +299,22 @@ function handleTargetChange(value: string) {
 function validateForm() {
   const target = form.match.target
   if (!form.name.trim()) {
-    return "规则名称不能为空"
+    return t("common.ruleNameRequired")
   }
   if (Number(form.priority ?? 0) < 0) {
-    return "优先级不能小于 0"
+    return t("common.invalidPriorityZero")
   }
   if (target === "path" && !String(form.match.path || "").startsWith("/")) {
-    return "路径必须以 / 开头"
+    return t("common.pathMustStartSlash")
   }
   if (target === "ip" || target === "cidr") {
-    return "IP/CIDR 黑白名单请使用独立 IP 黑白名单模块"
+    return t("modules.access.ipCidrIndependent")
   }
   if (target === "header" && (!form.match.header_name?.trim() || !form.match.value?.trim())) {
-    return "Header 名称和值不能为空"
+    return t("modules.access.headerNameValueRequired")
   }
   if (target === "host" && !form.match.host?.trim()) {
-    return "Host 不能为空"
+    return t("modules.access.hostRequired")
   }
   return ""
 }
@@ -330,10 +332,10 @@ async function save() {
   try {
     if (editing.value) {
       await updateAccessControlRule(editing.value.id, form)
-      message.success("访问控制规则已更新")
+      message.success(t("common.updated", { name: t("modules.access.title") }))
     } else {
       await createAccessControlRule(form)
-      message.success("访问控制规则已创建")
+      message.success(t("common.created", { name: t("modules.access.title") }))
     }
     formVisible.value = false
     await resource.refresh()
@@ -349,10 +351,10 @@ function confirmRiskIfNeeded() {
   }
   return new Promise<boolean>((resolve) => {
     dialog.warning({
-      title: "确认高风险访问控制配置",
+      title: t("common.highRiskConfirm", { name: t("modules.access.title") }),
       content: () => h("div", { class: "risk-confirm" }, risks.map((risk) => h("p", { key: risk.message }, riskPromptText(risk)))),
-      positiveText: "确认保存",
-      negativeText: "取消",
+      positiveText: t("common.confirmSave"),
+      negativeText: t("common.cancel"),
       onPositiveClick: () => resolve(true),
       onNegativeClick: () => resolve(false),
       onClose: () => resolve(false)
@@ -362,7 +364,7 @@ function confirmRiskIfNeeded() {
 
 async function remove(item: ProtectionRule) {
   await deleteAccessControlRule(item.id)
-  message.success("访问控制规则已删除")
+  message.success(t("common.deleted", { name: t("modules.access.title") }))
   await resource.refresh()
 }
 
@@ -370,36 +372,36 @@ function hStatus(enabled: boolean) {
   return h(
     NTag,
     { type: enabled ? "success" : "default", size: "small" },
-    { default: () => (enabled ? "启用" : "停用") }
+    { default: () => (enabled ? t("common.enabled") : t("common.disabled")) }
   )
 }
 
 function formatMatch(row: ProtectionRule) {
   const target = row.match.target
   if (target === "path") {
-    return `路径 ${row.match.path_match === "prefix" ? "前缀" : "精确"} ${row.match.path}`
+    return t("modules.access.pathSummary", { mode: row.match.path_match === "prefix" ? t("common.prefix") : t("common.exact"), path: row.match.path })
   }
   if (target === "header") {
-    return `Header ${row.match.header_name} ${row.match.operator === "contains" ? "包含" : "等于"} ${row.match.value}`
+    return t("modules.access.headerSummary", { name: row.match.header_name, operator: row.match.operator === "contains" ? t("common.contains") : t("common.equals"), value: row.match.value })
   }
   if (target === "host") {
-    return `Host ${row.match.operator === "suffix" ? "后缀" : "等于"} ${row.match.host || row.match.value}`
+    return t("modules.access.hostSummary", { operator: row.match.operator === "suffix" ? t("common.suffix") : t("common.equals"), host: row.match.host || row.match.value })
   }
-  return "不支持的访问控制对象"
+  return t("modules.access.unsupportedTarget")
 }
 
 function hSource(row: ProtectionRule) {
   const status = row.migration_status ?? ""
-  const label = status === "legacy-only" ? "兼容" : status === "migrated" ? "已迁移" : "原生"
+  const label = status === "legacy-only" ? t("common.legacy") : status === "migrated" ? t("common.migrated") : t("common.native")
   const type = status === "legacy-only" ? "warning" : status === "migrated" ? "info" : "success"
   return h(NTag, { type, size: "small" }, { default: () => label })
 }
 
 function formatAction(value: string) {
   const labels: Record<string, string> = {
-    allow: "放行",
-    "log-only": "观察",
-    block: "阻断"
+    allow: t("common.allow"),
+    "log-only": t("common.observation"),
+    block: t("common.block")
   }
   return labels[value] ?? value
 }
@@ -415,15 +417,15 @@ function formatTime(value?: string) {
 <template>
   <main class="page">
     <ModulePageHeader
-      title="访问控制"
-      subtitle="按路径、Header 和 Host 管理放行、观察与阻断规则；来源 IP/CIDR 使用独立 IP 黑白名单。"
-      eyebrow="Protection Module"
+      :title="t('modules.access.title')"
+      :subtitle="t('modules.access.subtitle')"
+      :eyebrow="t('moduleCommon.protectionModule')"
       :tags="headerTags"
     >
       <template #actions>
       <NSpace>
-        <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
-        <NButton type="primary" :disabled="!authStore.canWrite" @click="openCreate">新增规则</NButton>
+        <NButton :loading="resource.loading.value" @click="resource.refresh">{{ t("common.refresh") }}</NButton>
+        <NButton type="primary" :disabled="!authStore.canWrite" @click="openCreate">{{ t("common.createRule") }}</NButton>
       </NSpace>
       </template>
     </ModulePageHeader>
@@ -431,16 +433,16 @@ function formatTime(value?: string) {
     <ModuleStateBlock
       v-if="resource.error.value"
       state="error"
-      title="访问控制加载失败"
+      :title="t('modules.access.loadingFailed')"
       :description="resource.error.value"
-      action-label="重试"
+      :action-label="t('common.retry')"
       @retry="resource.refresh"
     />
 
     <ModuleStatusSummary :items="statusItems" />
 
     <section class="section section-pad guidance-section">
-      <ModuleRiskGuidance title="运营指引" :items="guidanceAlerts" empty-description="暂无访问控制运营指引" />
+      <ModuleRiskGuidance :title="t('common.operationGuidance')" :items="guidanceAlerts" :empty-description="t('modules.access.emptyGuidance')" />
     </section>
 
     <section class="section section-pad">
@@ -455,75 +457,75 @@ function formatTime(value?: string) {
       <ModuleStateBlock
         v-if="!resource.loading.value && !resource.error.value && items.length === 0"
         state="empty"
-        description="暂无访问控制规则"
+        :description="t('modules.access.emptyRules')"
       />
     </section>
 
     <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="formVisible" :width="520">
-      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? '编辑访问控制规则' : '新增访问控制规则'" closable>
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? t('moduleCommon.editRule', { name: t('modules.access.title') }) : t('moduleCommon.createRule', { name: t('modules.access.title') })" closable>
         <NForm class="rule-form" label-placement="top">
-          <NFormItem v-if="!editing" label="模板">
-            <NSelect :options="templateOptions" placeholder="选择模板快速填充" @update:value="applyTemplate" />
+          <NFormItem v-if="!editing" :label="t('common.template')">
+            <NSelect :options="templateOptions" :placeholder="t('moduleCommon.chooseTemplate')" @update:value="applyTemplate" />
           </NFormItem>
-          <NFormItem label="规则名称">
+          <NFormItem :label="t('common.ruleName')">
             <NInput v-model:value="form.name" />
           </NFormItem>
-          <NFormItem label="应用 ID">
+          <NFormItem :label="t('common.applicationId')">
             <NInputNumber v-model:value="form.application_id" :min="0" />
           </NFormItem>
-          <NFormItem label="匹配对象">
+          <NFormItem :label="t('table.target')">
             <NSelect :value="form.match.target" :options="targetOptions" @update:value="handleTargetChange" />
           </NFormItem>
           <template v-if="form.match.target === 'path'">
-            <NFormItem label="路径">
+            <NFormItem :label="t('common.path')">
               <NInput v-model:value="form.match.path" />
             </NFormItem>
-            <NFormItem label="路径匹配">
+            <NFormItem :label="t('table.pathMatch')">
               <NSelect v-model:value="form.match.path_match" :options="pathMatchOptions" />
             </NFormItem>
-            <NFormItem label="请求方法">
-              <NSelect v-model:value="form.match.methods" multiple :options="methodOptions" placeholder="全部方法" />
+            <NFormItem :label="t('common.methods')">
+              <NSelect v-model:value="form.match.methods" multiple :options="methodOptions" :placeholder="t('common.allMethods')" />
             </NFormItem>
           </template>
           <template v-else-if="form.match.target === 'header'">
-            <NFormItem label="Header 名称">
+            <NFormItem :label="t('modules.access.headerName')">
               <NInput v-model:value="form.match.header_name" />
             </NFormItem>
-            <NFormItem label="匹配方式">
+            <NFormItem :label="t('table.pathMatch')">
               <NSelect v-model:value="form.match.operator" :options="operatorOptions" />
             </NFormItem>
-            <NFormItem label="Header 值">
+            <NFormItem :label="t('modules.access.headerValue')">
               <NInput v-model:value="form.match.value" />
             </NFormItem>
           </template>
           <template v-else-if="form.match.target === 'host'">
-            <NFormItem label="匹配方式">
+            <NFormItem :label="t('table.pathMatch')">
               <NSelect v-model:value="form.match.operator" :options="operatorOptions" />
             </NFormItem>
-            <NFormItem label="Host">
+            <NFormItem :label="t('common.host')">
               <NInput v-model:value="form.match.host" />
             </NFormItem>
           </template>
-          <NFormItem label="动作">
+          <NFormItem :label="t('common.action')">
             <NSelect v-model:value="form.action.type" :options="actionOptions" />
           </NFormItem>
-          <NFormItem label="优先级">
+          <NFormItem :label="t('common.priority')">
             <NInputNumber v-model:value="form.priority" :min="0" />
           </NFormItem>
-          <NFormItem label="启用">
+          <NFormItem :label="t('common.enabled')">
             <NSwitch v-model:value="form.enabled" />
           </NFormItem>
           <ModuleRiskGuidance
             v-if="formRiskAlerts.length > 0"
             class="risk-prompt-list"
-            title="保存前风险确认"
+            :title="t('common.saveBeforeRiskConfirm')"
             :items="formRiskAlerts"
           />
         </NForm>
         <template #footer>
           <NSpace justify="end">
-            <NButton @click="formVisible = false">取消</NButton>
-            <NButton type="primary" :loading="saving" @click="save">保存</NButton>
+            <NButton @click="formVisible = false">{{ t("common.cancel") }}</NButton>
+            <NButton type="primary" :loading="saving" @click="save">{{ t("common.save") }}</NButton>
           </NSpace>
         </template>
       </NDrawerContent>

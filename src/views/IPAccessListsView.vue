@@ -15,7 +15,9 @@ import ModuleStateBlock from "@/components/operations/ModuleStateBlock.vue"
 import ModuleStatusSummary from "@/components/operations/ModuleStatusSummary.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
+import { useI18n } from "vue-i18n"
 
+const { t } = useI18n()
 const message = useMessage()
 const dialog = useDialog()
 const authStore = useAuthStore()
@@ -31,35 +33,35 @@ const allowCount = computed(() => items.value.filter((item) => item.kind === "al
 const blockCount = computed(() => items.value.filter((item) => item.kind === "block").length)
 const cidrCount = computed(() => items.value.filter((item) => item.target === "cidr").length)
 const headerTags = computed(() => [
-  { label: "名单", value: items.value.length, tone: "info" as const },
-  { label: "启用", value: enabledCount.value, tone: "success" as const },
-  { label: "白名单", value: allowCount.value, tone: allowCount.value > 0 ? "warning" as const : "default" as const }
+  { label: t("moduleCommon.list"), value: items.value.length, tone: "info" as const },
+  { label: t("common.enabled"), value: enabledCount.value, tone: "success" as const },
+  { label: t("moduleCommon.whitelist"), value: allowCount.value, tone: allowCount.value > 0 ? "warning" as const : "default" as const }
 ])
 const statusItems = computed(() => [
-  { label: "名单总数", value: items.value.length, note: "来自 IP 黑白名单 API", tone: "info" as const },
-  { label: "启用名单", value: enabledCount.value, note: "参与独立 IP 模块判断", tone: "success" as const },
-  { label: "白名单放行", value: allowCount.value, note: "优先复核宽泛放行", tone: allowCount.value > 0 ? "danger" as const : "neutral" as const },
-  { label: "CIDR 网段", value: cidrCount.value, note: "按前缀长度有界匹配", tone: cidrCount.value > 0 ? "warning" as const : "neutral" as const }
+  { label: t("moduleCommon.totalList"), value: items.value.length, note: "IP access list API", tone: "info" as const },
+  { label: t("moduleCommon.enabledList"), value: enabledCount.value, note: t("moduleCommon.independentModule"), tone: "success" as const },
+  { label: t("moduleCommon.allowList"), value: allowCount.value, note: t("moduleCommon.broadAllowReview"), tone: allowCount.value > 0 ? "danger" as const : "neutral" as const },
+  { label: t("moduleCommon.cidrRange"), value: cidrCount.value, note: t("moduleCommon.ipAccessListSubtitle"), tone: cidrCount.value > 0 ? "warning" as const : "neutral" as const }
 ])
 const guidanceAlerts = computed(() => [
-  { title: "独立模块", message: "IP 黑白名单保持与访问控制分离，日志和发布预览按 ip-access-list 模块归因。", tone: "info" as const },
-  { title: "宽泛放行复核", message: "白名单和大网段 CIDR 会影响拦截判断，保存前应确认应用作用域和优先级。", tone: "warning" as const }
+  { title: t("moduleCommon.independentModule"), message: t("moduleCommon.independentModuleMessage"), tone: "info" as const },
+  { title: t("moduleCommon.broadAllowReview"), message: t("moduleCommon.broadAllowReviewMessage"), tone: "warning" as const }
 ])
 
-const kindOptions = [
-  { label: "白名单放行", value: "allow" },
-  { label: "黑名单阻断", value: "block" }
-]
+const kindOptions = computed(() => [
+  { label: t("moduleCommon.allowList"), value: "allow" },
+  { label: t("moduleCommon.blacklist"), value: "block" }
+])
 
-const targetOptions = [
-  { label: "单个 IP", value: "ip" },
-  { label: "CIDR 网段", value: "cidr" }
-]
+const targetOptions = computed(() => [
+  { label: t("moduleCommon.singleIp"), value: "ip" },
+  { label: t("moduleCommon.cidrRange"), value: "cidr" }
+])
 
-const columns: DataTableColumns<IPAccessListEntry> = [
-  { title: "名称", key: "name", minWidth: 160 },
+const columns = computed<DataTableColumns<IPAccessListEntry>>(() => [
+  { title: t("common.name"), key: "name", minWidth: 160 },
   {
-    title: "类型",
+    title: t("table.type"),
     key: "kind",
     width: 110,
     render(row) {
@@ -67,35 +69,35 @@ const columns: DataTableColumns<IPAccessListEntry> = [
     }
   },
   {
-    title: "目标",
+    title: t("table.target"),
     key: "target",
     width: 92,
     render(row) {
       return row.target === "cidr" ? "CIDR" : "IP"
     }
   },
-  { title: "输入值", key: "value", minWidth: 170 },
-  { title: "运行键", key: "normalized_value", minWidth: 190 },
+  { title: t("table.inputValue"), key: "value", minWidth: 170 },
+  { title: t("table.runtimeKey"), key: "normalized_value", minWidth: 190 },
   {
-    title: "作用域",
+    title: t("table.scope"),
     key: "application_id",
     width: 100,
     render(row) {
-      return row.application_id > 0 ? `站点 ${row.application_id}` : "全局"
+      return row.application_id > 0 ? t("common.siteScoped", { id: row.application_id }) : t("common.global")
     }
   },
-  { title: "族", key: "ip_family", width: 86 },
-  { title: "前缀", key: "prefix_length", width: 76 },
+  { title: t("table.family"), key: "ip_family", width: 86 },
+  { title: t("table.prefixLength"), key: "prefix_length", width: 76 },
   {
-    title: "启用",
+    title: t("common.enabled"),
     key: "enabled",
     width: 84,
     render(row) {
-      return h(NTag, { type: row.enabled ? "success" : "default", size: "small" }, { default: () => (row.enabled ? "启用" : "停用") })
+      return h(NTag, { type: row.enabled ? "success" : "default", size: "small" }, { default: () => (row.enabled ? t("common.enabled") : t("common.disabled")) })
     }
   },
   {
-    title: "操作",
+    title: t("common.actions"),
     key: "actions",
     fixed: "right",
     width: 210,
@@ -105,23 +107,23 @@ const columns: DataTableColumns<IPAccessListEntry> = [
         { size: "small" },
         {
           default: () => [
-            h(NButton, { size: "small", disabled: !authStore.canWrite, onClick: () => startEdit(row) }, { default: () => "编辑" }),
+            h(NButton, { size: "small", disabled: !authStore.canWrite, onClick: () => startEdit(row) }, { default: () => t("common.edit") }),
             h(
               NButton,
               { size: "small", disabled: !authStore.canWrite, onClick: () => toggleEnabled(row) },
-              { default: () => (row.enabled ? "停用" : "启用") }
+              { default: () => (row.enabled ? t("common.disabled") : t("common.enabled")) }
             ),
             h(
               NButton,
               { size: "small", type: "error", disabled: !authStore.canWrite, onClick: () => remove(row) },
-              { default: () => "删除" }
+              { default: () => t("common.delete") }
             )
           ]
         }
       )
     }
   }
-]
+])
 
 function emptyForm(): IPAccessListInput {
   return {
@@ -167,22 +169,22 @@ function startEdit(item: IPAccessListEntry) {
 
 function validateForm() {
   if (!form.name.trim()) {
-    return "名称不能为空"
+    return t("moduleCommon.nameRequired")
   }
   if (!form.value.trim()) {
-    return "IP 或 CIDR 不能为空"
+    return t("moduleCommon.valueRequired", { name: form.target === "cidr" ? "CIDR" : t("moduleCommon.ipAddress") })
   }
   if (Number(form.application_id ?? 0) < 0) {
-    return "应用 ID 不能小于 0"
+    return t("moduleCommon.applicationIdInvalid")
   }
   if (Number(form.priority ?? 0) < 0) {
-    return "优先级不能小于 0"
+    return t("common.invalidPriorityZero")
   }
   if (form.target === "ip" && !isIP(form.value)) {
-    return "请输入有效 IPv4 或 IPv6 地址"
+    return t("moduleCommon.invalidIpv4OrIpv6")
   }
   if (form.target === "cidr" && !isCIDR(form.value)) {
-    return "请输入有效 IPv4/IPv6 CIDR"
+    return t("moduleCommon.invalidCidr")
   }
   return ""
 }
@@ -197,10 +199,10 @@ async function save() {
   try {
     if (editing.value) {
       await updateIPAccessList(editing.value.id, form)
-      message.success("IP 黑白名单已更新")
+      message.success(t("common.updated", { name: t("shell.nav.ipAccessLists") }))
     } else {
       await createIPAccessList(form)
-      message.success("IP 黑白名单已创建")
+      message.success(t("common.created", { name: t("shell.nav.ipAccessLists") }))
     }
     formVisible.value = false
     await resource.refresh()
@@ -211,26 +213,26 @@ async function save() {
 
 async function toggleEnabled(item: IPAccessListEntry) {
   await updateIPAccessList(item.id, { ...toInput(item), enabled: !item.enabled })
-  message.success(item.enabled ? "已停用" : "已启用")
+  message.success(item.enabled ? t("moduleCommon.disabledMessage") : t("moduleCommon.enabledMessage"))
   await resource.refresh()
 }
 
 function remove(item: IPAccessListEntry) {
   dialog.warning({
-    title: "删除 IP 黑白名单",
-    content: `确认删除 ${item.name}？`,
-    positiveText: "删除",
-    negativeText: "取消",
+    title: t("moduleCommon.deleteTitle", { name: t("shell.nav.ipAccessLists") }),
+    content: t("moduleCommon.deleteContent", { name: item.name }),
+    positiveText: t("common.delete"),
+    negativeText: t("common.cancel"),
     onPositiveClick: async () => {
       await deleteIPAccessList(item.id)
-      message.success("IP 黑白名单已删除")
+      message.success(t("common.deleted", { name: t("shell.nav.ipAccessLists") }))
       await resource.refresh()
     }
   })
 }
 
 function formatKind(value: string) {
-  return value === "allow" ? "白名单" : "黑名单"
+  return value === "allow" ? t("moduleCommon.whitelist") : t("moduleCommon.blacklist")
 }
 
 function isIP(value: string) {
@@ -268,15 +270,15 @@ function isIPv6(value: string) {
 <template>
   <main class="page">
     <ModulePageHeader
-      title="IP 黑白名单"
-      subtitle="Exact IP 使用预处理哈希索引 O(1) 查询；CIDR 使用按前缀长度分组的有界索引。"
-      eyebrow="Protection Module"
+      :title="t('shell.nav.ipAccessLists')"
+      :subtitle="t('moduleCommon.ipAccessListSubtitle')"
+      :eyebrow="t('moduleCommon.protectionModule')"
       :tags="headerTags"
     >
       <template #actions>
       <NSpace>
-        <NButton :loading="resource.loading.value" @click="resource.refresh">刷新</NButton>
-        <NButton v-if="authStore.canWrite" type="primary" @click="openCreate">新增名单</NButton>
+        <NButton :loading="resource.loading.value" @click="resource.refresh">{{ t("common.refresh") }}</NButton>
+        <NButton v-if="authStore.canWrite" type="primary" @click="openCreate">{{ t("moduleCommon.createList") }}</NButton>
       </NSpace>
       </template>
     </ModulePageHeader>
@@ -284,16 +286,16 @@ function isIPv6(value: string) {
     <ModuleStatusSummary :items="statusItems" />
 
     <section class="section section-pad guidance-section">
-      <ModuleRiskGuidance title="运营指引" :items="guidanceAlerts" />
+      <ModuleRiskGuidance :title="t('common.operationGuidance')" :items="guidanceAlerts" />
     </section>
 
     <section class="section section-pad">
       <ModuleStateBlock
         v-if="resource.error.value"
         state="error"
-        title="IP 黑白名单加载失败"
+        :title="t('moduleCommon.ipAccessListLoadFailed')"
         :description="resource.error.value"
-        action-label="重试"
+        :action-label="t('common.retry')"
         @retry="resource.refresh"
       />
       <NDataTable
@@ -307,42 +309,42 @@ function isIPv6(value: string) {
       <ModuleStateBlock
         v-if="!resource.loading.value && !resource.error.value && items.length === 0"
         state="empty"
-        description="暂无 IP 黑白名单"
+        :description="t('moduleCommon.noIpAccessLists')"
       />
     </section>
 
     <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="formVisible" :width="520">
-      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? '编辑 IP 黑白名单' : '新增 IP 黑白名单'" closable>
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? t('moduleCommon.editIpAccessList') : t('moduleCommon.createIpAccessList')" closable>
         <NForm class="rule-form" label-placement="top">
-          <NFormItem label="名称">
+          <NFormItem :label="t('common.name')">
             <NInput v-model:value="form.name" />
           </NFormItem>
-          <NFormItem label="类型">
+          <NFormItem :label="t('table.type')">
             <NSelect v-model:value="form.kind" :options="kindOptions" />
           </NFormItem>
-          <NFormItem label="目标">
+          <NFormItem :label="t('table.target')">
             <NSelect v-model:value="form.target" :options="targetOptions" />
           </NFormItem>
-          <NFormItem :label="form.target === 'cidr' ? 'CIDR' : 'IP 地址'">
+          <NFormItem :label="form.target === 'cidr' ? 'CIDR' : t('moduleCommon.ipAddress')">
             <NInput v-model:value="form.value" />
           </NFormItem>
-          <NFormItem label="应用 ID">
+          <NFormItem :label="t('common.applicationId')">
             <NInputNumber v-model:value="form.application_id" :min="0" />
           </NFormItem>
-          <NFormItem label="优先级">
+          <NFormItem :label="t('common.priority')">
             <NInputNumber v-model:value="form.priority" :min="0" />
           </NFormItem>
-          <NFormItem label="启用">
+          <NFormItem :label="t('common.enabled')">
             <NSwitch v-model:value="form.enabled" />
           </NFormItem>
-          <NFormItem label="描述">
+          <NFormItem :label="t('moduleCommon.description')">
             <NInput v-model:value="form.description" type="textarea" />
           </NFormItem>
         </NForm>
         <template #footer>
           <NSpace justify="end">
-            <NButton @click="formVisible = false">取消</NButton>
-            <NButton type="primary" :loading="saving" @click="save">保存</NButton>
+            <NButton @click="formVisible = false">{{ t("common.cancel") }}</NButton>
+            <NButton type="primary" :loading="saving" @click="save">{{ t("common.save") }}</NButton>
           </NSpace>
         </template>
       </NDrawerContent>

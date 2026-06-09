@@ -6,6 +6,8 @@ import { LineChart } from "echarts/charts"
 import { GridComponent, TooltipComponent } from "echarts/components"
 import { CanvasRenderer } from "echarts/renderers"
 import { useThemeStore } from "@/stores/theme"
+import { getActiveLocale } from "@/i18n"
+import { useI18n } from "vue-i18n"
 
 use([CanvasRenderer, LineChart, GridComponent, TooltipComponent])
 
@@ -21,6 +23,7 @@ const props = defineProps<{
 }>()
 
 const themeStore = useThemeStore()
+const { t } = useI18n()
 const sourcePoints = computed(() => {
   const points = props.points.length > 1 ? props.points : [0, props.points[0] ?? 0]
   return points.map((point) => {
@@ -33,7 +36,7 @@ const formatTrendTime = (value: string) => {
   if (Number.isNaN(date.getTime())) {
     return value
   }
-  return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })
+  return date.toLocaleTimeString(getActiveLocale(), { hour: "2-digit", minute: "2-digit" })
 }
 const sourceLabels = computed(() => {
   const points = props.points.length > 1 ? props.points : [undefined, props.points[0]]
@@ -98,7 +101,7 @@ const option = computed(() => ({
   },
   series: [
     {
-      name: "趋势",
+      name: t("common.status"),
       type: "line",
       data: sourcePoints.value,
       smooth: true,

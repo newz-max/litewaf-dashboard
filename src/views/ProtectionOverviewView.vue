@@ -5,7 +5,9 @@ import ModulePostureCard from "@/components/operations/ModulePostureCard.vue"
 import PostureMetricCard, { type PostureMetric } from "@/components/operations/PostureMetricCard.vue"
 import RiskSummaryList from "@/components/operations/RiskSummaryList.vue"
 import { useApiResource } from "@/composables/useApiResource"
+import { getActiveLocale } from "@/i18n"
 import { useThemeStore } from "@/stores/theme"
+import { useI18n } from "vue-i18n"
 
 interface ModuleCardModel {
   module: ProtectionModuleOverview
@@ -15,6 +17,7 @@ interface ModuleCardModel {
 }
 
 const themeStore = useThemeStore()
+const { t } = useI18n()
 const overviewResource = useApiResource(getProtectionOverview)
 const overview = computed(() => overviewResource.data.value)
 const modules = computed(() => overview.value?.modules ?? [])
@@ -44,49 +47,49 @@ function moduleLogQuery(moduleKey: string): Record<string, string> {
 
 const postureMetrics = computed<PostureMetric[]>(() => [
   {
-    label: "防护模块",
+    label: t("protectionOverview.modules"),
     value: modules.value.length,
-    note: "已接入概览的模块数量",
+    note: t("protectionOverview.modulesNote"),
     tone: hasModules.value ? "info" : "neutral",
     featured: true
   },
   {
-    label: "启用规则",
+    label: t("common.enabledRules"),
     value: totalOf("enabled"),
-    note: "所有模块已启用规则",
+    note: t("protectionOverview.enabledRulesNote"),
     tone: totalOf("enabled") > 0 ? "success" : "neutral",
     featured: true
   },
   {
-    label: "阻断姿态",
+    label: t("protectionOverview.blockPosture"),
     value: totalOf("block"),
-    note: "阻断类处置配置数量",
+    note: t("protectionOverview.blockPostureNote"),
     tone: totalOf("block") > 0 ? "danger" : "neutral",
     featured: true
   },
   {
-    label: "风险提示",
+    label: t("protectionOverview.riskHints"),
     value: risks.value.length,
-    note: "跨模块高风险配置提示",
+    note: t("protectionOverview.riskHintsNote"),
     tone: risks.value.length > 0 ? "warning" : "success",
     featured: true
   },
   {
-    label: "观察策略",
+    label: t("protectionOverview.observePolicies"),
     value: totalOf("observe"),
-    note: "观察/记录类处置配置",
+    note: t("protectionOverview.observePoliciesNote"),
     tone: "info"
   },
   {
-    label: "放行规则",
+    label: t("protectionOverview.allowRules"),
     value: totalOf("allow"),
-    note: "显式放行配置",
+    note: t("protectionOverview.allowRulesNote"),
     tone: "success"
   },
   {
-    label: "命中证据",
+    label: t("protectionOverview.evidence"),
     value: modules.value.reduce((total, module) => total + evidenceTotal(module), 0),
-    note: "模块概览返回的最近命中",
+    note: t("protectionOverview.evidenceNote"),
     tone: "warning"
   }
 ])
@@ -108,29 +111,33 @@ const moduleCards = computed<ModuleCardModel[]>(() =>
     }
   })
 )
+
+function formatCount(value: number) {
+  return new Intl.NumberFormat(getActiveLocale()).format(value)
+}
 </script>
 
 <template>
   <main class="page protection-overview">
     <div class="page-header overview-header">
       <div>
-        <h1 class="page-title">防护概览</h1>
-        <p class="page-subtitle">按模块查看规则启用、处置姿态、风险提示和最近命中证据。</p>
+        <h1 class="page-title">{{ t("protectionOverview.title") }}</h1>
+        <p class="page-subtitle">{{ t("protectionOverview.subtitle") }}</p>
       </div>
       <NButton type="primary" :loading="overviewResource.loading.value" @click="overviewResource.refresh">
-        刷新概览
+        {{ t("common.refreshOverview") }}
       </NButton>
     </div>
 
     <section class="overview-hero">
       <div class="overview-hero-copy">
-        <div class="hero-kicker">Module-first Posture</div>
-        <h2>按防护模块组织运营状态和风险证据</h2>
-        <p>模块卡片只展示 API 返回的规则、处置、风险和命中证据；缺少规则身份时只保留模块级日志筛选。</p>
+        <div class="hero-kicker">{{ t("protectionOverview.heroKicker") }}</div>
+        <h2>{{ t("protectionOverview.heroTitle") }}</h2>
+        <p>{{ t("protectionOverview.heroText") }}</p>
       </div>
       <div class="hero-status">
         <NTag :type="overviewResource.error.value ? 'error' : hasModules ? 'success' : 'default'" size="small">
-          {{ overviewResource.error.value ? "接口异常" : hasModules ? "模块态势已加载" : "暂无模块数据" }}
+          {{ overviewResource.error.value ? t("common.apiError") : hasModules ? t("protectionOverview.loaded") : t("protectionOverview.emptyStatus") }}
         </NTag>
         <span>{{ themeStore.activePreset.label }} · {{ themeStore.activeModeLabel }}</span>
       </div>
@@ -141,7 +148,7 @@ const moduleCards = computed<ModuleCardModel[]>(() =>
     </NAlert>
 
     <NAlert v-if="isEmptyOverview" type="info">
-      防护概览接口当前没有返回模块数据。页面保持空态展示，不生成演示模块或风险记录。
+      {{ t("protectionOverview.empty") }}
     </NAlert>
 
     <section class="overview-metric-grid">
@@ -162,10 +169,10 @@ const moduleCards = computed<ModuleCardModel[]>(() =>
     <section class="section section-pad risk-section">
       <div class="panel-heading">
         <div>
-          <div class="panel-title">跨模块风险</div>
-          <div class="panel-subtitle">高风险规则、过宽范围和需要复核的处置姿态</div>
+          <div class="panel-title">{{ t("protectionOverview.crossModuleRisk") }}</div>
+          <div class="panel-subtitle">{{ t("protectionOverview.crossModuleRiskSubtitle") }}</div>
         </div>
-        <NTag size="small" type="warning">{{ risks.length }} 条</NTag>
+        <NTag size="small" type="warning">{{ t("protectionOverview.riskCount", { count: formatCount(risks.length) }) }}</NTag>
       </div>
       <RiskSummaryList :risks="risks" :log-query-by-module="moduleLogQuery" />
     </section>

@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { RouterLink } from "vue-router"
 import type { ProtectionModuleRisk } from "@/api/litewaf"
+import { useI18n } from "vue-i18n"
 
 defineProps<{
   risks: readonly ProtectionModuleRisk[]
   logQueryByModule: (moduleKey: string) => Record<string, string>
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -17,14 +20,14 @@ defineProps<{
           <span class="risk-message">{{ risk.message }}</span>
         </div>
         <div class="risk-meta">
-          <span v-if="risk.rule_name">规则 {{ risk.rule_name }}</span>
+          <span v-if="risk.rule_name">{{ t("risk.rulePrefix", { name: risk.rule_name }) }}</span>
           <span v-if="risk.scope">{{ risk.scope }}</span>
           <span v-if="risk.action">{{ risk.action }}</span>
         </div>
-        <RouterLink :to="{ path: '/attack-logs', query: logQueryByModule(risk.module) }">日志筛选</RouterLink>
+        <RouterLink :to="{ path: '/attack-logs', query: logQueryByModule(risk.module) }">{{ t("risk.logFilter") }}</RouterLink>
       </div>
     </div>
-    <NEmpty v-else description="暂无高风险配置提示" />
+    <NEmpty v-else :description="t('risk.empty')" />
   </div>
 </template>
 

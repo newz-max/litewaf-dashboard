@@ -23,6 +23,7 @@ import AccessControlView from "@/views/AccessControlView.vue"
 import UploadProtectionView from "@/views/UploadProtectionView.vue"
 import BotProtectionView from "@/views/BotProtectionView.vue"
 import DynamicProtectionView from "@/views/DynamicProtectionView.vue"
+import { i18n } from "@/i18n"
 import { useAuthStore } from "@/stores/auth"
 
 const router = createRouter({
@@ -32,7 +33,7 @@ const router = createRouter({
       path: "/login",
       name: "login",
       component: LoginView,
-      meta: { title: "登录" }
+      meta: { titleKey: "shell.nav.login" }
     },
     {
       path: "/",
@@ -43,19 +44,19 @@ const router = createRouter({
           path: "",
           name: "dashboard",
           component: DashboardView,
-          meta: { title: "仪表盘" }
+          meta: { titleKey: "shell.nav.dashboard" }
         },
         {
           path: "statistics-report",
           name: "statisticsReport",
           component: () => import("@/views/StatisticsReportView.vue"),
-          meta: { title: "统计报表" }
+          meta: { titleKey: "shell.nav.statisticsReport" }
         },
         {
           path: "applications",
           name: "applications",
           component: ApplicationsView,
-          meta: { title: "防护应用" }
+          meta: { titleKey: "shell.nav.applications" }
         },
         {
           path: "sites",
@@ -65,121 +66,121 @@ const router = createRouter({
           path: "protection-overview",
           name: "protectionOverview",
           component: ProtectionOverviewView,
-          meta: { title: "防护概览" }
+          meta: { titleKey: "shell.nav.protectionOverview" }
         },
         {
           path: "rules",
           name: "rules",
           component: RulesView,
-          meta: { title: "规则管理" }
+          meta: { titleKey: "shell.nav.rules" }
         },
         {
           path: "rule-ecosystem",
           name: "ruleEcosystem",
           component: RuleEcosystemView,
-          meta: { title: "高级规则生态" }
+          meta: { titleKey: "shell.nav.ruleEcosystem" }
         },
         {
           path: "policies",
           name: "policies",
           component: PoliciesView,
-          meta: { title: "防护策略" }
+          meta: { titleKey: "shell.nav.policies" }
         },
         {
           path: "attack-logs",
           name: "attackLogs",
           component: AttackLogsView,
-          meta: { title: "攻击日志" }
+          meta: { titleKey: "shell.nav.attackLogs" }
         },
         {
           path: "blocked-rejected-records",
           name: "blockedRejectedRecords",
           component: BlockedRejectedRecordsView,
-          meta: { title: "拦截 / 拒绝记录" }
+          meta: { titleKey: "shell.nav.blockedRejectedRecords" }
         },
         {
           path: "dynamic-bans",
           name: "dynamicBans",
           component: ActiveDynamicBansView,
-          meta: { title: "动态封禁" }
+          meta: { titleKey: "shell.nav.dynamicBans" }
         },
         {
           path: "access-logs",
           name: "accessLogs",
           component: AccessLogsView,
-          meta: { title: "访问日志" }
+          meta: { titleKey: "shell.nav.accessLogs" }
         },
         {
           path: "releases",
           name: "releases",
           component: ReleasesView,
-          meta: { title: "发布记录" }
+          meta: { titleKey: "shell.nav.releases" }
         },
         {
           path: "protection-migration-health",
           name: "protectionMigrationHealth",
           component: MigrationHealthView,
-          meta: { title: "迁移健康检查" }
+          meta: { titleKey: "shell.nav.protectionMigrationHealth" }
         },
         {
           path: "audit-logs",
           name: "auditLogs",
           component: AuditLogsView,
-          meta: { title: "审计日志" }
+          meta: { titleKey: "shell.nav.auditLogs" }
         },
         {
           path: "ip-access-lists",
           name: "ipAccessLists",
           component: IPAccessListsView,
-          meta: { title: "IP 黑白名单" }
+          meta: { titleKey: "shell.nav.ipAccessLists" }
         },
         {
           path: "cc-protection",
           name: "ccProtection",
           component: CcProtectionView,
-          meta: { title: "CC 防护" }
+          meta: { titleKey: "shell.nav.ccProtection" }
         },
         {
           path: "attack-protection",
           name: "attackProtection",
           component: AttackProtectionView,
-          meta: { title: "攻击防护" }
+          meta: { titleKey: "shell.nav.attackProtection" }
         },
         {
           path: "access-control",
           name: "accessControl",
           component: AccessControlView,
-          meta: { title: "访问控制" }
+          meta: { titleKey: "shell.nav.accessControl" }
         },
         {
           path: "upload-protection",
           name: "uploadProtection",
           component: UploadProtectionView,
-          meta: { title: "上传防护" }
+          meta: { titleKey: "shell.nav.uploadProtection" }
         },
         {
           path: "bot-protection",
           name: "botProtection",
           component: BotProtectionView,
-          meta: { title: "Bot / 人机验证" }
+          meta: { titleKey: "shell.nav.botProtection" }
         },
         {
           path: "dynamic-protection",
           name: "dynamicProtection",
           component: DynamicProtectionView,
-          meta: { title: "动态防护 / 等候室" }
+          meta: { titleKey: "shell.nav.dynamicProtection" }
         },
         {
           path: "rate-limits",
           name: "rateLimits",
           component: RateLimitsView,
-          meta: { title: "限流配置（已废弃）" }
+          meta: { titleKey: "shell.nav.rateLimits" }
         },
         {
           path: "settings",
           name: "settings",
           component: SettingsView,
-          meta: { title: "系统设置" }
+          meta: { titleKey: "shell.nav.settings" }
         }
       ]
     }
@@ -197,7 +198,8 @@ router.beforeEach((to) => {
 })
 
 router.afterEach((to) => {
-  document.title = `${String(to.meta.title || "控制台")} - LiteWaf`
+  const titleKey = typeof to.meta.titleKey === "string" ? to.meta.titleKey : "common.console"
+  document.title = `${i18n.global.t(titleKey)} - LiteWaf`
 })
 
 export default router

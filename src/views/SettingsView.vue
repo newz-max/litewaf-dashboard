@@ -3,7 +3,9 @@ import { computed } from "vue"
 import { getVersion } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 import ThemeSettingsPanel from "@/components/theme/ThemeSettingsPanel.vue"
+import { useI18n } from "vue-i18n"
 
+const { t } = useI18n()
 const versionResource = useApiResource(getVersion)
 const settings = computed(() => {
   const version = versionResource.data.value
@@ -13,9 +15,9 @@ const settings = computed(() => {
   }
 
   return [
-    { key: "应用名称", value: version.name },
-    { key: "版本", value: version.version },
-    { key: "环境", value: version.env }
+    { key: t("settings.appName"), value: version.name },
+    { key: t("settings.version"), value: version.version },
+    { key: t("settings.environment"), value: version.env }
   ]
 })
 </script>
@@ -24,17 +26,17 @@ const settings = computed(() => {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">系统设置</h1>
-        <p class="page-subtitle">维护运行参数、用户权限、系统集成和本地外观偏好。</p>
+        <h1 class="page-title">{{ t("settings.title") }}</h1>
+        <p class="page-subtitle">{{ t("settings.subtitle") }}</p>
       </div>
     </div>
 
     <ThemeSettingsPanel />
 
     <section class="section section-pad">
-      <div class="section-title">运行信息</div>
+      <div class="section-title">{{ t("settings.runtimeInfo") }}</div>
       <NSpin :show="versionResource.loading.value">
-        <NEmpty v-if="settings.length === 0 && !versionResource.loading.value" description="暂无系统配置数据" />
+        <NEmpty v-if="settings.length === 0 && !versionResource.loading.value" :description="t('settings.emptyRuntimeInfo')" />
         <NDescriptions v-else bordered :column="1" label-placement="left">
           <NDescriptionsItem
             v-for="item in settings"
