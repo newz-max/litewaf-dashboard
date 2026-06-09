@@ -110,6 +110,7 @@ function updateSelectFilter(key: SelectFilterKey, value: string | number | null)
       </div>
 
       <NDataTable
+        :scrollbar-props="{ trigger: 'hover' }"
         :loading="logsResource.loading.value"
         :columns="columns"
         :data="logs"

@@ -196,6 +196,7 @@ async function removePolicy(id: number) {
 
     <section class="section section-pad">
       <NDataTable
+        :scrollbar-props="{ trigger: 'hover' }"
         :loading="policiesResource.loading.value"
         :columns="columns"
         :data="policies"
@@ -207,8 +208,8 @@ async function removePolicy(id: number) {
       </NAlert>
     </section>
 
-    <NDrawer v-model:show="showForm" :width="480">
-      <NDrawerContent :title="editingID ? '编辑策略' : '新增策略'">
+    <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="showForm" :width="480">
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editingID ? '编辑策略' : '新增策略'">
         <NForm label-placement="top">
           <NFormItem label="策略名称">
             <NInput v-model:value="form.name" />

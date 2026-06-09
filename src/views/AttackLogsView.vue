@@ -295,6 +295,7 @@ function moduleRoute(module: string) {
       </div>
 
       <NDataTable
+        :scrollbar-props="{ trigger: 'hover' }"
         :loading="logsResource.loading.value"
         :columns="columns"
         :data="logs"

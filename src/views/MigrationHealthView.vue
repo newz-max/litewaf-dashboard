@@ -131,12 +131,12 @@ function statusType(status: string) {
 
       <section class="section section-pad section-gap">
         <div class="panel-title">旧存储覆盖</div>
-        <NDataTable :columns="storeColumns" :data="legacyStores" :bordered="false" />
+        <NDataTable :scrollbar-props="{ trigger: 'hover' }" :columns="storeColumns" :data="legacyStores" :bordered="false" />
       </section>
 
       <section class="section section-pad section-gap">
         <div class="panel-title">迁移问题</div>
-        <NDataTable :columns="issueColumns" :data="issues" :bordered="false" />
+        <NDataTable :scrollbar-props="{ trigger: 'hover' }" :columns="issueColumns" :data="issues" :bordered="false" />
         <NEmpty v-if="issues.length === 0" description="未发现迁移缺失、孤儿、重复或冲突" />
       </section>
 

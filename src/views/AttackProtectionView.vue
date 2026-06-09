@@ -219,6 +219,7 @@ function formatTime(value?: string) {
 
     <section class="section section-pad">
       <NDataTable
+        :scrollbar-props="{ trigger: 'hover' }"
         :loading="resource.loading.value"
         :columns="columns"
         :data="groups"
@@ -232,8 +233,8 @@ function formatTime(value?: string) {
       />
     </section>
 
-    <NDrawer v-model:show="drawerVisible" :width="460">
-      <NDrawerContent :title="editing ? editing.name : '攻击防护配置'" closable>
+    <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="drawerVisible" :width="460">
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? editing.name : '攻击防护配置'" closable>
         <NForm class="group-form" label-placement="top">
           <NFormItem label="攻击类型">
             <NInput :value="editing ? formatAttackType(editing.attack_type) : ''" disabled />

@@ -73,6 +73,7 @@ function updateResultFilter(value: string | number | null) {
       </div>
 
       <NDataTable
+        :scrollbar-props="{ trigger: 'hover' }"
         :loading="auditResource.loading.value"
         :columns="columns"
         :data="logs"

@@ -150,6 +150,7 @@ async function removeRule(id: number) {
 
     <section class="section section-pad">
       <NDataTable
+        :scrollbar-props="{ trigger: 'hover' }"
         :loading="rulesResource.loading.value"
         :columns="columns"
         :data="rules"
@@ -161,8 +162,8 @@ async function removeRule(id: number) {
       </NAlert>
     </section>
 
-    <NDrawer v-model:show="showForm" :width="480">
-      <NDrawerContent :title="editingID ? '编辑规则' : '新增规则'">
+    <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="showForm" :width="480">
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editingID ? '编辑规则' : '新增规则'">
         <NForm label-placement="top">
           <NFormItem label="规则名称">
             <NInput v-model:value="form.name" />

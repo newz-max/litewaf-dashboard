@@ -351,6 +351,18 @@ export function buildThemeOverrides(
       thTextColor: tokens.textMuted,
       tdTextColor: tokens.text
     },
+    Scrollbar: {
+      width: "8px",
+      height: "8px",
+      borderRadius: "999px",
+      color: `color-mix(in srgb, ${settings.accentColor} 38%, transparent)`,
+      colorHover: `color-mix(in srgb, ${settings.accentColor} 62%, transparent)`,
+      railColor: `color-mix(in srgb, ${tokens.panelMuted} 42%, transparent)`,
+      railInsetHorizontalBottom: "2px 4px",
+      railInsetHorizontalTop: "2px 4px",
+      railInsetVerticalRight: "4px 2px",
+      railInsetVerticalLeft: "4px 2px"
+    },
     Alert: {
       borderRadius: "6px",
       color: `color-mix(in srgb, ${tokens.panelMuted} 94%, ${tokens.panel})`,

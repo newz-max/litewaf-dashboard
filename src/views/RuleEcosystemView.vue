@@ -981,6 +981,7 @@ function parseKeyValues(value: string) {
             <section class="section section-pad">
               <div class="section-title">规则包</div>
               <NDataTable
+                :scrollbar-props="{ trigger: 'hover' }"
                 :loading="packagesResource.loading.value"
                 :columns="packageColumns"
                 :data="packages"
@@ -1039,12 +1040,12 @@ function parseKeyValues(value: string) {
               @update:value="loadCatalogPackages"
             />
           </NSpace>
-          <NDataTable :loading="catalogsResource.loading.value" :columns="catalogColumns" :data="catalogs" :bordered="false" />
+          <NDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="catalogsResource.loading.value" :columns="catalogColumns" :data="catalogs" :bordered="false" />
         </section>
 
         <section class="section section-pad">
           <div class="section-title">目录包</div>
-          <NDataTable :loading="catalogLoading" :columns="catalogPackageColumns" :data="catalogPackages" :bordered="false" />
+          <NDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="catalogLoading" :columns="catalogPackageColumns" :data="catalogPackages" :bordered="false" />
           <NEmpty v-if="!catalogLoading && catalogPackages.length === 0" description="暂无已同步目录包" />
           <div v-if="remotePreview || updatePreview" class="preview-grid">
             <NStatistic label="远程新增" :value="remotePreview?.added.length ?? updatePreview?.added.length ?? 0" />
@@ -1097,7 +1098,7 @@ function parseKeyValues(value: string) {
               </NSpace>
             </NGi>
           </NGrid>
-          <NDataTable :loading="providersResource.loading.value" :columns="providerColumns" :data="providers" :bordered="false" />
+          <NDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="providersResource.loading.value" :columns="providerColumns" :data="providers" :bordered="false" />
           <NEmpty v-if="!providersResource.loading.value && providers.length === 0" description="暂无外部 Provider" />
         </section>
 
@@ -1114,7 +1115,7 @@ function parseKeyValues(value: string) {
             />
             <NButton :disabled="!activeProviderID" :loading="providerLoading" @click="loadProviderPackages">刷新包列表</NButton>
           </NSpace>
-          <NDataTable :loading="providerLoading" :columns="providerPackageColumns" :data="providerPackages" :bordered="false" />
+          <NDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="providerLoading" :columns="providerPackageColumns" :data="providerPackages" :bordered="false" />
           <NEmpty v-if="!providerLoading && providerPackages.length === 0" description="暂无 Provider 包" />
           <div v-if="providerPreview" class="preview-grid">
             <NStatistic label="新增" :value="providerPreview.added.length" />
@@ -1155,7 +1156,7 @@ function parseKeyValues(value: string) {
           <NButton type="primary" :loading="busy === 'create-trust'" :disabled="!canWrite" @click="createTrustKey">
             保存密钥
           </NButton>
-          <NDataTable class="mt" :loading="trustKeysResource.loading.value" :columns="trustColumns" :data="trustKeys" :bordered="false" />
+          <NDataTable :scrollbar-props="{ trigger: 'hover' }" class="mt" :loading="trustKeysResource.loading.value" :columns="trustColumns" :data="trustKeys" :bordered="false" />
         </section>
       </NTabPane>
 
@@ -1185,6 +1186,7 @@ function parseKeyValues(value: string) {
             </NGi>
           </NGrid>
           <NDataTable
+            :scrollbar-props="{ trigger: 'hover' }"
             :loading="accountSourcesResource.loading.value"
             :columns="accountSourceColumns"
             :data="accountSources"
@@ -1196,6 +1198,7 @@ function parseKeyValues(value: string) {
         <section class="section section-pad">
           <div class="section-title">自动导入建议队列</div>
           <NDataTable
+            :scrollbar-props="{ trigger: 'hover' }"
             :loading="reviewQueueResource.loading.value"
             :columns="reviewQueueColumns"
             :data="reviewQueue"
@@ -1228,6 +1231,7 @@ function parseKeyValues(value: string) {
             </NGi>
           </NGrid>
           <NDataTable
+            :scrollbar-props="{ trigger: 'hover' }"
             :loading="contributionTargetsResource.loading.value"
             :columns="contributionTargetColumns"
             :data="contributionTargets"
@@ -1243,6 +1247,7 @@ function parseKeyValues(value: string) {
             </NButton>
           </NSpace>
           <NDataTable
+            :scrollbar-props="{ trigger: 'hover' }"
             class="mt"
             :loading="contributionPushesResource.loading.value"
             :columns="contributionPushColumns"
@@ -1264,8 +1269,9 @@ function parseKeyValues(value: string) {
             </NGi>
             <NGi :span="4"><NInput v-model:value="feedbackForm.reason" type="textarea" placeholder="误报原因，避免粘贴敏感请求内容" /></NGi>
           </NGrid>
-          <NDataTable :loading="feedbackResource.loading.value" :columns="feedbackColumns" :data="feedbackItems" :bordered="false" />
+          <NDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="feedbackResource.loading.value" :columns="feedbackColumns" :data="feedbackItems" :bordered="false" />
           <NDataTable
+            :scrollbar-props="{ trigger: 'hover' }"
             class="mt"
             :loading="feedbackSuggestionsResource.loading.value"
             :columns="feedbackSuggestionColumns"
@@ -1278,7 +1284,7 @@ function parseKeyValues(value: string) {
       <NTabPane name="rules" tab="规则与导出">
         <section class="section section-pad">
           <div class="section-title">已导入规则</div>
-          <NDataTable :loading="rulesResource.loading.value" :columns="ruleColumns" :data="importedRules" :bordered="false" />
+          <NDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="rulesResource.loading.value" :columns="ruleColumns" :data="importedRules" :bordered="false" />
           <NEmpty v-if="!rulesResource.loading.value && importedRules.length === 0" description="暂无导入规则" />
         </section>
 

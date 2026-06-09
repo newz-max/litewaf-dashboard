@@ -366,6 +366,7 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
 
     <section class="section section-pad">
       <NDataTable
+        :scrollbar-props="{ trigger: 'hover' }"
         :loading="applicationsResource.loading.value"
         :columns="applicationColumns"
         :data="applications"
@@ -385,6 +386,7 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
         <h2 class="section-title">证书</h2>
       </div>
       <NDataTable
+        :scrollbar-props="{ trigger: 'hover' }"
         :loading="certificatesResource.loading.value"
         :columns="certificateColumns"
         :data="certificates"
@@ -399,8 +401,8 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
       </NAlert>
     </section>
 
-    <NDrawer v-model:show="showForm" :width="720">
-      <NDrawerContent :title="editingID ? '编辑防护应用' : '新增防护应用'">
+    <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="showForm" :width="720">
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editingID ? '编辑防护应用' : '新增防护应用'">
         <NForm label-placement="top">
           <NFormItem label="应用名称">
             <NInput v-model:value="form.name" />
@@ -471,8 +473,8 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
       </NDrawerContent>
     </NDrawer>
 
-    <NDrawer v-model:show="showCertificateForm" :width="640">
-      <NDrawerContent title="上传证书">
+    <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="showCertificateForm" :width="640">
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" title="上传证书">
         <NForm label-placement="top">
           <NFormItem label="证书名称">
             <NInput v-model:value="certificateForm.name" />

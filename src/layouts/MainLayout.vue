@@ -251,6 +251,8 @@ onBeforeUnmount(() => {
       :collapsed="siderCollapsed"
       :collapsed-width="72"
       :width="256"
+      :native-scrollbar="false"
+      :scrollbar-props="{ trigger: 'hover', style: {} }"
       show-trigger
       class="app-sider"
       :class="{ 'app-sider--collapsed': siderCollapsed }"
@@ -331,7 +333,7 @@ onBeforeUnmount(() => {
         </div>
       </NLayoutHeader>
 
-      <NLayoutContent class="app-content">
+      <NLayoutContent class="app-content" :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }">
         <RouterView />
       </NLayoutContent>
     </NLayout>
@@ -507,13 +509,16 @@ onBeforeUnmount(() => {
 
 .app-content {
   height: calc(100vh - 66px);
-  padding: var(--lw-content-padding);
-  overflow: auto;
   background:
     radial-gradient(circle at 56% -8%, rgba(47, 124, 255, 0.12), transparent 24%),
     linear-gradient(180deg, #020916 0%, #010613 42%, #00040c 100%),
     var(--lw-bg);
   color: var(--lw-text);
+}
+
+.app-content :deep(.n-scrollbar-content) {
+  min-height: 100%;
+  padding: var(--lw-content-padding);
 }
 
 @media (max-width: 860px) {

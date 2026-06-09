@@ -297,6 +297,7 @@ function isIPv6(value: string) {
         @retry="resource.refresh"
       />
       <NDataTable
+        :scrollbar-props="{ trigger: 'hover' }"
         :loading="resource.loading.value"
         :columns="columns"
         :data="items"
@@ -310,8 +311,8 @@ function isIPv6(value: string) {
       />
     </section>
 
-    <NDrawer v-model:show="formVisible" :width="520">
-      <NDrawerContent :title="editing ? '编辑 IP 黑白名单' : '新增 IP 黑白名单'" closable>
+    <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="formVisible" :width="520">
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? '编辑 IP 黑白名单' : '新增 IP 黑白名单'" closable>
         <NForm class="rule-form" label-placement="top">
           <NFormItem label="名称">
             <NInput v-model:value="form.name" />

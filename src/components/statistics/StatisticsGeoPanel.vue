@@ -475,14 +475,20 @@ function withAlpha(color: string, alpha: number) {
       <div class="map-wrap">
         <VChart class="map-chart" :option="chartOption" :loading="loading" autoresize />
       </div>
-      <aside class="geo-ranking" :class="{ 'geo-ranking--empty': ranking.length === 0 }">
+      <NScrollbar
+        class="geo-ranking"
+        :class="{ 'geo-ranking--empty': ranking.length === 0 }"
+        trigger="hover"
+        :size="8"
+        content-class="geo-ranking__content"
+      >
         <NEmpty v-if="ranking.length === 0" :description="emptyDescription" />
         <div v-for="item in displayRanking" v-else :key="item.code || item.name" class="rank-row">
           <span>{{ item.displayName }}</span>
           <strong>{{ formatNumber(item.count) }}</strong>
           <NProgress type="line" :show-indicator="false" :percentage="Math.min(100, item.count)" />
         </div>
-      </aside>
+      </NScrollbar>
     </div>
   </section>
 </template>
@@ -552,12 +558,16 @@ function withAlpha(color: string, alpha: number) {
 }
 
 .geo-ranking {
+  min-height: 320px;
+  background: var(--lw-panel-muted);
+}
+
+.geo-ranking :deep(.geo-ranking__content) {
   display: grid;
   align-content: center;
   gap: 12px;
   min-height: 320px;
   padding: 14px;
-  background: var(--lw-panel-muted);
 }
 
 .geo-content--immersive .geo-ranking {
@@ -567,7 +577,6 @@ function withAlpha(color: string, alpha: number) {
   z-index: 1;
   width: min(240px, 28%);
   max-height: calc(100% - 28px);
-  overflow: auto;
   border: 1px solid var(--lw-border);
   background: color-mix(in srgb, var(--lw-panel-muted) 86%, transparent);
   backdrop-filter: blur(8px);
@@ -607,6 +616,10 @@ function withAlpha(color: string, alpha: number) {
   }
 
   .geo-ranking {
+    min-height: auto;
+  }
+
+  .geo-ranking :deep(.geo-ranking__content) {
     align-content: start;
     min-height: auto;
   }

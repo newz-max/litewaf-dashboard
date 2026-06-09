@@ -162,6 +162,7 @@ async function resetFilters() {
       </NAlert>
 
       <NDataTable
+        :scrollbar-props="{ trigger: 'hover' }"
         :loading="bans.loading.value"
         :columns="columns"
         :data="tableRows"

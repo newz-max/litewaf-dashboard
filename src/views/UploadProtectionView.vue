@@ -426,6 +426,7 @@ function formatTime(value?: string) {
 
     <section class="section section-pad">
       <NDataTable
+        :scrollbar-props="{ trigger: 'hover' }"
         :loading="resource.loading.value"
         :columns="columns"
         :data="items"
@@ -439,8 +440,8 @@ function formatTime(value?: string) {
       />
     </section>
 
-    <NDrawer v-model:show="formVisible" :width="520">
-      <NDrawerContent :title="editing ? '编辑上传防护规则' : '新增上传防护规则'" closable>
+    <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="formVisible" :width="520">
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? '编辑上传防护规则' : '新增上传防护规则'" closable>
         <NForm class="rule-form" label-placement="top">
           <NFormItem v-if="!editing" label="模板">
             <NSelect :options="templateOptions" placeholder="选择模板快速填充" @update:value="applyTemplate" />
