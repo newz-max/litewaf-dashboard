@@ -47,11 +47,11 @@ defineProps<{
   align-items: center;
   gap: 12px;
   min-height: 40px;
-  border: 1px solid rgba(44, 125, 255, 0.36);
+  border: 1px solid color-mix(in srgb, var(--lw-accent) 24%, var(--lw-border));
   border-radius: 6px;
   background:
-    linear-gradient(135deg, rgba(47, 124, 255, 0.08), transparent 54%),
-    rgba(7, 31, 73, 0.78);
+    linear-gradient(135deg, color-mix(in srgb, var(--lw-accent) 8%, transparent), transparent 54%),
+    color-mix(in srgb, var(--lw-panel-muted) 86%, var(--lw-panel));
   padding: 8px 10px;
 }
 
@@ -63,7 +63,7 @@ defineProps<{
 }
 
 .count-list-value {
-  color: #58a8ff;
+  color: var(--lw-accent-strong);
   font-weight: 800;
 }
 </style>

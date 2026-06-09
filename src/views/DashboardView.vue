@@ -176,9 +176,9 @@ const topIpBarColor = computed(() => ({
   x2: 0,
   y2: 1,
   colorStops: [
-    { offset: 0, color: "#68b7ff" },
-    { offset: 0.45, color: themeStore.chartPalette[0] ?? "#2f7cff" },
-    { offset: 1, color: "#0b47c5" }
+    { offset: 0, color: themeStore.cssVars["--lw-accent-strong"] },
+    { offset: 0.45, color: themeStore.chartPalette[0] ?? themeStore.cssVars["--lw-accent"] },
+    { offset: 1, color: themeStore.cssVars["--lw-accent"] }
   ]
 }))
 
@@ -367,15 +367,15 @@ function refreshDashboard() {
   gap: 16px;
   overflow: hidden;
   position: relative;
-  border: 1px solid rgba(47, 124, 255, 0.58);
+  border: 1px solid color-mix(in srgb, var(--lw-accent) 42%, var(--lw-border));
   border-radius: 6px;
   background:
-    radial-gradient(circle at 31% 52%, rgba(47, 124, 255, 0.22), transparent 88px),
-    radial-gradient(circle at 72% 72%, rgba(22, 214, 196, 0.18), transparent 4px),
-    linear-gradient(120deg, rgba(5, 24, 62, 0.96), rgba(3, 15, 40, 0.86)),
+    radial-gradient(circle at 31% 52%, color-mix(in srgb, var(--lw-accent) 16%, transparent), transparent 88px),
+    radial-gradient(circle at 72% 72%, color-mix(in srgb, var(--lw-success) 12%, transparent), transparent 4px),
+    linear-gradient(120deg, color-mix(in srgb, var(--lw-panel-muted) 84%, transparent), color-mix(in srgb, var(--lw-panel) 92%, var(--lw-bg))),
     var(--lw-panel);
   box-shadow:
-    inset 0 0 54px rgba(47, 124, 255, 0.1),
+    inset 0 0 54px color-mix(in srgb, var(--lw-accent) 8%, transparent),
     var(--lw-shadow);
   padding: 18px 20px;
 }
@@ -386,9 +386,9 @@ function refreshDashboard() {
   content: "";
   pointer-events: none;
   background:
-    linear-gradient(110deg, transparent 0 38%, rgba(47, 124, 255, 0.12) 38.2% 38.45%, transparent 38.8%),
-    linear-gradient(140deg, transparent 0 64%, rgba(22, 214, 196, 0.1) 64.2% 64.45%, transparent 64.8%),
-    repeating-linear-gradient(0deg, rgba(90, 150, 255, 0.06) 0 1px, transparent 1px 32px);
+    linear-gradient(110deg, transparent 0 38%, color-mix(in srgb, var(--lw-accent) 10%, transparent) 38.2% 38.45%, transparent 38.8%),
+    linear-gradient(140deg, transparent 0 64%, color-mix(in srgb, var(--lw-success) 8%, transparent) 64.2% 64.45%, transparent 64.8%),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--lw-border-strong) 8%, transparent) 0 1px, transparent 1px 32px);
   opacity: 0.62;
 }
 
@@ -401,10 +401,10 @@ function refreshDashboard() {
   content: "";
   pointer-events: none;
   background:
-    radial-gradient(circle at 50% 42%, rgba(112, 180, 255, 0.68), rgba(47, 124, 255, 0.32) 28%, transparent 60%),
-    linear-gradient(145deg, rgba(22, 214, 196, 0.18), rgba(47, 124, 255, 0.34));
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--lw-accent-strong) 58%, transparent), color-mix(in srgb, var(--lw-accent) 26%, transparent) 28%, transparent 60%),
+    linear-gradient(145deg, color-mix(in srgb, var(--lw-success) 14%, transparent), color-mix(in srgb, var(--lw-accent) 24%, transparent));
   clip-path: polygon(50% 0, 82% 14%, 72% 70%, 50% 100%, 28% 70%, 18% 14%);
-  filter: drop-shadow(0 0 22px rgba(47, 124, 255, 0.72));
+  filter: drop-shadow(0 0 22px color-mix(in srgb, var(--lw-accent) 46%, transparent));
   opacity: 0.66;
 }
 
@@ -475,8 +475,8 @@ function refreshDashboard() {
 .chart-panel {
   min-height: 360px;
   background:
-    radial-gradient(circle at 94% 0, rgba(47, 124, 255, 0.13), transparent 34%),
-    linear-gradient(145deg, rgba(7, 31, 73, 0.94), rgba(3, 15, 39, 0.96)),
+    radial-gradient(circle at 94% 0, color-mix(in srgb, var(--lw-accent) 10%, transparent), transparent 34%),
+    linear-gradient(145deg, color-mix(in srgb, var(--lw-panel-muted) 84%, transparent), var(--lw-panel)),
     var(--lw-panel);
 }
 

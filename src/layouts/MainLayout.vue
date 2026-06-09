@@ -344,23 +344,23 @@ onBeforeUnmount(() => {
 .app-shell {
   height: 100vh;
   background:
-    radial-gradient(circle at 54% -18%, rgba(20, 62, 148, 0.28), transparent 26%),
-    linear-gradient(180deg, #020916 0%, #010613 48%, #00040c 100%),
+    radial-gradient(circle at 54% -18%, color-mix(in srgb, var(--lw-accent) 18%, transparent), transparent 26%),
+    linear-gradient(180deg, var(--lw-bg-elevated) 0%, var(--lw-bg) 52%, color-mix(in srgb, var(--lw-bg) 88%, var(--lw-sider)) 100%),
     var(--lw-bg);
   color: var(--lw-text);
 }
 
 .app-sider {
-  border-right: 1px solid rgba(38, 92, 190, 0.42);
+  border-right: 1px solid color-mix(in srgb, var(--lw-border) 74%, transparent);
   background:
-    linear-gradient(90deg, rgba(48, 94, 214, 0.32), transparent 4px),
-    radial-gradient(circle at 26% 0, rgba(47, 124, 255, 0.18), transparent 160px),
-    linear-gradient(180deg, #06183c 0%, #020b21 42%, #010817 100%),
+    linear-gradient(90deg, color-mix(in srgb, var(--lw-accent) 22%, transparent), transparent 4px),
+    radial-gradient(circle at 26% 0, color-mix(in srgb, var(--lw-accent) 12%, transparent), transparent 160px),
+    linear-gradient(180deg, color-mix(in srgb, var(--lw-sider) 90%, var(--lw-panel-muted)) 0%, var(--lw-sider) 62%, color-mix(in srgb, var(--lw-sider) 86%, var(--lw-bg)) 100%),
     var(--lw-sider);
   color: var(--lw-text);
   box-shadow:
-    inset -1px 0 0 rgba(77, 142, 255, 0.18),
-    12px 0 36px rgba(0, 0, 0, 0.22);
+    inset -1px 0 0 color-mix(in srgb, var(--lw-border-strong) 18%, transparent),
+    var(--lw-shadow);
 }
 
 .brand {
@@ -376,13 +376,13 @@ onBeforeUnmount(() => {
   width: 40px;
   height: 40px;
   place-items: center;
-  border: 1px solid rgba(32, 209, 255, 0.72);
+  border: 1px solid color-mix(in srgb, var(--lw-accent) 62%, var(--lw-border));
   border-radius: 9px;
   background:
-    radial-gradient(circle at 50% 20%, rgba(22, 214, 196, 0.28), transparent 58%),
-    rgba(4, 24, 63, 0.9);
-  color: #21d4ff;
-  box-shadow: 0 0 24px rgba(47, 124, 255, 0.34);
+    radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--lw-success) 24%, transparent), transparent 58%),
+    color-mix(in srgb, var(--lw-accent) 16%, var(--lw-panel));
+  color: var(--lw-accent-strong);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--lw-accent) 24%, transparent);
 }
 
 .brand-text {
@@ -396,7 +396,7 @@ onBeforeUnmount(() => {
 }
 
 .brand-text span {
-  color: #9eb5d8;
+  color: var(--lw-text-muted);
   font-size: 12px;
 }
 
@@ -407,9 +407,9 @@ onBeforeUnmount(() => {
   height: 34px;
   margin: 0 12px 10px;
   padding: 0 12px;
-  border: 1px solid rgba(44, 125, 255, 0.52);
+  border: 1px solid color-mix(in srgb, var(--lw-accent) 34%, var(--lw-border));
   border-radius: var(--lw-radius);
-  background: rgba(5, 24, 59, 0.9);
+  background: color-mix(in srgb, var(--lw-panel-muted) 82%, transparent);
   color: var(--lw-text-muted);
   font-size: 12px;
 }
@@ -461,9 +461,9 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   min-height: 66px;
   padding: 0 20px;
-  border-bottom: 1px solid rgba(44, 125, 255, 0.28);
+  border-bottom: 1px solid color-mix(in srgb, var(--lw-border) 74%, transparent);
   background:
-    linear-gradient(180deg, rgba(4, 18, 47, 0.95), rgba(2, 8, 22, 0.9)),
+    linear-gradient(180deg, color-mix(in srgb, var(--lw-header) 94%, var(--lw-panel)), color-mix(in srgb, var(--lw-header) 88%, var(--lw-bg))),
     var(--lw-header);
   color: var(--lw-text);
   backdrop-filter: blur(16px);
@@ -510,8 +510,8 @@ onBeforeUnmount(() => {
 .app-content {
   height: calc(100vh - 66px);
   background:
-    radial-gradient(circle at 56% -8%, rgba(47, 124, 255, 0.12), transparent 24%),
-    linear-gradient(180deg, #020916 0%, #010613 42%, #00040c 100%),
+    radial-gradient(circle at 56% -8%, color-mix(in srgb, var(--lw-accent) 10%, transparent), transparent 24%),
+    linear-gradient(180deg, var(--lw-bg-elevated) 0%, var(--lw-bg) 48%, color-mix(in srgb, var(--lw-bg) 92%, var(--lw-panel-muted)) 100%),
     var(--lw-bg);
   color: var(--lw-text);
 }
