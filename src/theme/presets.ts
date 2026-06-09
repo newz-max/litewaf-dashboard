@@ -280,6 +280,20 @@ export function buildThemeOverrides(
       iconColor: tokens.textMuted,
       borderRadius: `${settings.radius}px`
     },
+    Layout: {
+      color: tokens.bg,
+      colorEmbedded: tokens.bgElevated,
+      headerColor: tokens.header,
+      siderColor: tokens.sider,
+      textColor: tokens.text,
+      headerBorderColor: tokens.border,
+      siderBorderColor: tokens.border,
+      siderToggleButtonColor: tokens.panelMuted,
+      siderToggleButtonIconColor: tokens.text,
+      siderToggleButtonBorder: `1px solid ${tokens.borderStrong}`,
+      siderToggleBarColor: tokens.textMuted,
+      siderToggleBarColorHover: tokens.text
+    },
     Button: {
       color: `color-mix(in srgb, ${tokens.panelMuted} 86%, transparent)`,
       colorHover: `color-mix(in srgb, ${settings.accentColor} 16%, ${tokens.panelMuted})`,
@@ -303,6 +317,30 @@ export function buildThemeOverrides(
       borderRadius: "6px",
       titleTextColor: tokens.text,
       textColor: tokens.textMuted
+    },
+    Modal: {
+      color: tokens.panel,
+      textColor: tokens.text,
+      boxShadow: tokens.shadow
+    },
+    Drawer: {
+      color: tokens.panel,
+      bodyColor: tokens.panel,
+      textColor: tokens.text,
+      titleTextColor: tokens.text,
+      headerBorderBottom: `1px solid ${tokens.border}`,
+      footerBorderTop: `1px solid ${tokens.border}`
+    },
+    Dialog: {
+      color: tokens.panel,
+      border: `1px solid ${tokens.border}`,
+      titleTextColor: tokens.text,
+      textColor: tokens.textMuted,
+      closeIconColor: tokens.textMuted,
+      closeIconColorHover: tokens.text,
+      closeIconColorPressed: tokens.text,
+      closeColorHover: `color-mix(in srgb, ${settings.accentColor} 12%, transparent)`,
+      closeColorPressed: `color-mix(in srgb, ${settings.accentColor} 18%, transparent)`
     },
     DataTable: {
       borderRadius: "6px",
@@ -328,9 +366,6 @@ export function buildThemeOverrides(
       titleTextColor: tokens.text,
       contentTextColor: tokens.textMuted
     },
-    Tag: {
-      borderRadius: "5px"
-    },
     Empty: {
       textColor: tokens.textMuted,
       iconColor: tokens.textSubtle,
@@ -343,28 +378,74 @@ export function buildThemeOverrides(
       textColor: tokens.text,
       textColorDisabled: tokens.textSubtle,
       placeholderColor: tokens.textSubtle,
+      placeholderColorDisabled: tokens.textSubtle,
       border: `1px solid ${tokens.border}`,
       borderHover: `1px solid ${tokens.borderStrong}`,
       borderFocus: `1px solid ${settings.accentColor}`
     },
-    DatePicker: {
+    InputNumber: {
       peers: {
         Input: {
           color: tokens.panel,
           colorFocus: tokens.panel,
+          colorDisabled: tokens.panelMuted,
           textColor: tokens.text,
+          textColorDisabled: tokens.textSubtle,
           placeholderColor: tokens.textSubtle,
+          placeholderColorDisabled: tokens.textSubtle,
           border: `1px solid ${tokens.border}`,
           borderHover: `1px solid ${tokens.borderStrong}`,
           borderFocus: `1px solid ${settings.accentColor}`
         }
       }
     },
+    DatePicker: {
+      peers: {
+        Input: {
+          color: tokens.panel,
+          colorFocus: tokens.panel,
+          colorDisabled: tokens.panelMuted,
+          textColor: tokens.text,
+          textColorDisabled: tokens.textSubtle,
+          placeholderColor: tokens.textSubtle,
+          placeholderColorDisabled: tokens.textSubtle,
+          border: `1px solid ${tokens.border}`,
+          borderHover: `1px solid ${tokens.borderStrong}`,
+          borderFocus: `1px solid ${settings.accentColor}`
+        }
+      }
+    },
+    Form: {
+      labelTextColor: tokens.text,
+      feedbackTextColor: tokens.textMuted,
+      feedbackTextColorWarning: tokens.warning,
+      feedbackTextColorError: tokens.danger
+    },
+    Radio: {
+      textColor: tokens.text,
+      textColorDisabled: tokens.textSubtle,
+      buttonTextColor: tokens.text,
+      buttonTextColorHover: tokens.text,
+      buttonTextColorActive: tokens.text,
+      buttonTextColorDisabled: tokens.textSubtle,
+      buttonColor: tokens.panel,
+      buttonColorActive: `color-mix(in srgb, ${settings.accentColor} 20%, ${tokens.panel})`,
+      buttonBorderColor: tokens.border,
+      buttonBorderColorActive: settings.accentColor
+    },
+    Switch: {
+      textColor: tokens.text,
+      railColor: tokens.panelMuted,
+      railColorActive: settings.accentColor,
+      buttonColor: tokens.text
+    },
     Select: {
       peers: {
         InternalSelection: {
           textColor: tokens.text,
+          textColorDisabled: tokens.textSubtle,
           placeholderColor: tokens.textSubtle,
+          placeholderColorDisabled: tokens.textSubtle,
           color: tokens.panel,
           colorActive: tokens.panel,
           colorDisabled: tokens.panelMuted,
@@ -388,6 +469,26 @@ export function buildThemeOverrides(
         }
       }
     },
+    ColorPicker: {
+      textColor: tokens.text,
+      panelColor: tokens.panel,
+      peers: {
+        Input: {
+          color: tokens.panel,
+          colorFocus: tokens.panel,
+          textColor: tokens.text,
+          placeholderColor: tokens.textSubtle,
+          border: `1px solid ${tokens.border}`,
+          borderHover: `1px solid ${tokens.borderStrong}`,
+          borderFocus: `1px solid ${settings.accentColor}`
+        },
+        Button: {
+          textColor: tokens.text,
+          textColorHover: tokens.text,
+          textColorPressed: tokens.text
+        }
+      }
+    },
     Menu: {
       color: "transparent",
       groupTextColor: tokens.textSubtle,
@@ -402,6 +503,74 @@ export function buildThemeOverrides(
       itemColorActive: `color-mix(in srgb, ${settings.accentColor} 18%, transparent)`,
       itemColorActiveHover: `color-mix(in srgb, ${settings.accentColor} 22%, transparent)`,
       itemBorderRadius: "6px"
+    },
+    Tabs: {
+      colorSegment: tokens.panelMuted,
+      tabColor: tokens.panel,
+      tabColorSegment: `color-mix(in srgb, ${settings.accentColor} 16%, ${tokens.panel})`,
+      tabBorderColor: tokens.border,
+      tabTextColorLine: tokens.textMuted,
+      tabTextColorActiveLine: tokens.text,
+      tabTextColorHoverLine: tokens.text,
+      tabTextColorBar: tokens.textMuted,
+      tabTextColorActiveBar: tokens.text,
+      tabTextColorHoverBar: tokens.text,
+      tabTextColorCard: tokens.textMuted,
+      tabTextColorActiveCard: tokens.text,
+      tabTextColorHoverCard: tokens.text,
+      tabTextColorSegment: tokens.textMuted,
+      tabTextColorActiveSegment: tokens.text,
+      tabTextColorHoverSegment: tokens.text,
+      paneTextColor: tokens.text,
+      barColor: settings.accentColor,
+      closeIconColor: tokens.textMuted,
+      closeIconColorHover: tokens.text
+    },
+    Descriptions: {
+      titleTextColor: tokens.text,
+      thColor: tokens.panelMuted,
+      thColorModal: tokens.panelMuted,
+      thColorPopover: tokens.panelMuted,
+      thTextColor: tokens.text,
+      tdColor: tokens.panel,
+      tdColorModal: tokens.panel,
+      tdColorPopover: tokens.panel,
+      tdTextColor: tokens.textMuted,
+      borderColor: tokens.border,
+      borderColorModal: tokens.border,
+      borderColorPopover: tokens.border
+    },
+    List: {
+      color: "transparent",
+      textColor: tokens.text,
+      borderColor: tokens.border
+    },
+    Statistic: {
+      labelTextColor: tokens.textMuted,
+      valueTextColor: tokens.text,
+      valuePrefixTextColor: tokens.text,
+      valueSuffixTextColor: tokens.textMuted
+    },
+    Tag: {
+      borderRadius: "5px",
+      color: `color-mix(in srgb, ${tokens.panelMuted} 88%, transparent)`,
+      textColor: tokens.text,
+      border: `1px solid ${tokens.border}`,
+      colorCheckable: "transparent",
+      colorChecked: `color-mix(in srgb, ${settings.accentColor} 18%, transparent)`,
+      textColorCheckable: tokens.textMuted,
+      textColorHoverCheckable: tokens.text,
+      textColorPressedCheckable: tokens.text,
+      textColorChecked: tokens.text
+    },
+    Tooltip: {
+      color: tokens.panelMuted,
+      textColor: tokens.text,
+      boxShadow: tokens.shadow
+    },
+    Code: {
+      textColor: tokens.text,
+      lineNumberTextColor: tokens.textSubtle
     }
   }
 }

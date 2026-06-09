@@ -33,6 +33,18 @@
 
 :root[data-theme-mode="dark"] {
   color-scheme: dark;
+  --n-text-color: var(--lw-text);
+  --n-text-color-1: var(--lw-text);
+  --n-text-color-2: var(--lw-text-muted);
+  --n-text-color-3: var(--lw-text-subtle);
+  --n-label-text-color: var(--lw-text);
+  --n-title-text-color: var(--lw-text);
+  --n-placeholder-color: var(--lw-text-subtle);
+  --n-icon-color: var(--lw-text-muted);
+  --n-border-color: var(--lw-border);
+  --n-color: var(--lw-panel);
+  --n-color-modal: var(--lw-panel);
+  --n-color-popover: var(--lw-panel);
 }
 
 html,
@@ -226,6 +238,63 @@ body {
 .n-empty {
   --n-text-color: var(--lw-text-muted);
   --n-icon-color: var(--lw-text-subtle);
+  color: var(--lw-text-muted);
+}
+
+:root[data-theme-mode="dark"] .n-form-item,
+:root[data-theme-mode="dark"] .n-form-item-label,
+:root[data-theme-mode="dark"] .n-radio,
+:root[data-theme-mode="dark"] .n-checkbox,
+:root[data-theme-mode="dark"] .n-descriptions,
+:root[data-theme-mode="dark"] .n-list,
+:root[data-theme-mode="dark"] .n-tabs,
+:root[data-theme-mode="dark"] .n-statistic,
+:root[data-theme-mode="dark"] .n-card,
+:root[data-theme-mode="dark"] .n-drawer,
+:root[data-theme-mode="dark"] .n-dialog {
+  color: var(--lw-text);
+}
+
+:root[data-theme-mode="dark"] .n-form-item-feedback-wrapper,
+:root[data-theme-mode="dark"] .n-descriptions-table-content,
+:root[data-theme-mode="dark"] .n-list-item__suffix,
+:root[data-theme-mode="dark"] .n-statistic .n-statistic__label,
+:root[data-theme-mode="dark"] .n-card > .n-card-header .n-card-header__extra {
+  color: var(--lw-text-muted);
+}
+
+:root[data-theme-mode="dark"] .n-input,
+:root[data-theme-mode="dark"] .n-input-number,
+:root[data-theme-mode="dark"] .n-base-selection,
+:root[data-theme-mode="dark"] .n-date-picker,
+:root[data-theme-mode="dark"] .n-color-picker {
+  --n-text-color: var(--lw-text);
+  --n-placeholder-color: var(--lw-text-subtle);
+  --n-color: var(--lw-panel);
+  --n-color-focus: var(--lw-panel);
+  --n-border: 1px solid var(--lw-border);
+}
+
+.app-shell .page,
+.app-shell .section,
+.app-shell .metric-card,
+.app-shell .page-title,
+.app-shell .section-title,
+.app-shell .panel-title,
+.app-shell .n-card,
+.app-shell .n-data-table,
+.app-shell .n-form-item,
+.app-shell .n-form-item-label {
+  color: var(--lw-text);
+}
+
+.app-shell .page-subtitle,
+.app-shell .metric-label,
+.app-shell .metric-note,
+.app-shell .panel-subtitle,
+.app-shell .query-label,
+.app-shell .n-empty,
+.app-shell .n-form-item-feedback-wrapper {
   color: var(--lw-text-muted);
 }
 

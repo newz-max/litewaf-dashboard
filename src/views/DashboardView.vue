@@ -415,7 +415,7 @@ function refreshDashboard() {
 }
 
 .hero-kicker {
-  color: #56a9ff;
+  color: var(--lw-accent-strong);
   font-size: 12px;
   font-weight: 800;
 }

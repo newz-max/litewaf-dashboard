@@ -273,7 +273,7 @@ onBeforeUnmount(() => {
         <span>控制面在线</span>
       </div>
 
-      <NMenu :value="activeKey" :options="menuOptions" :indent="18" />
+      <NMenu class="litewaf-menu" :value="activeKey" :options="menuOptions" :indent="18" />
     </NLayoutSider>
 
     <NLayout>
@@ -345,6 +345,7 @@ onBeforeUnmount(() => {
     radial-gradient(circle at 54% -18%, rgba(20, 62, 148, 0.28), transparent 26%),
     linear-gradient(180deg, #020916 0%, #010613 48%, #00040c 100%),
     var(--lw-bg);
+  color: var(--lw-text);
 }
 
 .app-sider {
@@ -354,6 +355,7 @@ onBeforeUnmount(() => {
     radial-gradient(circle at 26% 0, rgba(47, 124, 255, 0.18), transparent 160px),
     linear-gradient(180deg, #06183c 0%, #020b21 42%, #010817 100%),
     var(--lw-sider);
+  color: var(--lw-text);
   box-shadow:
     inset -1px 0 0 rgba(77, 142, 255, 0.18),
     12px 0 36px rgba(0, 0, 0, 0.22);
@@ -410,6 +412,29 @@ onBeforeUnmount(() => {
   font-size: 12px;
 }
 
+.litewaf-menu {
+  --n-group-text-color: var(--lw-text-subtle);
+  --n-item-text-color: var(--lw-text-muted);
+  --n-item-text-color-hover: var(--lw-text);
+  --n-item-text-color-active: var(--lw-text);
+  --n-item-text-color-active-hover: var(--lw-text);
+  --n-item-icon-color: var(--lw-text-muted);
+  --n-item-icon-color-hover: var(--lw-text);
+  --n-item-icon-color-active: var(--lw-accent);
+  --n-item-color-hover: color-mix(in srgb, var(--lw-accent) 11%, transparent);
+  --n-item-color-active: color-mix(in srgb, var(--lw-accent) 18%, transparent);
+  --n-item-color-active-hover: color-mix(in srgb, var(--lw-accent) 22%, transparent);
+  color: var(--lw-text);
+}
+
+.litewaf-menu :deep(.n-menu-item-content),
+.litewaf-menu :deep(.n-menu-item-content-header),
+.litewaf-menu :deep(.n-menu-item-content-header a),
+.litewaf-menu :deep(.n-menu-item-content__icon),
+.litewaf-menu :deep(.n-menu-item-group-title) {
+  color: inherit;
+}
+
 .app-sider--collapsed .brand {
   justify-content: center;
   padding: 0;
@@ -438,6 +463,7 @@ onBeforeUnmount(() => {
   background:
     linear-gradient(180deg, rgba(4, 18, 47, 0.95), rgba(2, 8, 22, 0.9)),
     var(--lw-header);
+  color: var(--lw-text);
   backdrop-filter: blur(16px);
 }
 
@@ -487,6 +513,7 @@ onBeforeUnmount(() => {
     radial-gradient(circle at 56% -8%, rgba(47, 124, 255, 0.12), transparent 24%),
     linear-gradient(180deg, #020916 0%, #010613 42%, #00040c 100%),
     var(--lw-bg);
+  color: var(--lw-text);
 }
 
 @media (max-width: 860px) {
