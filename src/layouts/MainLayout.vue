@@ -345,17 +345,17 @@ onBeforeUnmount(() => {
   height: 100vh;
   background:
     radial-gradient(circle at 54% -18%, color-mix(in srgb, var(--lw-accent) 18%, transparent), transparent 26%),
-    linear-gradient(180deg, var(--lw-bg-elevated) 0%, var(--lw-bg) 52%, color-mix(in srgb, var(--lw-bg) 88%, var(--lw-sider)) 100%),
+    var(--lw-shell-bg),
     var(--lw-bg);
   color: var(--lw-text);
 }
 
 .app-sider {
-  border-right: 1px solid color-mix(in srgb, var(--lw-border) 74%, transparent);
+  border-right: 1px solid var(--lw-shell-border);
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--lw-accent) 22%, transparent), transparent 4px),
     radial-gradient(circle at 26% 0, color-mix(in srgb, var(--lw-accent) 12%, transparent), transparent 160px),
-    linear-gradient(180deg, color-mix(in srgb, var(--lw-sider) 90%, var(--lw-panel-muted)) 0%, var(--lw-sider) 62%, color-mix(in srgb, var(--lw-sider) 86%, var(--lw-bg)) 100%),
+    var(--lw-shell-sider),
     var(--lw-sider);
   color: var(--lw-text);
   box-shadow:
@@ -409,7 +409,7 @@ onBeforeUnmount(() => {
   padding: 0 12px;
   border: 1px solid color-mix(in srgb, var(--lw-accent) 34%, var(--lw-border));
   border-radius: var(--lw-radius);
-  background: color-mix(in srgb, var(--lw-panel-muted) 82%, transparent);
+  background: var(--lw-shell-surface);
   color: var(--lw-text-muted);
   font-size: 12px;
 }
@@ -461,9 +461,9 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   min-height: 66px;
   padding: 0 20px;
-  border-bottom: 1px solid color-mix(in srgb, var(--lw-border) 74%, transparent);
+  border-bottom: 1px solid var(--lw-shell-border);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--lw-header) 94%, var(--lw-panel)), color-mix(in srgb, var(--lw-header) 88%, var(--lw-bg))),
+    var(--lw-shell-header),
     var(--lw-header);
   color: var(--lw-text);
   backdrop-filter: blur(16px);
@@ -511,7 +511,7 @@ onBeforeUnmount(() => {
   height: calc(100vh - 66px);
   background:
     radial-gradient(circle at 56% -8%, color-mix(in srgb, var(--lw-accent) 10%, transparent), transparent 24%),
-    linear-gradient(180deg, var(--lw-bg-elevated) 0%, var(--lw-bg) 48%, color-mix(in srgb, var(--lw-bg) 92%, var(--lw-panel-muted)) 100%),
+    var(--lw-shell-content),
     var(--lw-bg);
   color: var(--lw-text);
 }

@@ -17,6 +17,12 @@
   --lw-info: #2f7cff;
   --lw-header: rgba(2, 8, 22, 0.9);
   --lw-sider: #01081a;
+  --lw-shell-bg: linear-gradient(180deg, var(--lw-bg-elevated) 0%, var(--lw-bg) 52%, color-mix(in srgb, var(--lw-bg) 88%, var(--lw-sider)) 100%);
+  --lw-shell-sider: linear-gradient(180deg, color-mix(in srgb, var(--lw-sider) 90%, var(--lw-panel-muted)) 0%, var(--lw-sider) 62%, color-mix(in srgb, var(--lw-sider) 86%, var(--lw-bg)) 100%);
+  --lw-shell-header: linear-gradient(180deg, color-mix(in srgb, var(--lw-header) 94%, var(--lw-panel)), color-mix(in srgb, var(--lw-header) 88%, var(--lw-bg)));
+  --lw-shell-content: linear-gradient(180deg, var(--lw-bg-elevated) 0%, var(--lw-bg) 48%, color-mix(in srgb, var(--lw-bg) 92%, var(--lw-panel-muted)) 100%);
+  --lw-shell-border: color-mix(in srgb, var(--lw-border) 74%, transparent);
+  --lw-shell-surface: color-mix(in srgb, var(--lw-panel-muted) 82%, transparent);
   --lw-radius: 8px;
   --lw-shadow: 0 18px 42px rgba(0, 48, 132, 0.16);
   --lw-density-y: 16px;
@@ -31,8 +37,7 @@
   --lw-chart-6: #5bc0ff;
 }
 
-:root[data-theme-mode="dark"] {
-  color-scheme: dark;
+:root {
   --n-text-color: var(--lw-text);
   --n-text-color-1: var(--lw-text);
   --n-text-color-2: var(--lw-text-muted);
@@ -45,6 +50,10 @@
   --n-color: var(--lw-panel);
   --n-color-modal: var(--lw-panel);
   --n-color-popover: var(--lw-panel);
+}
+
+:root[data-theme-mode="dark"] {
+  color-scheme: dark;
 }
 
 html,
