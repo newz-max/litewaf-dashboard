@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, reactive } from "vue"
-import { getAccessLogs } from "@/api/litewaf"
+import { getAccessLogsPage } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
+import { useRemotePagination } from "@/composables/useRemotePagination"
 import { useI18n } from "vue-i18n"
 
 const { t } = useI18n()
@@ -17,8 +18,11 @@ const filters = reactive({
 
 type SelectFilterKey = "method" | "disposition"
 
-const logsResource = useApiResource(() => getAccessLogs(cleanFilters()))
-const logs = computed(() => [...(logsResource.data.value ?? [])])
+const pagination = useRemotePagination()
+const logsResource = useApiResource(fetchLogsPage)
+pagination.setOnChange(logsResource.refresh)
+const tablePagination = pagination.tablePagination
+const logs = computed(() => [...(logsResource.data.value?.items ?? [])])
 
 const dispositionOptions = computed(() => [
   { label: t("logs.proxied"), value: "proxied" },
@@ -42,6 +46,21 @@ const columns = computed(() => [
 
 function cleanFilters() {
   return Object.fromEntries(Object.entries(filters).filter(([, value]) => value.trim() !== ""))
+}
+
+async function fetchLogsPage() {
+  const result = await getAccessLogsPage({ ...cleanFilters(), ...pagination.params() })
+  if (pagination.setItemCount(result.total)) {
+    const clampedResult = await getAccessLogsPage({ ...cleanFilters(), ...pagination.params() })
+    pagination.setItemCount(clampedResult.total)
+    return clampedResult
+  }
+  return result
+}
+
+async function searchLogs() {
+  pagination.resetPage()
+  await logsResource.refresh()
 }
 
 function selectFilterValue(key: SelectFilterKey) {
@@ -110,7 +129,7 @@ function updateSelectFilter(key: SelectFilterKey, value: string | number | null)
             :options="dispositionOptions"
           />
         </div>
-        <NButton type="primary" @click="logsResource.refresh">{{ t("common.query") }}</NButton>
+        <NButton type="primary" @click="searchLogs">{{ t("common.query") }}</NButton>
       </div>
 
       <LwDataTable
@@ -119,6 +138,7 @@ function updateSelectFilter(key: SelectFilterKey, value: string | number | null)
         :columns="columns"
         :data="logs"
         :bordered="false"
+        :pagination="tablePagination"
       />
       <NEmpty v-if="!logsResource.loading.value && logs.length === 0" :description="t('logs.noAccessLogs')" />
       <NAlert v-if="logsResource.error.value" type="error" style="margin-top: 12px">

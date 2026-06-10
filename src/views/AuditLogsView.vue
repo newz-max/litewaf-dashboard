@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, reactive } from "vue"
-import { getAuditLogs } from "@/api/litewaf"
+import { getAuditLogsPage } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
+import { useRemotePagination } from "@/composables/useRemotePagination"
 import { useI18n } from "vue-i18n"
 
 const { t } = useI18n()
@@ -11,8 +12,11 @@ const filters = reactive({
   result: ""
 })
 
-const auditResource = useApiResource(() => getAuditLogs(cleanFilters()))
-const logs = computed(() => [...(auditResource.data.value ?? [])])
+const pagination = useRemotePagination()
+const auditResource = useApiResource(fetchAuditLogsPage)
+pagination.setOnChange(auditResource.refresh)
+const tablePagination = pagination.tablePagination
+const logs = computed(() => [...(auditResource.data.value?.items ?? [])])
 
 const resultOptions = computed(() => [
   { label: t("logs.success"), value: "success" },
@@ -32,6 +36,21 @@ const columns = computed(() => [
 
 function cleanFilters() {
   return Object.fromEntries(Object.entries(filters).filter(([, value]) => value.trim() !== ""))
+}
+
+async function fetchAuditLogsPage() {
+  const result = await getAuditLogsPage({ ...cleanFilters(), ...pagination.params() })
+  if (pagination.setItemCount(result.total)) {
+    const clampedResult = await getAuditLogsPage({ ...cleanFilters(), ...pagination.params() })
+    pagination.setItemCount(clampedResult.total)
+    return clampedResult
+  }
+  return result
+}
+
+async function searchLogs() {
+  pagination.resetPage()
+  await auditResource.refresh()
 }
 
 function selectResultValue() {
@@ -73,7 +92,7 @@ function updateResultFilter(value: string | number | null) {
             :options="resultOptions"
           />
         </div>
-        <NButton type="primary" @click="auditResource.refresh">{{ t("common.query") }}</NButton>
+        <NButton type="primary" @click="searchLogs">{{ t("common.query") }}</NButton>
       </div>
 
       <LwDataTable
@@ -82,6 +101,7 @@ function updateResultFilter(value: string | number | null) {
         :columns="columns"
         :data="logs"
         :bordered="false"
+        :pagination="tablePagination"
       />
       <NEmpty v-if="!auditResource.loading.value && logs.length === 0" :description="t('logs.noAuditLogs')" />
       <NAlert v-if="auditResource.error.value" type="error" style="margin-top: 12px">

@@ -2,6 +2,16 @@ import { apiClient } from "@/api/client"
 
 export interface ListResponse<T> {
   items?: T[] | null
+  total?: number
+  limit?: number
+  offset?: number
+}
+
+export interface ListResult<T> {
+  items: T[]
+  total: number
+  limit: number
+  offset: number
 }
 
 export interface ItemResponse<T> {
@@ -454,6 +464,16 @@ function asArray<T>(value: T[] | null | undefined): T[] {
 
 function listItems<T>(response: ListResponse<T>): T[] {
   return asArray(response.items)
+}
+
+function listResult<T>(response: ListResponse<T>): ListResult<T> {
+  const items = asArray(response.items)
+  return {
+    items,
+    total: Number(response.total ?? items.length),
+    limit: Number(response.limit ?? items.length),
+    offset: Number(response.offset ?? 0)
+  }
 }
 
 function normalizeObservabilitySummary(item: ObservabilitySummary): ObservabilitySummary {
@@ -1705,16 +1725,34 @@ export function getAttackLogs(params: Record<string, string | number> = {}) {
     .then((response) => listItems(response.data))
 }
 
+export function getAttackLogsPage(params: Record<string, string | number> = {}) {
+  return apiClient
+    .get<ListResponse<AttackLog>>("/api/v1/attack-logs", { params })
+    .then((response) => listResult(response.data))
+}
+
 export function getAccessLogs(params: Record<string, string | number> = {}) {
   return apiClient
     .get<ListResponse<AccessLog>>("/api/v1/access-logs", { params })
     .then((response) => listItems(response.data))
 }
 
+export function getAccessLogsPage(params: Record<string, string | number> = {}) {
+  return apiClient
+    .get<ListResponse<AccessLog>>("/api/v1/access-logs", { params })
+    .then((response) => listResult(response.data))
+}
+
 export function getBlockedRejectedRecords(params: Record<string, string | number> = {}) {
   return apiClient
     .get<ListResponse<BlockedRejectedRecord>>("/api/v1/blocked-rejected-records", { params })
     .then((response) => listItems(response.data))
+}
+
+export function getBlockedRejectedRecordsPage(params: Record<string, string | number> = {}) {
+  return apiClient
+    .get<ListResponse<BlockedRejectedRecord>>("/api/v1/blocked-rejected-records", { params })
+    .then((response) => listResult(response.data))
 }
 
 export function getObservabilitySummary(params: Record<string, string | number> = {}) {
@@ -1763,16 +1801,28 @@ export function rollbackRelease(version: string) {
     .then((response) => response.data.item)
 }
 
-export function getAuditLogs(params: Record<string, string> = {}) {
+export function getAuditLogs(params: Record<string, string | number> = {}) {
   return apiClient
     .get<ListResponse<AuditLog>>("/api/v1/audit-logs", { params })
     .then((response) => listItems(response.data))
+}
+
+export function getAuditLogsPage(params: Record<string, string | number> = {}) {
+  return apiClient
+    .get<ListResponse<AuditLog>>("/api/v1/audit-logs", { params })
+    .then((response) => listResult(response.data))
 }
 
 export function getDynamicBans(params: Record<string, string | number> = {}) {
   return apiClient
     .get<ListResponse<DynamicBan>>("/api/v1/dynamic-bans", { params })
     .then((response) => listItems(response.data))
+}
+
+export function getDynamicBansPage(params: Record<string, string | number> = {}) {
+  return apiClient
+    .get<ListResponse<DynamicBan>>("/api/v1/dynamic-bans", { params })
+    .then((response) => listResult(response.data))
 }
 
 export function clearDynamicBan(payload: { application_id: number; client_ip: string }) {

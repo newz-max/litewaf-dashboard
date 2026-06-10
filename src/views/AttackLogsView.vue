@@ -2,8 +2,9 @@
 import { computed, h, reactive } from "vue"
 import { RouterLink, useRoute, useRouter } from "vue-router"
 import { NButton, NSpace } from "naive-ui"
-import { getAttackLogs, type AttackLog } from "@/api/litewaf"
+import { getAttackLogsPage, type AttackLog } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
+import { useRemotePagination } from "@/composables/useRemotePagination"
 import { useI18n } from "vue-i18n"
 
 const { t } = useI18n()
@@ -30,8 +31,11 @@ type FilterKey = typeof filterKeys[number]
 
 const filters = reactive(Object.fromEntries(filterKeys.map((key) => [key, queryString(key)])) as Record<typeof filterKeys[number], string>)
 
-const logsResource = useApiResource(() => getAttackLogs(cleanFilters()))
-const logs = computed(() => [...(logsResource.data.value ?? [])])
+const pagination = useRemotePagination()
+const logsResource = useApiResource(fetchLogsPage)
+pagination.setOnChange(logsResource.refresh)
+const tablePagination = pagination.tablePagination
+const logs = computed(() => [...(logsResource.data.value?.items ?? [])])
 
 const eventTypeOptions = computed(() => [
   { label: t("logs.ruleEvent"), value: "rule" },
@@ -127,7 +131,7 @@ const columns = computed(() => [
   { title: t("logs.botResult"), key: "bot_result" },
   { title: t("logs.botReason"), key: "bot_reason" },
   { title: t("logs.deviceSignal"), key: "device_signal" },
-  { title: t("logs.dynamicResult"), key: "advanced_target" },
+  { title: t("logs.dynamicResult"), key: "dynamic_result", render: (row: AttackLog) => row.advanced_target || "-" },
   { title: t("logs.advancedTarget"), key: "advanced_target" },
   { title: t("logs.score"), key: "score" },
   { title: t("common.action"), key: "action" },
@@ -162,7 +166,18 @@ function cleanFilters() {
   return Object.fromEntries(Object.entries(filters).filter(([, value]) => value.trim() !== ""))
 }
 
+async function fetchLogsPage() {
+  const result = await getAttackLogsPage({ ...cleanFilters(), ...pagination.params() })
+  if (pagination.setItemCount(result.total)) {
+    const clampedResult = await getAttackLogsPage({ ...cleanFilters(), ...pagination.params() })
+    pagination.setItemCount(clampedResult.total)
+    return clampedResult
+  }
+  return result
+}
+
 async function searchLogs() {
+  pagination.resetPage()
   await router.replace({ query: cleanFilters() })
   await logsResource.refresh()
 }
@@ -321,6 +336,7 @@ function moduleRoute(module: string) {
         :columns="columns"
         :data="logs"
         :bordered="false"
+        :pagination="tablePagination"
       />
       <NEmpty v-if="!logsResource.loading.value && logs.length === 0" :description="t('logs.noAttackLogs')" />
       <NAlert v-if="logsResource.error.value" type="error" style="margin-top: 12px">

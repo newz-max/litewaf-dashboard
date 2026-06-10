@@ -110,6 +110,7 @@ function updateStatusFilter(value: string | number | null) {
 }
 
 async function applyFilters() {
+  bans.resetPage()
   await bans.refresh()
 }
 
@@ -170,6 +171,7 @@ async function resetFilters() {
         :data="tableRows"
         :bordered="false"
         :row-key="bans.rowKey"
+        :pagination="bans.tablePagination.value"
       />
       <NEmpty v-if="!bans.loading.value && !bans.hasRows.value" :description="t('dynamicBans.empty')" />
     </section>

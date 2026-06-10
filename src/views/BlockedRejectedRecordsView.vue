@@ -3,8 +3,9 @@ import { computed, h, reactive, shallowRef } from "vue"
 import { RouterLink, useRoute, useRouter } from "vue-router"
 import { NButton, NSpace, NTag } from "naive-ui"
 import type { DataTableColumns } from "naive-ui"
-import { getBlockedRejectedRecords, type BlockedRejectedRecord } from "@/api/litewaf"
+import { getBlockedRejectedRecordsPage, type BlockedRejectedRecord } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
+import { useRemotePagination } from "@/composables/useRemotePagination"
 import { useI18n } from "vue-i18n"
 
 const { t } = useI18n()
@@ -30,8 +31,11 @@ type FilterKey = typeof filterKeys[number]
 const filters = reactive(Object.fromEntries(filterKeys.map((key) => [key, queryString(key)])) as Record<typeof filterKeys[number], string>)
 const timeRange = shallowRef<[number, number] | null>(initialTimeRange())
 
-const recordsResource = useApiResource(() => getBlockedRejectedRecords(cleanFilters()))
-const records = computed(() => [...(recordsResource.data.value ?? [])])
+const pagination = useRemotePagination()
+const recordsResource = useApiResource(fetchRecordsPage)
+pagination.setOnChange(recordsResource.refresh)
+const tablePagination = pagination.tablePagination
+const records = computed(() => [...(recordsResource.data.value?.items ?? [])])
 
 const dispositionOptions = computed(() => [
   { label: t("logs.blocked"), value: "blocked" },
@@ -98,7 +102,18 @@ function cleanFilters() {
   return params
 }
 
+async function fetchRecordsPage() {
+  const result = await getBlockedRejectedRecordsPage({ ...cleanFilters(), ...pagination.params() })
+  if (pagination.setItemCount(result.total)) {
+    const clampedResult = await getBlockedRejectedRecordsPage({ ...cleanFilters(), ...pagination.params() })
+    pagination.setItemCount(clampedResult.total)
+    return clampedResult
+  }
+  return result
+}
+
 async function searchRecords() {
+  pagination.resetPage()
   await router.replace({ query: cleanFilters() })
   await recordsResource.refresh()
 }
@@ -108,6 +123,7 @@ async function resetFilters() {
     filters[key] = ""
   }
   timeRange.value = null
+  pagination.resetPage()
   await router.replace({ query: {} })
   await recordsResource.refresh()
 }
@@ -347,6 +363,7 @@ function moduleRoute(module: string) {
         :data="records"
         :bordered="false"
         :scroll-x="2200"
+        :pagination="tablePagination"
       />
       <NEmpty v-if="!recordsResource.loading.value && records.length === 0" :description="t('logs.noBlockedRejectedRecords')" />
       <NAlert v-if="recordsResource.error.value" type="error" class="result-alert">

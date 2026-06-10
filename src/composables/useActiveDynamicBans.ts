@@ -1,6 +1,7 @@
 import { computed, reactive, readonly, shallowRef } from "vue"
-import { clearDynamicBan, getDynamicBans, type DynamicBan, type DynamicBanClearResult } from "@/api/litewaf"
+import { clearDynamicBan, getDynamicBansPage, type DynamicBan, type DynamicBanClearResult } from "@/api/litewaf"
 import { i18n } from "@/i18n"
+import { useRemotePagination } from "@/composables/useRemotePagination"
 
 export interface DynamicBanFilters {
   application_id: string
@@ -21,9 +22,17 @@ export function useActiveDynamicBans() {
   const error = shallowRef("")
   const clearingKey = shallowRef("")
   const lastClear = shallowRef<DynamicBanClearResult | null>(null)
+  const pagination = useRemotePagination()
 
-  const activeCount = computed(() => items.value.filter((item) => item.status === "active").length)
+  const activeCount = computed(() => {
+    if (filters.status === "active") {
+      return pagination.itemCount.value
+    }
+    return items.value.filter((item) => item.status === "active").length
+  })
   const hasRows = computed(() => items.value.length > 0)
+
+  pagination.setOnChange(refresh)
 
   function params() {
     return Object.fromEntries(
@@ -37,7 +46,8 @@ export function useActiveDynamicBans() {
     loading.value = true
     error.value = ""
     try {
-      items.value = await getDynamicBans(params())
+      const result = await fetchBansPage()
+      items.value = result.items
     } catch (err) {
       error.value = err instanceof Error ? err.message : i18n.global.t("common.requestFailed")
     } finally {
@@ -60,6 +70,17 @@ export function useActiveDynamicBans() {
 
   function resetFilters() {
     Object.assign(filters, defaultFilters)
+    pagination.resetPage()
+  }
+
+  async function fetchBansPage() {
+    const result = await getDynamicBansPage({ ...params(), ...pagination.params() })
+    if (pagination.setItemCount(result.total)) {
+      const clampedResult = await getDynamicBansPage({ ...params(), ...pagination.params() })
+      pagination.setItemCount(clampedResult.total)
+      return clampedResult
+    }
+    return result
   }
 
   return {
@@ -71,6 +92,8 @@ export function useActiveDynamicBans() {
     lastClear: readonly(lastClear),
     activeCount,
     hasRows,
+    tablePagination: pagination.tablePagination,
+    resetPage: pagination.resetPage,
     refresh,
     clearBan,
     resetFilters,
