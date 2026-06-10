@@ -36,7 +36,7 @@ const hasAnyData = computed(() => {
     item.cards.requests > 0 ||
     item.cards.blocked > 0 ||
     item.geo.ranking.length > 0 ||
-    item.qps.length > 0 ||
+    item.qps.some((point) => point.value > 0) ||
     item.visits.length > 0 ||
     item.blocks.length > 0 ||
     item.clients.os.length > 0 ||
@@ -105,7 +105,7 @@ function setMetric(value: StatisticsMetric) {
         @update-metric="setMetric"
       />
       <div class="side-trends">
-        <StatisticsTrendPanel :title="t('statistics.realtimeQps')" :points="report?.qps ?? []" kind="bar" :empty-description="t('statistics.noQps')" />
+        <StatisticsTrendPanel :title="t('statistics.realtimeQps')" :points="report?.qps ?? []" kind="bar" time-format="second" update-mode="rolling" :empty-description="t('statistics.noQps')" />
         <StatisticsTrendPanel :title="t('statistics.visitsTrend')" :points="report?.visits ?? []" kind="line" tone="blue" :empty-description="t('statistics.noVisits')" />
         <StatisticsTrendPanel :title="t('statistics.blocksTrend')" :points="report?.blocks ?? []" kind="line" tone="red" :empty-description="t('statistics.noBlocks')" />
       </div>

@@ -1,6 +1,8 @@
-import { computed, reactive, watch } from "vue"
-import { getStatisticsReport } from "@/api/litewaf"
+import { computed, onMounted, onUnmounted, reactive, shallowRef, watch } from "vue"
+import { getStatisticsReport, type TimeSeriesPoint } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
+
+const STATISTICS_REFRESH_INTERVAL_MS = 5000
 
 export type StatisticsScope = "world" | "china"
 export type StatisticsMapView = "3d" | "2d"
@@ -37,27 +39,83 @@ export function useStatisticsReport() {
   })
 
   const resource = useApiResource(() => getStatisticsReport(params.value))
-  const report = computed(() => resource.data.value)
+  const qpsPoints = shallowRef<readonly TimeSeriesPoint[]>([])
+  const report = computed(() => {
+    const current = resource.data.value
+    if (!current) {
+      return current
+    }
+    return { ...current, qps: qpsPoints.value }
+  })
+  let refreshTimer: ReturnType<typeof window.setInterval> | undefined
+  let backgroundRefreshPromise: Promise<void> | null = null
+
+  async function refreshReport() {
+    if (resource.loading.value) {
+      return
+    }
+    if (backgroundRefreshPromise) {
+      await backgroundRefreshPromise
+    }
+    await resource.refresh()
+  }
+
+  function refreshRealtimeQps() {
+    if (resource.loading.value || backgroundRefreshPromise) {
+      return
+    }
+
+    const requestParams = params.value
+    const requestKey = JSON.stringify(requestParams)
+    backgroundRefreshPromise = getStatisticsReport(requestParams)
+      .then((latest) => {
+        if (JSON.stringify(params.value) === requestKey) {
+          qpsPoints.value = latest.qps
+        }
+      })
+      .finally(() => {
+        backgroundRefreshPromise = null
+      })
+  }
+
+  watch(
+    () => resource.data.value?.qps,
+    (latestQps) => {
+      qpsPoints.value = latestQps ?? []
+    }
+  )
 
   watch(
     () => filters.scope,
     () => {
-      void resource.refresh()
+      void refreshReport()
     }
   )
 
   watch(
     () => [filters.applicationId, filters.range, filters.mapView, filters.metric],
     () => {
-      void resource.refresh()
+      void refreshReport()
     }
   )
+
+  onMounted(() => {
+    refreshTimer = window.setInterval(() => {
+      refreshRealtimeQps()
+    }, STATISTICS_REFRESH_INTERVAL_MS)
+  })
+
+  onUnmounted(() => {
+    if (refreshTimer !== undefined) {
+      window.clearInterval(refreshTimer)
+    }
+  })
 
   return {
     filters,
     params,
     report,
     resource,
-    refresh: resource.refresh
+    refresh: refreshReport
   }
 }
