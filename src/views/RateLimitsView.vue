@@ -164,7 +164,7 @@ async function remove(item: RateLimitRule) {
         </NFormItem>
       </NForm>
 
-      <NDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="resource.loading.value" :columns="columns" :data="items" :bordered="false" />
+      <LwDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="resource.loading.value" :columns="columns" :data="items" :bordered="false" />
       <NSpace v-if="authStore.canWrite" class="row-actions">
         <NButton v-for="item in items" :key="`edit-${item.id}`" size="small" @click="startEdit(item)">
           {{ t("rateLimits.editItem", { id: item.id }) }}

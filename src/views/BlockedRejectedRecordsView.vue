@@ -340,7 +340,7 @@ function moduleRoute(module: string) {
         <NButton @click="resetFilters">{{ t("common.reset") }}</NButton>
       </div>
 
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         :loading="recordsResource.loading.value"
         :columns="columns"

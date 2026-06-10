@@ -133,12 +133,12 @@ function statusType(status: string) {
 
       <section class="section section-pad section-gap">
         <div class="panel-title">{{ t("migrationHealth.legacyStoreCoverage") }}</div>
-        <NDataTable :scrollbar-props="{ trigger: 'hover' }" :columns="storeColumns" :data="legacyStores" :bordered="false" />
+        <LwDataTable :scrollbar-props="{ trigger: 'hover' }" :columns="storeColumns" :data="legacyStores" :bordered="false" />
       </section>
 
       <section class="section section-pad section-gap">
         <div class="panel-title">{{ t("migrationHealth.migrationIssues") }}</div>
-        <NDataTable :scrollbar-props="{ trigger: 'hover' }" :columns="issueColumns" :data="issues" :bordered="false" />
+        <LwDataTable :scrollbar-props="{ trigger: 'hover' }" :columns="issueColumns" :data="issues" :bordered="false" />
         <NEmpty v-if="issues.length === 0" :description="t('migrationHealth.noIssues')" />
       </section>
 

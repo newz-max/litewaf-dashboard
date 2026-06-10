@@ -163,7 +163,7 @@ async function resetFilters() {
         {{ bans.error.value }}
       </NAlert>
 
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         :loading="bans.loading.value"
         :columns="columns"

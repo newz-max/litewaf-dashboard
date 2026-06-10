@@ -76,7 +76,7 @@ function updateResultFilter(value: string | number | null) {
         <NButton type="primary" @click="auditResource.refresh">{{ t("common.query") }}</NButton>
       </div>
 
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         :loading="auditResource.loading.value"
         :columns="columns"

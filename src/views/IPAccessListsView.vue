@@ -298,7 +298,7 @@ function isIPv6(value: string) {
         :action-label="t('common.retry')"
         @retry="resource.refresh"
       />
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         :loading="resource.loading.value"
         :columns="columns"

@@ -151,7 +151,7 @@ async function removeRule(id: number) {
     </div>
 
     <section class="section section-pad">
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         :loading="rulesResource.loading.value"
         :columns="columns"

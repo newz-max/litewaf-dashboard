@@ -219,7 +219,7 @@ async function rollback(version: string) {
     </div>
 
     <section class="section section-pad">
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         :loading="releasesResource.loading.value"
         :columns="columns"

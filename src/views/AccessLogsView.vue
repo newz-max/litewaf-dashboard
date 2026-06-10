@@ -113,7 +113,7 @@ function updateSelectFilter(key: SelectFilterKey, value: string | number | null)
         <NButton type="primary" @click="logsResource.refresh">{{ t("common.query") }}</NButton>
       </div>
 
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         :loading="logsResource.loading.value"
         :columns="columns"

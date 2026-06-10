@@ -367,7 +367,7 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
     </div>
 
     <section class="section section-pad">
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         :loading="applicationsResource.loading.value"
         :columns="applicationColumns"
@@ -387,7 +387,7 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
       <div class="section-header">
         <h2 class="section-title">{{ t("applications.certificates") }}</h2>
       </div>
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         :loading="certificatesResource.loading.value"
         :columns="certificateColumns"

@@ -982,7 +982,7 @@ function parseKeyValues(value: string) {
           <NGi>
             <section class="section section-pad">
               <div class="section-title">{{ t("ruleEcosystem.sections.packages") }}</div>
-              <NDataTable
+              <LwDataTable
                 :scrollbar-props="{ trigger: 'hover' }"
                 :loading="packagesResource.loading.value"
                 :columns="packageColumns"
@@ -1042,12 +1042,12 @@ function parseKeyValues(value: string) {
               @update:value="loadCatalogPackages"
             />
           </NSpace>
-          <NDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="catalogsResource.loading.value" :columns="catalogColumns" :data="catalogs" :bordered="false" />
+          <LwDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="catalogsResource.loading.value" :columns="catalogColumns" :data="catalogs" :bordered="false" />
         </section>
 
         <section class="section section-pad">
           <div class="section-title">{{ t("ruleEcosystem.sections.catalogPackages") }}</div>
-          <NDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="catalogLoading" :columns="catalogPackageColumns" :data="catalogPackages" :bordered="false" />
+          <LwDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="catalogLoading" :columns="catalogPackageColumns" :data="catalogPackages" :bordered="false" />
           <NEmpty v-if="!catalogLoading && catalogPackages.length === 0" :description="t('ruleEcosystem.empty.catalogPackages')" />
           <div v-if="remotePreview || updatePreview" class="preview-grid">
             <NStatistic :label="t('ruleEcosystem.stats.remoteAdded')" :value="remotePreview?.added.length ?? updatePreview?.added.length ?? 0" />
@@ -1100,7 +1100,7 @@ function parseKeyValues(value: string) {
               </NSpace>
             </NGi>
           </NGrid>
-          <NDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="providersResource.loading.value" :columns="providerColumns" :data="providers" :bordered="false" />
+          <LwDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="providersResource.loading.value" :columns="providerColumns" :data="providers" :bordered="false" />
           <NEmpty v-if="!providersResource.loading.value && providers.length === 0" :description="t('ruleEcosystem.empty.providers')" />
         </section>
 
@@ -1117,7 +1117,7 @@ function parseKeyValues(value: string) {
             />
             <NButton :disabled="!activeProviderID" :loading="providerLoading" @click="loadProviderPackages">{{ t("ruleEcosystem.actions.refreshPackages") }}</NButton>
           </NSpace>
-          <NDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="providerLoading" :columns="providerPackageColumns" :data="providerPackages" :bordered="false" />
+          <LwDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="providerLoading" :columns="providerPackageColumns" :data="providerPackages" :bordered="false" />
           <NEmpty v-if="!providerLoading && providerPackages.length === 0" :description="t('ruleEcosystem.empty.providerPackages')" />
           <div v-if="providerPreview" class="preview-grid">
             <NStatistic :label="t('ruleEcosystem.stats.added')" :value="providerPreview.added.length" />
@@ -1158,7 +1158,7 @@ function parseKeyValues(value: string) {
           <NButton type="primary" :loading="busy === 'create-trust'" :disabled="!canWrite" @click="createTrustKey">
             {{ t("ruleEcosystem.actions.saveKey") }}
           </NButton>
-          <NDataTable :scrollbar-props="{ trigger: 'hover' }" class="mt" :loading="trustKeysResource.loading.value" :columns="trustColumns" :data="trustKeys" :bordered="false" />
+          <LwDataTable :scrollbar-props="{ trigger: 'hover' }" class="mt" :loading="trustKeysResource.loading.value" :columns="trustColumns" :data="trustKeys" :bordered="false" />
         </section>
       </NTabPane>
 
@@ -1187,7 +1187,7 @@ function parseKeyValues(value: string) {
               </NSpace>
             </NGi>
           </NGrid>
-          <NDataTable
+          <LwDataTable
             :scrollbar-props="{ trigger: 'hover' }"
             :loading="accountSourcesResource.loading.value"
             :columns="accountSourceColumns"
@@ -1199,7 +1199,7 @@ function parseKeyValues(value: string) {
 
         <section class="section section-pad">
           <div class="section-title">{{ t("ruleEcosystem.sections.reviewQueue") }}</div>
-          <NDataTable
+          <LwDataTable
             :scrollbar-props="{ trigger: 'hover' }"
             :loading="reviewQueueResource.loading.value"
             :columns="reviewQueueColumns"
@@ -1232,7 +1232,7 @@ function parseKeyValues(value: string) {
               </NSpace>
             </NGi>
           </NGrid>
-          <NDataTable
+          <LwDataTable
             :scrollbar-props="{ trigger: 'hover' }"
             :loading="contributionTargetsResource.loading.value"
             :columns="contributionTargetColumns"
@@ -1248,7 +1248,7 @@ function parseKeyValues(value: string) {
               {{ t("ruleEcosystem.actions.executePush") }}
             </NButton>
           </NSpace>
-          <NDataTable
+          <LwDataTable
             :scrollbar-props="{ trigger: 'hover' }"
             class="mt"
             :loading="contributionPushesResource.loading.value"
@@ -1271,8 +1271,8 @@ function parseKeyValues(value: string) {
             </NGi>
             <NGi :span="4"><NInput v-model:value="feedbackForm.reason" type="textarea" :placeholder="t('ruleEcosystem.placeholders.falsePositiveReason')" /></NGi>
           </NGrid>
-          <NDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="feedbackResource.loading.value" :columns="feedbackColumns" :data="feedbackItems" :bordered="false" />
-          <NDataTable
+          <LwDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="feedbackResource.loading.value" :columns="feedbackColumns" :data="feedbackItems" :bordered="false" />
+          <LwDataTable
             :scrollbar-props="{ trigger: 'hover' }"
             class="mt"
             :loading="feedbackSuggestionsResource.loading.value"
@@ -1286,7 +1286,7 @@ function parseKeyValues(value: string) {
       <NTabPane name="rules" :tab="t('ruleEcosystem.tabs.rules')">
         <section class="section section-pad">
           <div class="section-title">{{ t("ruleEcosystem.sections.importedRules") }}</div>
-          <NDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="rulesResource.loading.value" :columns="ruleColumns" :data="importedRules" :bordered="false" />
+          <LwDataTable :scrollbar-props="{ trigger: 'hover' }" :loading="rulesResource.loading.value" :columns="ruleColumns" :data="importedRules" :bordered="false" />
           <NEmpty v-if="!rulesResource.loading.value && importedRules.length === 0" :description="t('ruleEcosystem.empty.importedRules')" />
         </section>
 

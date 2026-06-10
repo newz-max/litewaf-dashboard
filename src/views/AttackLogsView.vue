@@ -314,7 +314,7 @@ function moduleRoute(module: string) {
         <NButton type="primary" @click="searchLogs">{{ t("common.query") }}</NButton>
       </div>
 
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         :loading="logsResource.loading.value"
         :columns="columns"

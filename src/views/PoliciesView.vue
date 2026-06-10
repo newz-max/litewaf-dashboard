@@ -197,7 +197,7 @@ async function removePolicy(id: number) {
     </div>
 
     <section class="section section-pad">
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         :loading="policiesResource.loading.value"
         :columns="columns"

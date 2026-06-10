@@ -244,6 +244,19 @@ body {
   --n-td-text-color: var(--lw-text);
 }
 
+.lw-data-table .n-data-table-th,
+.lw-data-table .n-data-table-td,
+.lw-data-table .n-data-table-th__title,
+.lw-data-table .n-data-table-td__ellipsis,
+.lw-data-table .n-data-table-td__ellipsis span {
+  white-space: nowrap;
+}
+
+.lw-data-table .n-data-table-td .n-space,
+.lw-data-table .n-data-table-td .n-button-group {
+  flex-wrap: nowrap !important;
+}
+
 .n-empty {
   --n-text-color: var(--lw-text-muted);
   --n-icon-color: var(--lw-text-subtle);

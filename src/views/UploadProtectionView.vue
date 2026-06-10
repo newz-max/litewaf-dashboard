@@ -427,7 +427,7 @@ function formatTime(value?: string) {
     </section>
 
     <section class="section section-pad">
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         :loading="resource.loading.value"
         :columns="columns"

@@ -583,7 +583,7 @@ function formatTime(value?: string) {
     </section>
 
     <section class="section section-pad">
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         :loading="resource.loading.value"
         :columns="columns"
@@ -631,7 +631,7 @@ function formatTime(value?: string) {
           <NSwitch v-model:value="previewForm.attack_matched" />
         </NFormItem>
       </NForm>
-      <NDataTable
+      <LwDataTable
         :scrollbar-props="{ trigger: 'hover' }"
         v-if="previewResult && previewResult.length > 0"
         :columns="previewColumns"
