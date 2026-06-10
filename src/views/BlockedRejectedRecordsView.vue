@@ -5,7 +5,9 @@ import { NButton, NSpace, NTag } from "naive-ui"
 import type { DataTableColumns } from "naive-ui"
 import { getBlockedRejectedRecords, type BlockedRejectedRecord } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
+import { useI18n } from "vue-i18n"
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
@@ -31,17 +33,17 @@ const timeRange = shallowRef<[number, number] | null>(initialTimeRange())
 const recordsResource = useApiResource(() => getBlockedRejectedRecords(cleanFilters()))
 const records = computed(() => [...(recordsResource.data.value ?? [])])
 
-const dispositionOptions = [
-  { label: "已阻断", value: "blocked" },
-  { label: "已拒绝", value: "rejected" }
-]
+const dispositionOptions = computed(() => [
+  { label: t("logs.blocked"), value: "blocked" },
+  { label: t("logs.rejected"), value: "rejected" }
+])
 
-const sourceOptions = [
-  { label: "WAF 事件", value: "waf-event" },
-  { label: "动态封禁", value: "dynamic-ban" },
-  { label: "访问日志", value: "access-log" },
-  { label: "未归类", value: "unclassified" }
-]
+const sourceOptions = computed(() => [
+  { label: t("logs.wafEvent"), value: "waf-event" },
+  { label: t("logs.dynamicBan"), value: "dynamic-ban" },
+  { label: t("logs.accessLog"), value: "access-log" },
+  { label: t("logs.unclassified"), value: "unclassified" }
+])
 
 const actionOptions = [
   { label: "block", value: "block" },
@@ -54,24 +56,24 @@ const schemeOptions = [
   { label: "HTTPS", value: "https" }
 ]
 
-const columns: DataTableColumns<BlockedRejectedRecord> = [
-  { title: "时间", key: "time", minWidth: 180 },
-  { title: "请求 ID", key: "request_id", minWidth: 170 },
-  { title: "应用", key: "application_id", width: 90 },
-  { title: "监听", key: "listener", width: 110, render: renderListener },
+const columns = computed<DataTableColumns<BlockedRejectedRecord>>(() => [
+  { title: t("logs.time"), key: "time", minWidth: 180 },
+  { title: t("logs.requestId"), key: "request_id", minWidth: 170 },
+  { title: t("logs.application"), key: "application_id", width: 90 },
+  { title: t("logs.listener"), key: "listener", width: 110, render: renderListener },
   { title: "Host", key: "host", minWidth: 170 },
   { title: "URI", key: "uri", minWidth: 220 },
-  { title: "状态", key: "status", width: 90 },
-  { title: "来源 IP", key: "client_ip", minWidth: 150 },
-  { title: "处置", key: "disposition", width: 100, render: renderDisposition },
-  { title: "触发来源", key: "explanation_source", width: 120, render: renderSource },
-  { title: "关联", key: "correlation_type", width: 110, render: renderCorrelation },
-  { title: "模块", key: "module", minWidth: 140 },
-  { title: "动作", key: "action", width: 90 },
-  { title: "规则", key: "rule", minWidth: 180, render: renderRule },
-  { title: "原因", key: "reason", minWidth: 260, render: renderReason },
+  { title: t("common.status"), key: "status", width: 90 },
+  { title: t("logs.sourceIp"), key: "client_ip", minWidth: 150 },
+  { title: t("logs.disposition"), key: "disposition", width: 100, render: renderDisposition },
+  { title: t("logs.triggerSource"), key: "explanation_source", width: 120, render: renderSource },
+  { title: t("logs.correlation"), key: "correlation_type", width: 110, render: renderCorrelation },
+  { title: t("logs.module"), key: "module", minWidth: 140 },
+  { title: t("common.action"), key: "action", width: 90 },
+  { title: t("common.rule"), key: "rule", minWidth: 180, render: renderRule },
+  { title: t("logs.reason"), key: "reason", minWidth: 260, render: renderReason },
   {
-    title: "回跳",
+    title: t("logs.drilldown"),
     key: "actions",
     fixed: "right",
     width: 260,
@@ -79,7 +81,7 @@ const columns: DataTableColumns<BlockedRejectedRecord> = [
       return h(NSpace, { size: "small" }, { default: () => drilldownLinks(row) })
     }
   }
-]
+])
 
 function cleanFilters() {
   const params: Record<string, string | number> = {}
@@ -138,16 +140,16 @@ function renderListener(row: BlockedRejectedRecord) {
 
 function renderDisposition(row: BlockedRejectedRecord) {
   const type = row.disposition === "blocked" ? "error" : "warning"
-  const label = row.disposition === "blocked" ? "已阻断" : "已拒绝"
+  const label = row.disposition === "blocked" ? t("logs.blocked") : t("logs.rejected")
   return h(NTag, { type, size: "small" }, { default: () => label })
 }
 
 function renderSource(row: BlockedRejectedRecord) {
   const labels: Record<string, string> = {
-    "waf-event": "WAF 事件",
-    "dynamic-ban": "动态封禁",
-    "access-log": "访问日志",
-    unclassified: "未归类"
+    "waf-event": t("logs.wafEvent"),
+    "dynamic-ban": t("logs.dynamicBan"),
+    "access-log": t("logs.accessLog"),
+    unclassified: t("logs.unclassified")
   }
   const type = row.explanation_source === "waf-event" ? "error" : row.explanation_source === "unclassified" ? "warning" : "info"
   return h(NTag, { type, size: "small" }, { default: () => labels[row.explanation_source] ?? row.explanation_source })
@@ -155,9 +157,9 @@ function renderSource(row: BlockedRejectedRecord) {
 
 function renderCorrelation(row: BlockedRejectedRecord) {
   const labels: Record<string, string> = {
-    "request-id": "请求 ID",
-    fallback: "回退匹配",
-    none: "无关联"
+    "request-id": t("logs.requestIdCorrelation"),
+    fallback: t("logs.fallbackMatch"),
+    none: t("logs.noCorrelation")
   }
   return labels[row.correlation_type] ?? row.correlation_type
 }
@@ -175,17 +177,17 @@ function renderReason(row: BlockedRejectedRecord) {
 
 function drilldownLinks(row: BlockedRejectedRecord) {
   const links = [
-    h(RouterLink, { to: { path: "/access-logs", query: accessLogQuery(row) } }, { default: () => h(NButton, { size: "small", quaternary: true }, { default: () => "访问日志" }) })
+    h(RouterLink, { to: { path: "/access-logs", query: accessLogQuery(row) } }, { default: () => h(NButton, { size: "small", quaternary: true }, { default: () => t("logs.accessLog") }) })
   ]
   if (row.explanation_source === "waf-event") {
-    links.push(h(RouterLink, { to: { path: "/attack-logs", query: attackLogQuery(row) } }, { default: () => h(NButton, { size: "small", quaternary: true }, { default: () => "攻击日志" }) }))
+    links.push(h(RouterLink, { to: { path: "/attack-logs", query: attackLogQuery(row) } }, { default: () => h(NButton, { size: "small", quaternary: true }, { default: () => t("logs.attackLog") }) }))
   }
   if (row.explanation_source === "dynamic-ban") {
-    links.push(h(RouterLink, { to: { path: "/dynamic-bans", query: dynamicBanQuery(row) } }, { default: () => h(NButton, { size: "small", quaternary: true }, { default: () => "动态封禁" }) }))
+    links.push(h(RouterLink, { to: { path: "/dynamic-bans", query: dynamicBanQuery(row) } }, { default: () => h(NButton, { size: "small", quaternary: true }, { default: () => t("logs.dynamicBan") }) }))
   }
   const path = row.module ? moduleRoute(row.module) : ""
   if (path) {
-    links.push(h(RouterLink, { to: { path, query: row.rule_id && row.rule_id > 0 ? { rule_id: row.rule_id } : {} } }, { default: () => h(NButton, { size: "small", quaternary: true }, { default: () => "模块" }) }))
+    links.push(h(RouterLink, { to: { path, query: row.rule_id && row.rule_id > 0 ? { rule_id: row.rule_id } : {} } }, { default: () => h(NButton, { size: "small", quaternary: true }, { default: () => t("logs.moduleButton") }) }))
   }
   return links
 }
@@ -248,94 +250,94 @@ function moduleRoute(module: string) {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">拦截 / 拒绝记录</h1>
-        <p class="page-subtitle">从最终处置出发查看被阻断或拒绝的请求，以及可用的触发原因。</p>
+        <h1 class="page-title">{{ t("logs.blockedRejectedTitle") }}</h1>
+        <p class="page-subtitle">{{ t("logs.blockedRejectedSubtitle") }}</p>
       </div>
-      <NButton @click="recordsResource.refresh">刷新</NButton>
+      <NButton @click="recordsResource.refresh">{{ t("common.refresh") }}</NButton>
     </div>
 
     <section class="section section-pad">
       <div class="toolbar query-toolbar">
         <div class="query-field">
-          <span class="query-label">应用 ID</span>
-          <NInput v-model:value="filters.application_id" placeholder="输入应用 ID" clearable />
+          <span class="query-label">{{ t("common.applicationId") }}</span>
+          <NInput v-model:value="filters.application_id" :placeholder="t('logs.enterApplicationId')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">监听端口</span>
-          <NInput v-model:value="filters.listener_port" placeholder="输入监听端口" clearable />
+          <span class="query-label">{{ t("logs.listenerPort") }}</span>
+          <NInput v-model:value="filters.listener_port" :placeholder="t('logs.enterListenerPort')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">访问协议</span>
+          <span class="query-label">{{ t("logs.accessProtocol") }}</span>
           <NSelect
             :value="selectFilterValue('scheme')"
             :options="schemeOptions"
             clearable
-            placeholder="选择访问协议"
+            :placeholder="t('logs.selectAccessProtocol')"
             @update:value="updateSelectFilter('scheme', $event)"
           />
         </div>
         <div class="query-field query-field-wide">
           <span class="query-label">Host</span>
-          <NInput v-model:value="filters.host" placeholder="输入 Host" clearable />
+          <NInput v-model:value="filters.host" :placeholder="t('logs.enterHost')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">来源 IP</span>
-          <NInput v-model:value="filters.client_ip" placeholder="输入来源 IP" clearable />
+          <span class="query-label">{{ t("logs.sourceIp") }}</span>
+          <NInput v-model:value="filters.client_ip" :placeholder="t('logs.enterSourceIp')" clearable />
         </div>
         <div class="query-field query-field-wide">
-          <span class="query-label">请求 URI</span>
-          <NInput v-model:value="filters.uri" placeholder="输入请求 URI" clearable />
+          <span class="query-label">{{ t("logs.requestUri") }}</span>
+          <NInput v-model:value="filters.uri" :placeholder="t('logs.enterRequestUri')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">状态码</span>
-          <NInput v-model:value="filters.status" placeholder="输入状态码" clearable />
+          <span class="query-label">{{ t("logs.statusCode") }}</span>
+          <NInput v-model:value="filters.status" :placeholder="t('logs.enterStatusCode')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">处置结果</span>
+          <span class="query-label">{{ t("logs.dispositionResult") }}</span>
           <NSelect
             :value="selectFilterValue('disposition')"
             :options="dispositionOptions"
             clearable
-            placeholder="选择处置结果"
+            :placeholder="t('logs.selectDispositionResult')"
             @update:value="updateSelectFilter('disposition', $event)"
           />
         </div>
         <div class="query-field">
-          <span class="query-label">防护模块</span>
-          <NInput v-model:value="filters.module" placeholder="输入防护模块" clearable />
+          <span class="query-label">{{ t("logs.protectionModule") }}</span>
+          <NInput v-model:value="filters.module" :placeholder="t('logs.enterProtectionModule')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">执行动作</span>
+          <span class="query-label">{{ t("logs.executionAction") }}</span>
           <NSelect
             :value="selectFilterValue('action')"
             :options="actionOptions"
             clearable
-            placeholder="选择执行动作"
+            :placeholder="t('logs.selectAction')"
             @update:value="updateSelectFilter('action', $event)"
           />
         </div>
         <div class="query-field">
-          <span class="query-label">触发来源</span>
+          <span class="query-label">{{ t("logs.triggerSource") }}</span>
           <NSelect
             :value="selectFilterValue('trigger_source')"
             :options="sourceOptions"
             clearable
-            placeholder="选择触发来源"
+            :placeholder="t('logs.selectTriggerSource')"
             @update:value="updateSelectFilter('trigger_source', $event)"
           />
         </div>
         <div class="query-field query-time-range">
-          <span class="query-label">时间范围</span>
+          <span class="query-label">{{ t("logs.timeRange") }}</span>
           <NDatePicker
             v-model:value="timeRange"
             type="datetimerange"
             clearable
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
+            :start-placeholder="t('logs.startTime')"
+            :end-placeholder="t('logs.endTime')"
           />
         </div>
-        <NButton type="primary" @click="searchRecords">查询</NButton>
-        <NButton @click="resetFilters">重置</NButton>
+        <NButton type="primary" @click="searchRecords">{{ t("common.query") }}</NButton>
+        <NButton @click="resetFilters">{{ t("common.reset") }}</NButton>
       </div>
 
       <NDataTable
@@ -346,7 +348,7 @@ function moduleRoute(module: string) {
         :bordered="false"
         :scroll-x="2200"
       />
-      <NEmpty v-if="!recordsResource.loading.value && records.length === 0" description="暂无拦截或拒绝记录" />
+      <NEmpty v-if="!recordsResource.loading.value && records.length === 0" :description="t('logs.noBlockedRejectedRecords')" />
       <NAlert v-if="recordsResource.error.value" type="error" class="result-alert">
         {{ recordsResource.error.value }}
       </NAlert>

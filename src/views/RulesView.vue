@@ -10,7 +10,9 @@ import {
   type RuleInput
 } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
+import { useI18n } from "vue-i18n"
 
+const { t } = useI18n()
 const message = useMessage()
 const rulesResource = useApiResource(getRules)
 const rules = computed(() => [...(rulesResource.data.value ?? [])])
@@ -28,46 +30,46 @@ const form = reactive<RuleInput>({
   enabled: true
 })
 
-const typeOptions = [
+const typeOptions = computed(() => [
   { label: "SQLi", value: "sqli" },
   { label: "XSS", value: "xss" },
   { label: "RCE", value: "rce" },
   { label: "CC", value: "cc" },
   { label: "Bot", value: "bot" },
-  { label: "自定义", value: "custom" }
-]
-const targetOptions = [
-  { label: "查询参数", value: "args" },
+  { label: t("rulesPage.custom"), value: "custom" }
+])
+const targetOptions = computed(() => [
+  { label: t("rulesPage.queryArgs"), value: "args" },
   { label: "URI", value: "uri" },
-  { label: "请求头", value: "headers" },
-  { label: "归一化 URI", value: "normalized_uri" },
-  { label: "归一化路径", value: "normalized_path" },
-  { label: "归一化参数", value: "normalized_args" },
-  { label: "归一化请求头", value: "normalized_headers" },
-  { label: "请求体", value: "body" },
+  { label: t("rulesPage.headers"), value: "headers" },
+  { label: t("rulesPage.normalizedUri"), value: "normalized_uri" },
+  { label: t("rulesPage.normalizedPath"), value: "normalized_path" },
+  { label: t("rulesPage.normalizedArgs"), value: "normalized_args" },
+  { label: t("rulesPage.normalizedHeaders"), value: "normalized_headers" },
+  { label: t("rulesPage.body"), value: "body" },
   { label: "JSON Body", value: "body_json" },
   { label: "Form Body", value: "body_form" },
-  { label: "上传文件名", value: "upload_filename" },
-  { label: "上传扩展名", value: "upload_extension" },
-  { label: "上传 MIME", value: "upload_mime" },
-  { label: "上传大小", value: "upload_size" }
-]
-const actionOptions = [
-  { label: "阻断", value: "block" },
-  { label: "仅记录", value: "log-only" },
-  { label: "放行", value: "pass" }
-]
+  { label: t("rulesPage.uploadFilename"), value: "upload_filename" },
+  { label: t("rulesPage.uploadExtension"), value: "upload_extension" },
+  { label: t("rulesPage.uploadMime"), value: "upload_mime" },
+  { label: t("rulesPage.uploadSize"), value: "upload_size" }
+])
+const actionOptions = computed(() => [
+  { label: t("common.block"), value: "block" },
+  { label: t("rulesPage.logOnly"), value: "log-only" },
+  { label: t("common.allow"), value: "pass" }
+])
 
 const columns = computed(() => [
-  { title: "规则 ID", key: "id" },
-  { title: "名称", key: "name" },
-  { title: "类型", key: "type" },
-  { title: "检测目标", key: "target" },
-  { title: "动作", key: "action" },
-  { title: "分数", key: "score" },
-  { title: "状态", key: "enabled", render: (row: Rule) => (row.enabled ? "启用" : "停用") },
+  { title: t("rulesPage.ruleId"), key: "id" },
+  { title: t("common.name"), key: "name" },
+  { title: t("rulesPage.type"), key: "type" },
+  { title: t("rulesPage.target"), key: "target" },
+  { title: t("common.action"), key: "action" },
+  { title: t("rulesPage.score"), key: "score" },
+  { title: t("common.status"), key: "enabled", render: (row: Rule) => (row.enabled ? t("common.enabled") : t("common.disabled")) },
   {
-    title: "操作",
+    title: t("common.actions"),
     key: "actions",
     render: (row: Rule) =>
       h(
@@ -75,8 +77,8 @@ const columns = computed(() => [
         { size: "small" },
         {
           default: () => [
-            h(NButton, { size: "small", quaternary: true, onClick: () => editRule(row) }, { default: () => "编辑" }),
-            h(NButton, { size: "small", quaternary: true, onClick: () => removeRule(row.id) }, { default: () => "删除" })
+            h(NButton, { size: "small", quaternary: true, onClick: () => editRule(row) }, { default: () => t("common.edit") }),
+            h(NButton, { size: "small", quaternary: true, onClick: () => removeRule(row.id) }, { default: () => t("common.delete") })
           ]
         }
       )
@@ -123,7 +125,7 @@ async function saveRule() {
     } else {
       await createRule(form)
     }
-    message.success("规则已保存")
+    message.success(t("rulesPage.saved"))
     showForm.value = false
     await rulesResource.refresh()
   } finally {
@@ -133,7 +135,7 @@ async function saveRule() {
 
 async function removeRule(id: number) {
   await deleteRule(id)
-  message.success("规则已删除")
+  message.success(t("rulesPage.deleted"))
   await rulesResource.refresh()
 }
 </script>
@@ -142,10 +144,10 @@ async function removeRule(id: number) {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">规则管理</h1>
-        <p class="page-subtitle">维护 SQLi、XSS、RCE、CC 和 Bot 检测规则。</p>
+        <h1 class="page-title">{{ t("rulesPage.title") }}</h1>
+        <p class="page-subtitle">{{ t("rulesPage.subtitle") }}</p>
       </div>
-      <NButton type="primary" @click="openCreate">新增规则</NButton>
+      <NButton type="primary" @click="openCreate">{{ t("common.createRule") }}</NButton>
     </div>
 
     <section class="section section-pad">
@@ -156,41 +158,41 @@ async function removeRule(id: number) {
         :data="rules"
         :bordered="false"
       />
-      <NEmpty v-if="!rulesResource.loading.value && rules.length === 0" description="暂无规则" />
+      <NEmpty v-if="!rulesResource.loading.value && rules.length === 0" :description="t('common.noRules')" />
       <NAlert v-if="rulesResource.error.value" type="error" style="margin-top: 12px">
         {{ rulesResource.error.value }}
       </NAlert>
     </section>
 
     <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="showForm" :width="480">
-      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editingID ? '编辑规则' : '新增规则'">
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editingID ? t('rulesPage.editRule') : t('rulesPage.newRule')">
         <NForm label-placement="top">
-          <NFormItem label="规则名称">
+          <NFormItem :label="t('common.ruleName')">
             <NInput v-model:value="form.name" />
           </NFormItem>
-          <NFormItem label="规则类型">
+          <NFormItem :label="t('rulesPage.ruleType')">
             <NSelect v-model:value="form.type" :options="typeOptions" />
           </NFormItem>
-          <NFormItem label="检测目标">
+          <NFormItem :label="t('rulesPage.target')">
             <NSelect v-model:value="form.target" :options="targetOptions" />
           </NFormItem>
-          <NFormItem label="动作">
+          <NFormItem :label="t('common.action')">
             <NSelect v-model:value="form.action" :options="actionOptions" />
           </NFormItem>
-          <NFormItem label="表达式">
+          <NFormItem :label="t('rulesPage.expression')">
             <NInput v-model:value="form.expression" type="textarea" />
           </NFormItem>
-          <NFormItem label="分数">
+          <NFormItem :label="t('rulesPage.score')">
             <NInputNumber v-model:value="form.score" :min="0" :max="1000" />
           </NFormItem>
-          <NFormItem label="启用">
+          <NFormItem :label="t('common.enabled')">
             <NSwitch v-model:value="form.enabled" />
           </NFormItem>
         </NForm>
         <template #footer>
           <NSpace justify="end">
-            <NButton @click="showForm = false">取消</NButton>
-            <NButton type="primary" :loading="saving" @click="saveRule">保存</NButton>
+            <NButton @click="showForm = false">{{ t("common.cancel") }}</NButton>
+            <NButton type="primary" :loading="saving" @click="saveRule">{{ t("common.save") }}</NButton>
           </NSpace>
         </template>
       </NDrawerContent>

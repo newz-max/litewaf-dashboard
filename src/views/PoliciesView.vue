@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, h, reactive, ref } from "vue"
+import { useI18n } from "vue-i18n"
 import { NButton, NSpace, useMessage } from "naive-ui"
 import {
   createPolicy,
@@ -14,6 +15,7 @@ import {
 import { useApiResource } from "@/composables/useApiResource"
 
 const message = useMessage()
+const { t } = useI18n()
 const policiesResource = useApiResource(getPolicies)
 const applicationsResource = useApiResource(getApplications)
 const rulesResource = useApiResource(getRules)
@@ -56,11 +58,11 @@ const applicationOptions = computed(() =>
 const ruleOptions = computed(() =>
   (rulesResource.data.value ?? []).map((rule) => ({ label: `${rule.name} #${rule.id}`, value: rule.id }))
 )
-const actionOptions = [
-  { label: "阻断", value: "block" },
-  { label: "仅记录", value: "log-only" },
-  { label: "放行", value: "pass" }
-]
+const actionOptions = computed(() => [
+  { label: t("common.block"), value: "block" },
+  { label: t("common.logOnly"), value: "log-only" },
+  { label: t("common.allow"), value: "pass" }
+])
 const contentTypeOptions = [
   { label: "JSON", value: "application/json" },
   { label: "Form", value: "application/x-www-form-urlencoded" },
@@ -72,18 +74,18 @@ const bodyPathOptions = computed(() =>
 )
 
 const columns = computed(() => [
-  { title: "策略 ID", key: "id" },
-  { title: "名称", key: "name" },
-  { title: "风险阈值", key: "risk_threshold" },
-  { title: "默认动作", key: "default_action" },
-  { title: "Body", key: "body_inspection_enabled", render: (row: Policy) => (row.body_inspection_enabled ? "启用" : "停用") },
-  { title: "上传", key: "upload_inspection_enabled", render: (row: Policy) => (row.upload_inspection_enabled ? "启用" : "停用") },
-  { title: "动态封禁", key: "dynamic_ban_enabled", render: (row: Policy) => (row.dynamic_ban_enabled ? "启用" : "停用") },
-  { title: "应用数", key: "application_ids", render: (row: Policy) => row.application_ids.length },
-  { title: "规则数", key: "rule_ids", render: (row: Policy) => row.rule_ids.length },
-  { title: "状态", key: "enabled", render: (row: Policy) => (row.enabled ? "启用" : "停用") },
+  { title: t("policies.columns.policyId"), key: "id" },
+  { title: t("policies.columns.name"), key: "name" },
+  { title: t("policies.columns.riskThreshold"), key: "risk_threshold" },
+  { title: t("policies.columns.defaultAction"), key: "default_action" },
+  { title: t("policies.columns.body"), key: "body_inspection_enabled", render: (row: Policy) => (row.body_inspection_enabled ? t("common.enabled") : t("common.disabled")) },
+  { title: t("policies.columns.upload"), key: "upload_inspection_enabled", render: (row: Policy) => (row.upload_inspection_enabled ? t("common.enabled") : t("common.disabled")) },
+  { title: t("policies.columns.dynamicBan"), key: "dynamic_ban_enabled", render: (row: Policy) => (row.dynamic_ban_enabled ? t("common.enabled") : t("common.disabled")) },
+  { title: t("policies.columns.applicationCount"), key: "application_ids", render: (row: Policy) => row.application_ids.length },
+  { title: t("policies.columns.ruleCount"), key: "rule_ids", render: (row: Policy) => row.rule_ids.length },
+  { title: t("policies.columns.status"), key: "enabled", render: (row: Policy) => (row.enabled ? t("common.enabled") : t("common.disabled")) },
   {
-    title: "操作",
+    title: t("policies.columns.actions"),
     key: "actions",
     render: (row: Policy) =>
       h(
@@ -91,8 +93,8 @@ const columns = computed(() => [
         { size: "small" },
         {
           default: () => [
-            h(NButton, { size: "small", quaternary: true, onClick: () => editPolicy(row) }, { default: () => "编辑" }),
-            h(NButton, { size: "small", quaternary: true, onClick: () => removePolicy(row.id) }, { default: () => "删除" })
+            h(NButton, { size: "small", quaternary: true, onClick: () => editPolicy(row) }, { default: () => t("common.edit") }),
+            h(NButton, { size: "small", quaternary: true, onClick: () => removePolicy(row.id) }, { default: () => t("common.delete") })
           ]
         }
       )
@@ -169,7 +171,7 @@ async function savePolicy() {
     } else {
       await createPolicy(form)
     }
-    message.success("策略已保存")
+    message.success(t("policies.saved"))
     showForm.value = false
     await policiesResource.refresh()
   } finally {
@@ -179,7 +181,7 @@ async function savePolicy() {
 
 async function removePolicy(id: number) {
   await deletePolicy(id)
-  message.success("策略已删除")
+  message.success(t("policies.deleted"))
   await policiesResource.refresh()
 }
 </script>
@@ -188,10 +190,10 @@ async function removePolicy(id: number) {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">防护策略</h1>
-        <p class="page-subtitle">按防护应用绑定规则集、动作和风险阈值。</p>
+        <h1 class="page-title">{{ t("policies.title") }}</h1>
+        <p class="page-subtitle">{{ t("policies.subtitle") }}</p>
       </div>
-      <NButton type="primary" @click="openCreate">新增策略</NButton>
+      <NButton type="primary" @click="openCreate">{{ t("policies.createPolicy") }}</NButton>
     </div>
 
     <section class="section section-pad">
@@ -202,90 +204,90 @@ async function removePolicy(id: number) {
         :data="policies"
         :bordered="false"
       />
-      <NEmpty v-if="!policiesResource.loading.value && policies.length === 0" description="暂无策略" />
+      <NEmpty v-if="!policiesResource.loading.value && policies.length === 0" :description="t('policies.empty')" />
       <NAlert v-if="policiesResource.error.value" type="error" style="margin-top: 12px">
         {{ policiesResource.error.value }}
       </NAlert>
     </section>
 
     <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="showForm" :width="480">
-      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editingID ? '编辑策略' : '新增策略'">
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editingID ? t('policies.editPolicy') : t('policies.createPolicy')">
         <NForm label-placement="top">
-          <NFormItem label="策略名称">
+          <NFormItem :label="t('policies.form.name')">
             <NInput v-model:value="form.name" />
           </NFormItem>
-          <NFormItem label="绑定应用">
+          <NFormItem :label="t('policies.form.applications')">
             <NSelect v-model:value="form.application_ids" multiple :options="applicationOptions" />
           </NFormItem>
-          <NFormItem label="绑定规则">
+          <NFormItem :label="t('policies.form.rules')">
             <NSelect v-model:value="form.rule_ids" multiple :options="ruleOptions" />
           </NFormItem>
-          <NFormItem label="风险阈值">
+          <NFormItem :label="t('policies.form.riskThreshold')">
             <NInputNumber v-model:value="form.risk_threshold" :min="1" :max="1000" />
           </NFormItem>
-          <NFormItem label="默认动作">
+          <NFormItem :label="t('policies.form.defaultAction')">
             <NSelect v-model:value="form.default_action" :options="actionOptions" />
           </NFormItem>
           <NDivider />
-          <NFormItem label="请求归一化">
+          <NFormItem :label="t('policies.form.normalization')">
             <NSwitch v-model:value="form.normalization_enabled" />
           </NFormItem>
-          <NFormItem label="解码次数">
+          <NFormItem :label="t('policies.form.decodePasses')">
             <NInputNumber v-model:value="form.normalization_decode_passes" :min="1" :max="5" />
           </NFormItem>
-          <NFormItem label="归一化字节上限">
+          <NFormItem :label="t('policies.form.normalizationMaxBytes')">
             <NInputNumber v-model:value="form.normalization_max_value_bytes" :min="128" :max="65536" />
           </NFormItem>
           <NDivider />
-          <NFormItem label="请求体检测">
+          <NFormItem :label="t('policies.form.bodyInspection')">
             <NSwitch v-model:value="form.body_inspection_enabled" />
           </NFormItem>
-          <NFormItem label="请求体类型">
+          <NFormItem :label="t('policies.form.bodyTypes')">
             <NSelect v-model:value="form.body_inspection_content_types" multiple tag :options="contentTypeOptions" />
           </NFormItem>
-          <NFormItem label="路径前缀">
+          <NFormItem :label="t('policies.form.pathPrefixes')">
             <NSelect v-model:value="form.body_inspection_path_prefixes" multiple tag :options="bodyPathOptions" />
           </NFormItem>
-          <NFormItem label="请求体字节上限">
+          <NFormItem :label="t('policies.form.bodyMaxBytes')">
             <NInputNumber v-model:value="form.body_inspection_max_bytes" :min="1" :max="1048576" />
           </NFormItem>
-          <NFormItem label="超限动作">
+          <NFormItem :label="t('policies.form.oversizedBodyAction')">
             <NSelect v-model:value="form.oversized_body_action" :options="actionOptions" />
           </NFormItem>
           <NDivider />
-          <NFormItem label="上传检测">
+          <NFormItem :label="t('policies.form.uploadInspection')">
             <NSwitch v-model:value="form.upload_inspection_enabled" />
           </NFormItem>
-          <NFormItem label="上传字节上限">
+          <NFormItem :label="t('policies.form.uploadMaxBytes')">
             <NInputNumber v-model:value="form.upload_max_bytes" :min="1" :max="1073741824" />
           </NFormItem>
-          <NFormItem label="上传超限动作">
+          <NFormItem :label="t('policies.form.uploadSizeAction')">
             <NSelect v-model:value="form.upload_size_action" :options="actionOptions" />
           </NFormItem>
           <NDivider />
-          <NFormItem label="动态封禁">
+          <NFormItem :label="t('policies.form.dynamicBan')">
             <NSwitch v-model:value="form.dynamic_ban_enabled" />
           </NFormItem>
-          <NFormItem label="封禁秒">
+          <NFormItem :label="t('policies.form.banDurationSec')">
             <NInputNumber v-model:value="form.dynamic_ban_duration_sec" :min="1" :max="86400" />
           </NFormItem>
-          <NFormItem label="封禁分数阈值">
+          <NFormItem :label="t('policies.form.banScoreThreshold')">
             <NInputNumber v-model:value="form.dynamic_ban_score_threshold" :min="1" :max="10000" />
           </NFormItem>
-          <NFormItem label="触发次数">
+          <NFormItem :label="t('policies.form.triggerCount')">
             <NInputNumber v-model:value="form.dynamic_ban_trigger_count" :min="1" :max="1000" />
           </NFormItem>
-          <NFormItem label="统计窗口秒">
+          <NFormItem :label="t('policies.form.windowSec')">
             <NInputNumber v-model:value="form.dynamic_ban_window_sec" :min="1" :max="86400" />
           </NFormItem>
-          <NFormItem label="启用">
+          <NFormItem :label="t('policies.form.enabled')">
             <NSwitch v-model:value="form.enabled" />
           </NFormItem>
         </NForm>
         <template #footer>
           <NSpace justify="end">
-            <NButton @click="showForm = false">取消</NButton>
-            <NButton type="primary" :loading="saving" @click="savePolicy">保存</NButton>
+            <NButton @click="showForm = false">{{ t("common.cancel") }}</NButton>
+            <NButton type="primary" :loading="saving" @click="savePolicy">{{ t("common.save") }}</NButton>
           </NSpace>
         </template>
       </NDrawerContent>

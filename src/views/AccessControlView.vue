@@ -29,8 +29,8 @@ const editing = shallowRef<ProtectionRule | null>(null)
 const formVisible = shallowRef(false)
 const saving = shallowRef(false)
 const form = reactive<ProtectionRuleInput>(emptyForm())
-const guidanceItems = protectionGuides["access-control"]
-const formRiskPrompts = computed(() => protectionRiskPrompts(form))
+const guidanceItems = computed(() => protectionGuides(t, "access-control"))
+const formRiskPrompts = computed(() => protectionRiskPrompts(form, t))
 const enabledCount = computed(() => items.value.filter((item) => item.enabled).length)
 const blockCount = computed(() => items.value.filter((item) => item.action.type === "block").length)
 const allowCount = computed(() => items.value.filter((item) => item.action.type === "allow").length)
@@ -45,8 +45,8 @@ const statusItems = computed(() => [
   { label: t("modules.access.blockRules"), value: blockCount.value, note: t("modules.access.blockRulesNote"), tone: blockCount.value > 0 ? "warning" as const : "neutral" as const },
   { label: t("modules.access.allowRules"), value: allowCount.value, note: t("modules.access.allowRulesNote"), tone: allowCount.value > 0 ? "danger" as const : "neutral" as const }
 ])
-const guidanceAlerts = computed(() => guidanceItems.map((item) => ({ title: item.title, message: item.description, tone: "info" as const })))
-const formRiskAlerts = computed(() => formRiskPrompts.value.map((risk) => ({ title: risk.message, message: riskPromptText(risk), tone: "warning" as const })))
+const guidanceAlerts = computed(() => guidanceItems.value.map((item) => ({ title: item.title, message: item.description, tone: "info" as const })))
+const formRiskAlerts = computed(() => formRiskPrompts.value.map((risk) => ({ title: risk.message, message: riskPromptText(risk, t), tone: "warning" as const })))
 
 const templateOptions = computed(() => [
   { label: t("modules.access.adminPathBlock"), value: "admin" },
@@ -352,7 +352,7 @@ function confirmRiskIfNeeded() {
   return new Promise<boolean>((resolve) => {
     dialog.warning({
       title: t("common.highRiskConfirm", { name: t("modules.access.title") }),
-      content: () => h("div", { class: "risk-confirm" }, risks.map((risk) => h("p", { key: risk.message }, riskPromptText(risk)))),
+      content: () => h("div", { class: "risk-confirm" }, risks.map((risk) => h("p", { key: risk.message }, riskPromptText(risk, t)))),
       positiveText: t("common.confirmSave"),
       negativeText: t("common.cancel"),
       onPositiveClick: () => resolve(true),

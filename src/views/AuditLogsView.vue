@@ -2,7 +2,9 @@
 import { computed, reactive } from "vue"
 import { getAuditLogs } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
+import { useI18n } from "vue-i18n"
 
+const { t } = useI18n()
 const filters = reactive({
   action: "",
   resource_type: "",
@@ -12,16 +14,21 @@ const filters = reactive({
 const auditResource = useApiResource(() => getAuditLogs(cleanFilters()))
 const logs = computed(() => [...(auditResource.data.value ?? [])])
 
-const columns = [
-  { title: "时间", key: "time" },
-  { title: "操作者", key: "actor" },
-  { title: "角色", key: "role" },
-  { title: "动作", key: "action" },
-  { title: "资源", key: "resource_type" },
-  { title: "资源 ID", key: "resource_id" },
-  { title: "结果", key: "result" },
-  { title: "说明", key: "message" }
-]
+const resultOptions = computed(() => [
+  { label: t("logs.success"), value: "success" },
+  { label: t("logs.failure"), value: "failure" }
+])
+
+const columns = computed(() => [
+  { title: t("logs.time"), key: "time" },
+  { title: t("logs.actor"), key: "actor" },
+  { title: t("logs.role"), key: "role" },
+  { title: t("common.action"), key: "action" },
+  { title: t("logs.resource"), key: "resource_type" },
+  { title: t("logs.resourceId"), key: "resource_id" },
+  { title: t("logs.result"), key: "result" },
+  { title: t("logs.message"), key: "message" }
+])
 
 function cleanFilters() {
   return Object.fromEntries(Object.entries(filters).filter(([, value]) => value.trim() !== ""))
@@ -40,36 +47,33 @@ function updateResultFilter(value: string | number | null) {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">审计日志</h1>
-        <p class="page-subtitle">查询管理操作、发布和回滚记录。</p>
+        <h1 class="page-title">{{ t("logs.auditTitle") }}</h1>
+        <p class="page-subtitle">{{ t("logs.auditSubtitle") }}</p>
       </div>
-      <NButton @click="auditResource.refresh">刷新</NButton>
+      <NButton @click="auditResource.refresh">{{ t("common.refresh") }}</NButton>
     </div>
 
     <section class="section section-pad">
       <div class="toolbar query-toolbar">
         <div class="query-field">
-          <span class="query-label">操作动作</span>
-          <NInput v-model:value="filters.action" placeholder="输入动作" clearable />
+          <span class="query-label">{{ t("logs.operationAction") }}</span>
+          <NInput v-model:value="filters.action" :placeholder="t('logs.enterAction')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">资源类型</span>
-          <NInput v-model:value="filters.resource_type" placeholder="输入资源类型" clearable />
+          <span class="query-label">{{ t("logs.resourceType") }}</span>
+          <NInput v-model:value="filters.resource_type" :placeholder="t('logs.enterResourceType')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">操作结果</span>
+          <span class="query-label">{{ t("logs.operationResult") }}</span>
           <NSelect
             :value="selectResultValue()"
             clearable
-            placeholder="选择结果"
+            :placeholder="t('logs.selectResult')"
             @update:value="updateResultFilter"
-            :options="[
-              { label: '成功', value: 'success' },
-              { label: '失败', value: 'failure' }
-            ]"
+            :options="resultOptions"
           />
         </div>
-        <NButton type="primary" @click="auditResource.refresh">查询</NButton>
+        <NButton type="primary" @click="auditResource.refresh">{{ t("common.query") }}</NButton>
       </div>
 
       <NDataTable
@@ -79,7 +83,7 @@ function updateResultFilter(value: string | number | null) {
         :data="logs"
         :bordered="false"
       />
-      <NEmpty v-if="!auditResource.loading.value && logs.length === 0" description="暂无审计日志" />
+      <NEmpty v-if="!auditResource.loading.value && logs.length === 0" :description="t('logs.noAuditLogs')" />
       <NAlert v-if="auditResource.error.value" type="error" style="margin-top: 12px">
         {{ auditResource.error.value }}
       </NAlert>

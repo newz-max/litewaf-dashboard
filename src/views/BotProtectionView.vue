@@ -29,8 +29,8 @@ const editing = shallowRef<ProtectionRule | null>(null)
 const formVisible = shallowRef(false)
 const saving = shallowRef(false)
 const form = reactive<ProtectionRuleInput>(emptyForm())
-const guidanceItems = protectionGuides["bot-protection"]
-const formRiskPrompts = computed(() => protectionRiskPrompts(form))
+const guidanceItems = computed(() => protectionGuides(t, "bot-protection"))
+const formRiskPrompts = computed(() => protectionRiskPrompts(form, t))
 const enabledCount = computed(() => items.value.filter((item) => item.enabled).length)
 const captchaCount = computed(() => items.value.filter((item) => item.challenge?.mode === "captcha").length)
 const behaviorCount = computed(() => items.value.filter((item) => item.challenge?.behavior_enabled).length)
@@ -45,8 +45,8 @@ const statusItems = computed(() => [
   { label: t("modules.bot.localCaptcha"), value: captchaCount.value, note: t("modules.bot.localCaptchaNote"), tone: captchaCount.value > 0 ? "warning" as const : "neutral" as const },
   { label: t("modules.bot.behaviorScore"), value: behaviorCount.value, note: t("modules.bot.behaviorScoreNote"), tone: behaviorCount.value > 0 ? "warning" as const : "neutral" as const }
 ])
-const guidanceAlerts = computed(() => guidanceItems.map((item) => ({ title: item.title, message: item.description, tone: "info" as const })))
-const formRiskAlerts = computed(() => formRiskPrompts.value.map((risk) => ({ title: risk.message, message: riskPromptText(risk), tone: "warning" as const })))
+const guidanceAlerts = computed(() => guidanceItems.value.map((item) => ({ title: item.title, message: item.description, tone: "info" as const })))
+const formRiskAlerts = computed(() => formRiskPrompts.value.map((risk) => ({ title: risk.message, message: riskPromptText(risk, t), tone: "warning" as const })))
 
 const templateOptions = computed(() => [
   { label: t("modules.bot.adminPathChallenge"), value: "admin" },
@@ -396,7 +396,7 @@ function confirmRiskIfNeeded() {
   return new Promise<boolean>((resolve) => {
     dialog.warning({
       title: t("common.highRiskConfirm", { name: t("modules.bot.title") }),
-      content: () => h("div", { class: "risk-confirm" }, risks.map((risk) => h("p", { key: risk.message }, riskPromptText(risk)))),
+      content: () => h("div", { class: "risk-confirm" }, risks.map((risk) => h("p", { key: risk.message }, riskPromptText(risk, t)))),
       positiveText: t("common.confirmSave"),
       negativeText: t("common.cancel"),
       onPositiveClick: () => resolve(true),

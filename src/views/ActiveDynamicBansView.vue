@@ -4,31 +4,33 @@ import { NButton, NSpace, NTag, useDialog, useMessage } from "naive-ui"
 import { useAuthStore } from "@/stores/auth"
 import { type DynamicBan } from "@/api/litewaf"
 import { useActiveDynamicBans } from "@/composables/useActiveDynamicBans"
+import { useI18n } from "vue-i18n"
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 const dialog = useDialog()
 const message = useMessage()
 const bans = useActiveDynamicBans()
 const tableRows = computed(() => [...bans.items.value])
 
-const statusOptions = [
-  { label: "活跃", value: "active" },
-  { label: "已解封", value: "cleared" },
-  { label: "已过期", value: "expired" }
-]
+const statusOptions = computed(() => [
+  { label: t("dynamicBans.active"), value: "active" },
+  { label: t("dynamicBans.cleared"), value: "cleared" },
+  { label: t("dynamicBans.expired"), value: "expired" }
+])
 
 const columns = computed(() => [
-  { title: "站点", key: "application_id", width: 90 },
-  { title: "来源 IP", key: "client_ip", minWidth: 150 },
-  { title: "状态", key: "status", width: 100, render: renderStatus },
-  { title: "原因", key: "ban_reason", minWidth: 180 },
-  { title: "来源", key: "source", minWidth: 160 },
-  { title: "剩余", key: "ban_remaining_sec", width: 110, render: (row: DynamicBan) => formatDuration(row.ban_remaining_sec) },
-  { title: "封禁时长", key: "ban_duration_sec", width: 110, render: (row: DynamicBan) => formatDuration(row.ban_duration_sec) },
-  { title: "创建时间", key: "time", minWidth: 180 },
-  { title: "过期时间", key: "expires_at", minWidth: 180, render: (row: DynamicBan) => formatTime(row.expires_at) },
+  { title: t("logs.site"), key: "application_id", width: 90 },
+  { title: t("logs.sourceIp"), key: "client_ip", minWidth: 150 },
+  { title: t("common.status"), key: "status", width: 100, render: renderStatus },
+  { title: t("dynamicBans.reason"), key: "ban_reason", minWidth: 180 },
+  { title: t("common.source"), key: "source", minWidth: 160 },
+  { title: t("dynamicBans.remaining"), key: "ban_remaining_sec", width: 110, render: (row: DynamicBan) => formatDuration(row.ban_remaining_sec) },
+  { title: t("dynamicBans.banDuration"), key: "ban_duration_sec", width: 110, render: (row: DynamicBan) => formatDuration(row.ban_duration_sec) },
+  { title: t("dynamicBans.createdAt"), key: "time", minWidth: 180 },
+  { title: t("dynamicBans.expiresAt"), key: "expires_at", minWidth: 180, render: (row: DynamicBan) => formatTime(row.expires_at) },
   {
-    title: "操作",
+    title: t("common.actions"),
     key: "actions",
     width: 110,
     render(row: DynamicBan) {
@@ -45,7 +47,7 @@ const columns = computed(() => [
           loading: bans.clearingKey.value === key,
           onClick: () => confirmClear(row)
         },
-        { default: () => "解封" }
+        { default: () => t("dynamicBans.clear") }
       )
     }
   }
@@ -55,7 +57,7 @@ onMounted(bans.refresh)
 
 function renderStatus(row: DynamicBan) {
   const type = row.status === "active" ? "error" : row.status === "cleared" ? "success" : "default"
-  const label = row.status === "active" ? "活跃" : row.status === "cleared" ? "已解封" : "已过期"
+  const label = row.status === "active" ? t("dynamicBans.active") : row.status === "cleared" ? t("dynamicBans.cleared") : t("dynamicBans.expired")
   return h(NTag, { type, size: "small" }, { default: () => label })
 }
 
@@ -86,14 +88,14 @@ function formatTime(value: string) {
 
 function confirmClear(row: DynamicBan) {
   dialog.warning({
-    title: "确认解封",
-    content: `站点 ${row.application_id} / ${row.client_ip}`,
-    positiveText: "解封",
-    negativeText: "取消",
+    title: t("dynamicBans.confirmClear"),
+    content: t("dynamicBans.confirmClearContent", { applicationId: row.application_id, clientIp: row.client_ip }),
+    positiveText: t("dynamicBans.clear"),
+    negativeText: t("common.cancel"),
     onPositiveClick: async () => {
       await bans.clearBan(row)
       if (!bans.error.value) {
-        message.success("解封请求已提交")
+        message.success(t("dynamicBans.clearSubmitted"))
       }
     }
   })
@@ -121,37 +123,37 @@ async function resetFilters() {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">动态封禁</h1>
-        <p class="page-subtitle">查看和处理规则触发的临时来源封禁。</p>
+        <h1 class="page-title">{{ t("dynamicBans.title") }}</h1>
+        <p class="page-subtitle">{{ t("dynamicBans.subtitle") }}</p>
       </div>
       <NSpace>
-        <NTag type="error">活跃 {{ bans.activeCount.value }}</NTag>
-        <NButton @click="bans.refresh">刷新</NButton>
+        <NTag type="error">{{ t("dynamicBans.active") }} {{ bans.activeCount.value }}</NTag>
+        <NButton @click="bans.refresh">{{ t("common.refresh") }}</NButton>
       </NSpace>
     </div>
 
     <section class="section section-pad">
       <div class="toolbar query-toolbar">
         <div class="query-field">
-          <span class="query-label">应用 ID</span>
-          <NInput v-model:value="bans.filters.application_id" placeholder="输入应用 ID" clearable />
+          <span class="query-label">{{ t("common.applicationId") }}</span>
+          <NInput v-model:value="bans.filters.application_id" :placeholder="t('logs.enterApplicationId')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">来源 IP</span>
-          <NInput v-model:value="bans.filters.client_ip" placeholder="输入来源 IP" clearable />
+          <span class="query-label">{{ t("logs.sourceIp") }}</span>
+          <NInput v-model:value="bans.filters.client_ip" :placeholder="t('logs.enterSourceIp')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">封禁状态</span>
+          <span class="query-label">{{ t("dynamicBans.banStatus") }}</span>
           <NSelect
             :value="statusFilterValue()"
             :options="statusOptions"
             clearable
-            placeholder="选择状态"
+            :placeholder="t('dynamicBans.selectStatus')"
             @update:value="updateStatusFilter"
           />
         </div>
-        <NButton type="primary" @click="applyFilters">查询</NButton>
-        <NButton @click="resetFilters">重置</NButton>
+        <NButton type="primary" @click="applyFilters">{{ t("common.query") }}</NButton>
+        <NButton @click="resetFilters">{{ t("common.reset") }}</NButton>
       </div>
 
       <NAlert v-if="bans.lastClear.value" type="success" class="result-alert">
@@ -169,7 +171,7 @@ async function resetFilters() {
         :bordered="false"
         :row-key="bans.rowKey"
       />
-      <NEmpty v-if="!bans.loading.value && !bans.hasRows.value" description="暂无动态封禁" />
+      <NEmpty v-if="!bans.loading.value && !bans.hasRows.value" :description="t('dynamicBans.empty')" />
     </section>
   </main>
 </template>

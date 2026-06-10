@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, h, ref } from "vue"
-import { useDialog, useMessage, NButton, NList, NListItem, NSpace, NTag } from "naive-ui"
+import { useI18n } from "vue-i18n"
+import { useDialog, useMessage, NButton, NList, NListItem, NSpace, NTag, type DataTableColumns } from "naive-ui"
 import {
   getReleases,
   previewRelease,
@@ -15,20 +16,21 @@ import { useAuthStore } from "@/stores/auth"
 
 const message = useMessage()
 const dialog = useDialog()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const releasesResource = useApiResource(getReleases)
 const releases = computed(() => [...(releasesResource.data.value ?? [])])
 const publishing = ref(false)
 
-const columns = [
-  { title: "版本", key: "version" },
-  { title: "操作人", key: "operator" },
-  { title: "状态", key: "status" },
-  { title: "时间", key: "time" },
-  { title: "配置路径", key: "config_path" },
-  { title: "说明", key: "note" },
+const columns = computed<DataTableColumns<ReleaseRecord>>(() => [
+  { title: t("releases.columns.version"), key: "version" },
+  { title: t("releases.columns.operator"), key: "operator" },
+  { title: t("releases.columns.status"), key: "status" },
+  { title: t("releases.columns.time"), key: "time" },
+  { title: t("releases.columns.configPath"), key: "config_path" },
+  { title: t("releases.columns.note"), key: "note" },
   {
-    title: "操作",
+    title: t("releases.columns.actions"),
     key: "actions",
     render(row: ReleaseRecord) {
       if (!authStore.canWrite || row.status !== "success" || !row.version) {
@@ -42,56 +44,73 @@ const columns = [
               size: "small",
               onClick: () => rollback(row.version)
             },
-            { default: () => "回滚" }
+            { default: () => t("releases.rollback") }
           )
         ]
       })
     }
   }
-]
+])
 
 async function publishNow() {
   const preview = await previewRelease()
   const moduleSummary = (preview.summary.module_matrix ?? [])
     .filter((item) => item.rules > 0 || item.enabled > 0 || item.warnings.length > 0)
   const moduleText = moduleSummary.length > 0
-    ? `模块化防护包含 ${moduleSummary.map((item) => `${item.label} ${item.enabled}/${item.rules}`).join("、")}。`
+    ? t("releases.preview.moduleSummary", {
+        items: moduleSummary
+          .map((item) => t("releases.preview.moduleItem", { label: item.label, enabled: item.enabled, rules: item.rules }))
+          .join(t("releases.preview.itemSeparator"))
+      })
     : ""
   const ipList = preview.summary.ip_access_list
   const ipListText = ipList
-    ? `IP 黑白名单启用 ${ipList.enabled}/${ipList.total}，Exact ${ipList.exact_ip} 条、CIDR ${ipList.cidr} 条。`
+    ? t("releases.preview.ipList", { enabled: ipList.enabled, total: ipList.total, exact: ipList.exact_ip, cidr: ipList.cidr })
     : ""
   const compatibilityText = preview.summary.rate_limits > 0
-    ? `兼容字段保留 ${preview.summary.rate_limits} 条旧限流配置。`
+    ? t("releases.preview.compatibility", { count: preview.summary.rate_limits })
     : ""
   const diagnostics = preview.summary.compatibility_diagnostics
   const diagnosticsText = diagnostics
-    ? `兼容诊断：protection_rules ${diagnostics.protection_rules} 条，legacy_ref 去重 ${diagnostics.deduplicated} 条。`
+    ? t("releases.preview.diagnostics", { rules: diagnostics.protection_rules, deduplicated: diagnostics.deduplicated })
     : ""
   const validation = preview.summary.application_validation
   const validationText = validation
-    ? `应用校验 ${validation.errors} 个错误、${validation.warnings} 个警告。`
+    ? t("releases.preview.validation", { errors: validation.errors, warnings: validation.warnings })
     : ""
   const deployment = preview.summary.listener_deployment_mode
   const deploymentText = deployment
-    ? `监听模式 ${deployment.mode}${deployment.bridge_range_config ? `，端口范围 ${deployment.raw_port_range || "未配置"}` : ""}。`
+    ? t("releases.preview.deployment", {
+        mode: deployment.mode,
+        range: deployment.bridge_range_config
+          ? t("releases.preview.deploymentRange", { range: deployment.raw_port_range || t("releases.portRangeUnset") })
+          : ""
+      })
     : ""
   dialog.warning({
-    title: "确认发布",
+    title: t("releases.confirmTitle"),
     content: () => renderPublishPreview(
-      `将发布 ${preview.summary.applications} 个防护应用、${preview.summary.application_listeners} 个监听、${preview.summary.certificates} 个证书、${preview.summary.rules} 条规则、${preview.summary.policies} 个策略、${preview.summary.advanced_protection ?? 0} 项高级防护配置。${deploymentText}${validationText}${moduleText}${ipListText}${compatibilityText}${diagnosticsText}`,
+      t("releases.preview.summary", {
+        applications: preview.summary.applications,
+        listeners: preview.summary.application_listeners,
+        certificates: preview.summary.certificates,
+        rules: preview.summary.rules,
+        policies: preview.summary.policies,
+        advanced: preview.summary.advanced_protection ?? 0,
+        details: [deploymentText, validationText, moduleText, ipListText, compatibilityText, diagnosticsText].join("")
+      }),
       moduleSummary,
       preview.summary.risk_warnings ?? [],
       validation?.issues ?? [],
       deployment?.warnings ?? []
     ),
-    positiveText: "发布",
-    negativeText: "取消",
+    positiveText: t("releases.publish"),
+    negativeText: t("common.cancel"),
     onPositiveClick: async () => {
       publishing.value = true
       try {
-        const record = await publishRelease({ note: "dashboard publish" })
-        message.success(`已发布 ${record.version}`)
+        const record = await publishRelease({ note: t("releases.dashboardPublishNote") })
+        message.success(t("releases.published", { version: record.version }))
         await releasesResource.refresh()
       } finally {
         publishing.value = false
@@ -127,7 +146,7 @@ function renderPublishPreview(
           { class: "publish-risk-list" },
           deploymentWarnings.map((warning) =>
             h("div", { class: "publish-risk", key: warning }, [
-              h(NTag, { size: "small", type: "warning" }, { default: () => "部署" }),
+              h(NTag, { size: "small", type: "warning" }, { default: () => t("releases.deploymentTag") }),
               h("div", { class: "publish-risk-body" }, [h("strong", warning)])
             ])
           )
@@ -143,9 +162,15 @@ function renderPublishPreview(
                 NListItem,
                 { key: module.key },
                 {
-                  default: () => `${module.label}：启用 ${module.enabled} / 总数 ${module.rules}，观察 ${module.observe}，阻断 ${module.block}`,
+                  default: () => t("releases.preview.moduleRow", {
+                    label: module.label,
+                    enabled: module.enabled,
+                    rules: module.rules,
+                    observe: module.observe,
+                    block: module.block
+                  }),
                   suffix: () => module.compatibility_source
-                    ? h(NTag, { size: "small", type: "info" }, { default: () => `兼容 ${module.compatibility_source}` })
+                    ? h(NTag, { size: "small", type: "info" }, { default: () => t("releases.preview.compatible", { source: module.compatibility_source }) })
                     : null
                 }
               )
@@ -161,11 +186,11 @@ function renderPublishPreview(
             h("div", { class: "publish-risk", key: `${risk.module}-${risk.message}` }, [
               h(NTag, { size: "small", type: "warning" }, { default: () => risk.label }),
               h("div", { class: "publish-risk-body" }, [
-                h("strong", risk.rule_name ? `${risk.rule_name}：${risk.message}` : risk.message),
-                risk.scope ? h("span", `范围：${risk.scope}`) : null,
-                risk.action ? h("span", `动作：${risk.action}`) : null,
-                risk.impact ? h("span", `影响：${risk.impact}`) : null,
-                risk.recommendation ? h("span", `建议：${risk.recommendation}`) : null
+                h("strong", risk.rule_name ? `${risk.rule_name}: ${risk.message}` : risk.message),
+                risk.scope ? h("span", t("releases.preview.scope", { value: risk.scope })) : null,
+                risk.action ? h("span", t("releases.preview.action", { value: risk.action })) : null,
+                risk.impact ? h("span", t("releases.preview.impact", { value: risk.impact })) : null,
+                risk.recommendation ? h("span", t("releases.preview.recommendation", { value: risk.recommendation })) : null
               ])
             ])
           )
@@ -176,7 +201,7 @@ function renderPublishPreview(
 
 async function rollback(version: string) {
   const record = await rollbackRelease(version)
-  message.success(`已回滚 ${record.version}`)
+  message.success(t("releases.rolledBack", { version: record.version }))
   await releasesResource.refresh()
 }
 </script>
@@ -185,11 +210,11 @@ async function rollback(version: string) {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">发布记录</h1>
-        <p class="page-subtitle">将当前防护应用、监听、证书、策略和规则发布为网关可加载配置。</p>
+        <h1 class="page-title">{{ t("releases.title") }}</h1>
+        <p class="page-subtitle">{{ t("releases.subtitle") }}</p>
       </div>
       <NButton v-if="authStore.canWrite" type="primary" :loading="publishing" @click="publishNow">
-        发布新版本
+        {{ t("releases.publishNew") }}
       </NButton>
     </div>
 
@@ -201,7 +226,7 @@ async function rollback(version: string) {
         :data="releases"
         :bordered="false"
       />
-      <NEmpty v-if="!releasesResource.loading.value && releases.length === 0" description="暂无发布记录" />
+      <NEmpty v-if="!releasesResource.loading.value && releases.length === 0" :description="t('releases.empty')" />
       <NAlert v-if="releasesResource.error.value" type="error" style="margin-top: 12px">
         {{ releasesResource.error.value }}
       </NAlert>

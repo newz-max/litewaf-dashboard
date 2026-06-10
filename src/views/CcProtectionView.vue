@@ -33,8 +33,8 @@ const saving = shallowRef(false)
 const form = reactive<ProtectionRuleInput>(emptyForm())
 const previewing = shallowRef(false)
 const previewResult = shallowRef<CCProtectionPreviewMatch[] | null>(null)
-const guidanceItems = protectionGuides["cc-protection"]
-const formRiskPrompts = computed(() => protectionRiskPrompts(form))
+const guidanceItems = computed(() => protectionGuides(t, "cc-protection"))
+const formRiskPrompts = computed(() => protectionRiskPrompts(form, t))
 const previewForm = reactive({
   application_id: 0,
   path: "/api/v1/login",
@@ -277,9 +277,9 @@ const statusItems = computed(() => [
   { label: t("modules.cc.blockingRateLimit"), value: blockingCount.value, note: t("modules.cc.blockingRateLimitNote"), tone: blockingCount.value > 0 ? "warning" as const : "neutral" as const },
   { label: t("modules.cc.highRiskHints"), value: activeRiskWarnings.value.length, note: t("modules.cc.highRiskHintsNote"), tone: activeRiskWarnings.value.length > 0 ? "danger" as const : "neutral" as const }
 ])
-const guidanceAlerts = computed(() => guidanceItems.map((item) => ({ title: item.title, message: item.description, tone: "info" as const })))
+const guidanceAlerts = computed(() => guidanceItems.value.map((item) => ({ title: item.title, message: item.description, tone: "info" as const })))
 const activeRiskAlerts = computed(() => activeRiskWarnings.value.map((warning) => ({ title: warning, tone: "warning" as const })))
-const formRiskAlerts = computed(() => formRiskPrompts.value.map((risk) => ({ title: risk.message, message: riskPromptText(risk), tone: "warning" as const })))
+const formRiskAlerts = computed(() => formRiskPrompts.value.map((risk) => ({ title: risk.message, message: riskPromptText(risk, t), tone: "warning" as const })))
 
 function emptyForm(): ProtectionRuleInput {
   return {
@@ -460,7 +460,7 @@ function confirmRiskIfNeeded() {
   return new Promise<boolean>((resolve) => {
     dialog.warning({
       title: t("common.highRiskConfirm", { name: t("modules.cc.title") }),
-      content: () => h("div", { class: "risk-confirm" }, risks.map((risk) => h("p", { key: risk.message }, riskPromptText(risk)))),
+      content: () => h("div", { class: "risk-confirm" }, risks.map((risk) => h("p", { key: risk.message }, riskPromptText(risk, t)))),
       positiveText: t("common.confirmSave"),
       negativeText: t("common.cancel"),
       onPositiveClick: () => resolve(true),

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, h } from "vue"
+import { useI18n } from "vue-i18n"
 import { NTag, type DataTableColumns } from "naive-ui"
 import {
   getProtectionMigrationHealth,
@@ -8,6 +9,7 @@ import {
 } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 
+const { t } = useI18n()
 const healthResource = useApiResource(getProtectionMigrationHealth)
 const health = computed(() => healthResource.data.value)
 const protectionRules = computed(() => health.value?.protection_rules)
@@ -35,21 +37,21 @@ const hasNoData = computed(() =>
   issues.value.length === 0
 )
 
-const storeColumns: DataTableColumns<LegacyProtectionStoreState> = [
-  { title: "旧存储", key: "store" },
-  { title: "模块", key: "module" },
-  { title: "总数", key: "total" },
-  { title: "启用", key: "enabled" },
-  { title: "已迁移", key: "migrated" },
-  { title: "缺失", key: "missing" },
-  { title: "孤儿", key: "orphaned" },
-  { title: "重复", key: "duplicates" },
-  { title: "冲突", key: "conflicts" }
-]
+const storeColumns = computed<DataTableColumns<LegacyProtectionStoreState>>(() => [
+  { title: t("migrationHealth.columns.legacyStore"), key: "store" },
+  { title: t("migrationHealth.columns.module"), key: "module" },
+  { title: t("migrationHealth.columns.total"), key: "total" },
+  { title: t("migrationHealth.columns.enabled"), key: "enabled" },
+  { title: t("migrationHealth.columns.migrated"), key: "migrated" },
+  { title: t("migrationHealth.columns.missing"), key: "missing" },
+  { title: t("migrationHealth.columns.orphaned"), key: "orphaned" },
+  { title: t("migrationHealth.columns.duplicates"), key: "duplicates" },
+  { title: t("migrationHealth.columns.conflicts"), key: "conflicts" }
+])
 
-const issueColumns: DataTableColumns<ProtectionRuleHealthIssue> = [
+const issueColumns = computed<DataTableColumns<ProtectionRuleHealthIssue>>(() => [
   {
-    title: "级别",
+    title: t("migrationHealth.columns.severity"),
     key: "severity",
     render(row) {
       return h(
@@ -59,19 +61,19 @@ const issueColumns: DataTableColumns<ProtectionRuleHealthIssue> = [
       )
     }
   },
-  { title: "类型", key: "type" },
-  { title: "旧存储", key: "store" },
-  { title: "数量", key: "count" },
-  { title: "说明", key: "message" },
-  { title: "建议", key: "recommendation" },
+  { title: t("migrationHealth.columns.type"), key: "type" },
+  { title: t("migrationHealth.columns.legacyStore"), key: "store" },
+  { title: t("migrationHealth.columns.count"), key: "count" },
+  { title: t("migrationHealth.columns.message"), key: "message" },
+  { title: t("migrationHealth.columns.recommendation"), key: "recommendation" },
   {
-    title: "样例",
+    title: t("migrationHealth.columns.samples"),
     key: "samples",
     render(row) {
       return row.samples?.join(", ") || "-"
     }
   }
-]
+])
 
 function entries(source: Record<string, number> | undefined) {
   return Object.entries(source ?? {})
@@ -94,10 +96,10 @@ function statusType(status: string) {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">迁移健康检查</h1>
-        <p class="page-subtitle">查看通用 protection_rules 与旧防护存储的迁移、差异和兼容状态。</p>
+        <h1 class="page-title">{{ t("migrationHealth.title") }}</h1>
+        <p class="page-subtitle">{{ t("migrationHealth.subtitle") }}</p>
       </div>
-      <NButton :loading="healthResource.loading.value" @click="healthResource.refresh">刷新</NButton>
+      <NButton :loading="healthResource.loading.value" @click="healthResource.refresh">{{ t("common.refresh") }}</NButton>
     </div>
 
     <NAlert v-if="healthResource.error.value" type="error" class="section-gap">
@@ -107,11 +109,11 @@ function statusType(status: string) {
     <NSpin :show="healthResource.loading.value">
       <div class="health-grid section-gap">
         <section class="section section-pad health-panel">
-          <div class="panel-title">通用规则</div>
+          <div class="panel-title">{{ t("migrationHealth.generalRules") }}</div>
           <div class="stat-grid">
-            <NStatistic label="总数" :value="protectionRules?.total ?? 0" />
-            <NStatistic label="启用" :value="protectionRules?.enabled ?? 0" />
-            <NStatistic label="停用" :value="protectionRules?.disabled ?? 0" />
+            <NStatistic :label="t('migrationHealth.total')" :value="protectionRules?.total ?? 0" />
+            <NStatistic :label="t('common.enabled')" :value="protectionRules?.enabled ?? 0" />
+            <NStatistic :label="t('migrationHealth.disabled')" :value="protectionRules?.disabled ?? 0" />
           </div>
         </section>
 
@@ -121,28 +123,28 @@ function statusType(status: string) {
             <NTag :type="statusType(health?.backfill.status ?? 'unknown')">
               {{ health?.backfill.status ?? "unknown" }}
             </NTag>
-            <div class="muted">{{ health?.backfill.recommendation || "暂无 backfill 状态" }}</div>
+            <div class="muted">{{ health?.backfill.recommendation || t("migrationHealth.noBackfillStatus") }}</div>
             <NCode v-if="health?.backfill.command" :code="health.backfill.command" />
           </NSpace>
         </section>
       </div>
 
-      <NEmpty v-if="hasNoData" description="暂无防护规则或旧存储迁移数据" class="section-gap" />
+      <NEmpty v-if="hasNoData" :description="t('migrationHealth.noMigrationData')" class="section-gap" />
 
       <section class="section section-pad section-gap">
-        <div class="panel-title">旧存储覆盖</div>
+        <div class="panel-title">{{ t("migrationHealth.legacyStoreCoverage") }}</div>
         <NDataTable :scrollbar-props="{ trigger: 'hover' }" :columns="storeColumns" :data="legacyStores" :bordered="false" />
       </section>
 
       <section class="section section-pad section-gap">
-        <div class="panel-title">迁移问题</div>
+        <div class="panel-title">{{ t("migrationHealth.migrationIssues") }}</div>
         <NDataTable :scrollbar-props="{ trigger: 'hover' }" :columns="issueColumns" :data="issues" :bordered="false" />
-        <NEmpty v-if="issues.length === 0" description="未发现迁移缺失、孤儿、重复或冲突" />
+        <NEmpty v-if="issues.length === 0" :description="t('migrationHealth.noIssues')" />
       </section>
 
       <div class="health-grid section-gap">
         <section class="section section-pad">
-          <div class="panel-title">模块分布</div>
+          <div class="panel-title">{{ t("migrationHealth.moduleDistribution") }}</div>
           <NList>
             <NListItem v-for="row in moduleRows" :key="row.key">
               <span>{{ row.key }}</span>
@@ -152,7 +154,7 @@ function statusType(status: string) {
         </section>
 
         <section class="section section-pad">
-          <div class="panel-title">迁移状态</div>
+          <div class="panel-title">{{ t("migrationHealth.migrationStatus") }}</div>
           <NList>
             <NListItem v-for="row in statusRows" :key="row.key">
               <span>{{ row.key }}</span>
@@ -162,7 +164,7 @@ function statusType(status: string) {
         </section>
 
         <section class="section section-pad">
-          <div class="panel-title">来源分布</div>
+          <div class="panel-title">{{ t("migrationHealth.sourceDistribution") }}</div>
           <NList>
             <NListItem v-for="row in sourceRows" :key="row.key">
               <span>{{ row.key }}</span>
@@ -173,7 +175,7 @@ function statusType(status: string) {
       </div>
 
       <section v-if="health?.remediation_hints.length" class="section section-pad section-gap">
-        <div class="panel-title">处理建议</div>
+        <div class="panel-title">{{ t("migrationHealth.remediationHints") }}</div>
         <NList>
           <NListItem v-for="hint in health.remediation_hints" :key="hint">
             {{ hint }}

@@ -1,4 +1,5 @@
 import axios from "axios"
+import { i18n } from "@/i18n"
 
 interface ApiErrorPayload {
   error?: {
@@ -19,7 +20,11 @@ export function isApiRequestError(error: unknown): error is ApiRequestError {
   return error instanceof ApiRequestError
 }
 
-export function extractApiErrorMessage(error: unknown, fallback = "请求失败") {
+function defaultRequestFailedMessage() {
+  return i18n.global.t("common.requestFailed")
+}
+
+export function extractApiErrorMessage(error: unknown, fallback = defaultRequestFailedMessage()) {
   if (isApiRequestError(error)) {
     return error.message || fallback
   }
@@ -38,7 +43,7 @@ export function extractApiErrorMessage(error: unknown, fallback = "请求失败"
   return error.message || fallback
 }
 
-export function toApiRequestError(error: unknown, fallback = "请求失败") {
+export function toApiRequestError(error: unknown, fallback = defaultRequestFailedMessage()) {
   if (isApiRequestError(error)) {
     return error
   }

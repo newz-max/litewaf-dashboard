@@ -50,8 +50,8 @@ export interface ThemePreset {
 export const themePresets: ThemePreset[] = [
   {
     id: "litewaf-default",
-    label: "LiteWaf 清爽",
-    description: "接近当前产品色，适合日常配置和文档截图。",
+    label: "LiteWaf Fresh",
+    description: "Close to the current product colors, suitable for daily configuration and documentation screenshots.",
     accentColor: "#0f766e",
     radius: 8,
     chartPalette: ["#0f766e", "#2563eb", "#b7791f", "#b42318", "#6d5dfc", "#0891b2"],
@@ -96,8 +96,8 @@ export const themePresets: ThemePreset[] = [
   },
   {
     id: "safeline-inspired",
-    label: "蓝盾态势",
-    description: "面向安全态势和规则运营的深蓝科技风格。",
+    label: "Blue Shield Posture",
+    description: "A deep-blue technical style for security posture and rule operations.",
     accentColor: "#2f7cff",
     radius: 8,
     chartPalette: ["#2f7cff", "#16d6c4", "#ff8a3d", "#ff4f92", "#7c5cff", "#5bc0ff"],
@@ -142,8 +142,8 @@ export const themePresets: ThemePreset[] = [
   },
   {
     id: "high-contrast",
-    label: "高对比",
-    description: "强化边框和文字对比，适合长时间日志排查。",
+    label: "High Contrast",
+    description: "Strengthens borders and text contrast for long log-investigation sessions.",
     accentColor: "#2563eb",
     radius: 6,
     chartPalette: ["#2563eb", "#059669", "#d97706", "#dc2626", "#7c3aed", "#0891b2"],
@@ -188,8 +188,8 @@ export const themePresets: ThemePreset[] = [
   },
   {
     id: "compact-ops",
-    label: "紧凑运营",
-    description: "减少留白，提高规则、日志和表单页面的信息密度。",
+    label: "Compact Operations",
+    description: "Reduces whitespace and increases information density on rules, logs, and form pages.",
     accentColor: "#0ea5e9",
     radius: 6,
     chartPalette: ["#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#14b8a6", "#8b5cf6"],

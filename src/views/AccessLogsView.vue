@@ -2,7 +2,9 @@
 import { computed, reactive } from "vue"
 import { getAccessLogs } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
+import { useI18n } from "vue-i18n"
 
+const { t } = useI18n()
 const filters = reactive({
   application_id: "",
   host: "",
@@ -18,18 +20,25 @@ type SelectFilterKey = "method" | "disposition"
 const logsResource = useApiResource(() => getAccessLogs(cleanFilters()))
 const logs = computed(() => [...(logsResource.data.value ?? [])])
 
-const columns = [
-  { title: "时间", key: "time" },
-  { title: "请求 ID", key: "request_id" },
-  { title: "站点", key: "application_id" },
+const dispositionOptions = computed(() => [
+  { label: t("logs.proxied"), value: "proxied" },
+  { label: t("logs.blocked"), value: "blocked" },
+  { label: t("logs.rateLimited"), value: "rate-limited" },
+  { label: t("logs.rejected"), value: "rejected" }
+])
+
+const columns = computed(() => [
+  { title: t("logs.time"), key: "time" },
+  { title: t("logs.requestId"), key: "request_id" },
+  { title: t("logs.site"), key: "application_id" },
   { title: "Host", key: "host" },
-  { title: "方法", key: "method" },
+  { title: t("logs.method"), key: "method" },
   { title: "URI", key: "uri" },
-  { title: "状态", key: "status" },
-  { title: "耗时 ms", key: "duration_ms" },
-  { title: "来源 IP", key: "client_ip" },
-  { title: "处置", key: "disposition" }
-]
+  { title: t("common.status"), key: "status" },
+  { title: t("logs.durationMs"), key: "duration_ms" },
+  { title: t("logs.sourceIp"), key: "client_ip" },
+  { title: t("logs.disposition"), key: "disposition" }
+])
 
 function cleanFilters() {
   return Object.fromEntries(Object.entries(filters).filter(([, value]) => value.trim() !== ""))
@@ -48,32 +57,32 @@ function updateSelectFilter(key: SelectFilterKey, value: string | number | null)
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">访问日志</h1>
-        <p class="page-subtitle">查询网关请求、响应状态、耗时和最终处置。</p>
+        <h1 class="page-title">{{ t("logs.accessTitle") }}</h1>
+        <p class="page-subtitle">{{ t("logs.accessSubtitle") }}</p>
       </div>
-      <NButton @click="logsResource.refresh">刷新</NButton>
+      <NButton @click="logsResource.refresh">{{ t("common.refresh") }}</NButton>
     </div>
 
     <section class="section section-pad">
       <div class="toolbar query-toolbar">
         <div class="query-field">
-          <span class="query-label">应用 ID</span>
-          <NInput v-model:value="filters.application_id" placeholder="输入应用 ID" clearable />
+          <span class="query-label">{{ t("common.applicationId") }}</span>
+          <NInput v-model:value="filters.application_id" :placeholder="t('logs.enterApplicationId')" clearable />
         </div>
         <div class="query-field query-field-wide">
           <span class="query-label">Host</span>
-          <NInput v-model:value="filters.host" placeholder="输入 Host" clearable />
+          <NInput v-model:value="filters.host" :placeholder="t('logs.enterHost')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">来源 IP</span>
-          <NInput v-model:value="filters.client_ip" placeholder="输入来源 IP" clearable />
+          <span class="query-label">{{ t("logs.sourceIp") }}</span>
+          <NInput v-model:value="filters.client_ip" :placeholder="t('logs.enterSourceIp')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">请求方法</span>
+          <span class="query-label">{{ t("logs.requestMethod") }}</span>
           <NSelect
             :value="selectFilterValue('method')"
             clearable
-            placeholder="选择方法"
+            :placeholder="t('logs.selectMethod')"
             @update:value="updateSelectFilter('method', $event)"
             :options="[
               { label: 'GET', value: 'GET' },
@@ -85,28 +94,23 @@ function updateSelectFilter(key: SelectFilterKey, value: string | number | null)
         </div>
         <div class="query-field query-field-wide">
           <span class="query-label">URI</span>
-          <NInput v-model:value="filters.uri" placeholder="输入 URI" clearable />
+          <NInput v-model:value="filters.uri" :placeholder="t('logs.enterRequestUri')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">状态码</span>
-          <NInput v-model:value="filters.status" placeholder="输入状态码" clearable />
+          <span class="query-label">{{ t("logs.statusCode") }}</span>
+          <NInput v-model:value="filters.status" :placeholder="t('logs.enterStatusCode')" clearable />
         </div>
         <div class="query-field">
-          <span class="query-label">处置结果</span>
+          <span class="query-label">{{ t("logs.dispositionResult") }}</span>
           <NSelect
             :value="selectFilterValue('disposition')"
             clearable
-            placeholder="选择处置"
+            :placeholder="t('logs.selectDisposition')"
             @update:value="updateSelectFilter('disposition', $event)"
-            :options="[
-              { label: '已代理', value: 'proxied' },
-              { label: '已阻断', value: 'blocked' },
-              { label: '已限流', value: 'rate-limited' },
-              { label: '已拒绝', value: 'rejected' }
-            ]"
+            :options="dispositionOptions"
           />
         </div>
-        <NButton type="primary" @click="logsResource.refresh">查询</NButton>
+        <NButton type="primary" @click="logsResource.refresh">{{ t("common.query") }}</NButton>
       </div>
 
       <NDataTable
@@ -116,7 +120,7 @@ function updateSelectFilter(key: SelectFilterKey, value: string | number | null)
         :data="logs"
         :bordered="false"
       />
-      <NEmpty v-if="!logsResource.loading.value && logs.length === 0" description="暂无访问日志" />
+      <NEmpty v-if="!logsResource.loading.value && logs.length === 0" :description="t('logs.noAccessLogs')" />
       <NAlert v-if="logsResource.error.value" type="error" style="margin-top: 12px">
         {{ logsResource.error.value }}
       </NAlert>

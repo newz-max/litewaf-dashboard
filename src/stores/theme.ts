@@ -13,6 +13,7 @@ import {
   type ThemePresetId,
   type ThemeSettings
 } from "@/theme/presets"
+import { i18n } from "@/i18n"
 
 const storageKey = "litewaf.theme.v1"
 const legacySafelineAccentColor = "#19d3b5"
@@ -132,7 +133,7 @@ export const useThemeStore = defineStore("theme", () => {
   })
 
   const isDark = computed(() => activeMode.value === "dark")
-  const activeModeLabel = computed(() => (isDark.value ? "深色" : "浅色"))
+  const activeModeLabel = computed(() => (isDark.value ? i18n.global.t("settings.darkMode") : i18n.global.t("settings.lightMode")))
   const activePreset = computed(() => getThemePreset(settings.presetId))
   const activeTokens = computed(() => (isDark.value ? activePreset.value.dark : activePreset.value.light))
   const activeNaiveTheme = computed<GlobalTheme | null>(() => (isDark.value ? darkTheme : null))

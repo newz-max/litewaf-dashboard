@@ -15,7 +15,9 @@ import {
   type Certificate
 } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
+import { useI18n } from "vue-i18n"
 
+const { t } = useI18n()
 const message = useMessage()
 const applicationsResource = useApiResource(getApplications)
 const certificatesResource = useApiResource(getCertificates)
@@ -51,11 +53,11 @@ const certificateForm = reactive({
   key_pem: ""
 })
 
-const modeOptions = [
-  { label: "防护", value: "protect" },
-  { label: "观察", value: "monitor" },
-  { label: "关闭", value: "off" }
-]
+const modeOptions = computed(() => [
+  { label: t("applications.modeProtect"), value: "protect" },
+  { label: t("applications.modeMonitor"), value: "monitor" },
+  { label: t("applications.modeOff"), value: "off" }
+])
 
 const protocolOptions = [
   { label: "HTTP", value: "http" },
@@ -63,14 +65,14 @@ const protocolOptions = [
 ]
 
 const applicationColumns = computed(() => [
-  { title: "应用", key: "name" },
+  { title: t("applications.application"), key: "name" },
   {
-    title: "域名",
+    title: t("applications.domains"),
     key: "hosts",
     render: (row: Application) => row.hosts.map((host) => host.host).join(", ")
   },
   {
-    title: "监听",
+    title: t("applications.listener"),
     key: "listeners",
     render: (row: Application) =>
       h(
@@ -91,41 +93,41 @@ const applicationColumns = computed(() => [
       )
   },
   {
-    title: "上游",
+    title: t("applications.upstream"),
     key: "upstreams",
     render: (row: Application) => row.upstreams.filter((item) => item.enabled).map((item) => item.url).join(", ")
   },
-  { title: "模式", key: "mode" },
+  { title: t("applications.mode"), key: "mode" },
   {
-    title: "状态",
+    title: t("common.status"),
     key: "enabled",
-    render: (row: Application) => (row.enabled ? "启用" : "停用")
+    render: (row: Application) => (row.enabled ? t("common.enabled") : t("common.disabled"))
   },
   {
-    title: "操作",
+    title: t("common.actions"),
     key: "actions",
     render: (row: Application) =>
       hActions([
-        { label: "编辑", onClick: () => editApplication(row) },
-        { label: row.enabled ? "停用" : "启用", onClick: () => toggleApplication(row) },
-        { label: "删除", onClick: () => removeApplication(row.id) }
+        { label: t("common.edit"), onClick: () => editApplication(row) },
+        { label: row.enabled ? t("common.disabled") : t("common.enabled"), onClick: () => toggleApplication(row) },
+        { label: t("common.delete"), onClick: () => removeApplication(row.id) }
       ])
   }
 ])
 
 const certificateColumns = computed(() => [
-  { title: "证书", key: "name" },
+  { title: t("applications.certificates"), key: "name" },
   {
-    title: "域名",
+    title: t("applications.domains"),
     key: "domains",
     render: (row: Certificate) => row.domains.join(", ")
   },
-  { title: "有效期至", key: "not_after" },
-  { title: "指纹", key: "fingerprint" },
+  { title: t("applications.validUntil"), key: "not_after" },
+  { title: t("applications.fingerprint"), key: "fingerprint" },
   {
-    title: "操作",
+    title: t("common.actions"),
     key: "actions",
-    render: (row: Certificate) => hActions([{ label: "删除", onClick: () => removeCertificate(row.id) }])
+    render: (row: Certificate) => hActions([{ label: t("common.delete"), onClick: () => removeCertificate(row.id) }])
   }
 ])
 
@@ -180,7 +182,7 @@ async function saveApplication() {
     } else {
       await createApplication(payload)
     }
-    message.success("防护应用已保存")
+    message.success(t("applications.applicationSaved"))
     showForm.value = false
     await applicationsResource.refresh()
   } finally {
@@ -208,13 +210,13 @@ async function toggleApplication(application: Application) {
       enabled: upstream.enabled
     }))
   })
-  message.success(application.enabled ? "防护应用已停用" : "防护应用已启用")
+  message.success(application.enabled ? t("applications.applicationDisabled") : t("applications.applicationEnabled"))
   await applicationsResource.refresh()
 }
 
 async function removeApplication(id: number) {
   await deleteApplication(id)
-  message.success("防护应用已删除")
+  message.success(t("applications.applicationDeleted"))
   await applicationsResource.refresh()
 }
 
@@ -309,7 +311,7 @@ async function validateCertificateInput() {
       cert_pem: certificateForm.cert_pem,
       key_pem: certificateForm.key_pem
     })
-    message.success(`证书校验通过：${result.domains.join(", ") || result.name}`)
+    message.success(t("applications.certificateValidated", { name: result.domains.join(", ") || result.name }))
   } finally {
     validatingCertificate.value = false
   }
@@ -319,7 +321,7 @@ async function saveCertificate() {
   savingCertificate.value = true
   try {
     await createCertificate(certificateForm)
-    message.success("证书已上传")
+    message.success(t("applications.certificateUploaded"))
     showCertificateForm.value = false
     await certificatesResource.refresh()
   } finally {
@@ -329,7 +331,7 @@ async function saveCertificate() {
 
 async function removeCertificate(id: number) {
   await deleteCertificate(id)
-  message.success("证书已删除")
+  message.success(t("applications.certificateDeleted"))
   await certificatesResource.refresh()
 }
 
@@ -355,12 +357,12 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
   <main class="page">
     <div class="page-header">
       <div>
-        <h1 class="page-title">防护应用</h1>
-        <p class="page-subtitle">维护域名、入口监听、HTTPS 证书、上游和防护模式。</p>
+        <h1 class="page-title">{{ t("applications.title") }}</h1>
+        <p class="page-subtitle">{{ t("applications.subtitle") }}</p>
       </div>
       <NSpace>
-        <NButton @click="openCertificateForm">上传证书</NButton>
-        <NButton type="primary" @click="openCreate">新增应用</NButton>
+        <NButton @click="openCertificateForm">{{ t("applications.uploadCertificate") }}</NButton>
+        <NButton type="primary" @click="openCreate">{{ t("applications.createApplication") }}</NButton>
       </NSpace>
     </div>
 
@@ -374,7 +376,7 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
       />
       <NEmpty
         v-if="!applicationsResource.loading.value && applications.length === 0"
-        description="暂无防护应用"
+        :description="t('applications.noApplications')"
       />
       <NAlert v-if="applicationsResource.error.value" type="error" style="margin-top: 12px">
         {{ applicationsResource.error.value }}
@@ -383,7 +385,7 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
 
     <section class="section section-pad">
       <div class="section-header">
-        <h2 class="section-title">证书</h2>
+        <h2 class="section-title">{{ t("applications.certificates") }}</h2>
       </div>
       <NDataTable
         :scrollbar-props="{ trigger: 'hover' }"
@@ -394,7 +396,7 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
       />
       <NEmpty
         v-if="!certificatesResource.loading.value && certificates.length === 0"
-        description="暂无证书"
+        :description="t('applications.noCertificates')"
       />
       <NAlert v-if="certificatesResource.error.value" type="error" style="margin-top: 12px">
         {{ certificatesResource.error.value }}
@@ -402,39 +404,39 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
     </section>
 
     <NDrawer v-model:show="showForm" :width="720">
-      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editingID ? '编辑防护应用' : '新增防护应用'">
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editingID ? t('applications.editApplication') : t('applications.newApplication')">
         <NForm label-placement="top">
-          <NFormItem label="应用名称">
+          <NFormItem :label="t('applications.applicationName')">
             <NInput v-model:value="form.name" />
           </NFormItem>
-          <NFormItem label="备注">
+          <NFormItem :label="t('applications.remark')">
             <NInput v-model:value="form.description" type="textarea" />
           </NFormItem>
           <NSpace :wrap="false" align="center">
-            <NFormItem label="防护模式">
+            <NFormItem :label="t('applications.protectionMode')">
               <NSelect v-model:value="form.mode" :options="modeOptions" />
             </NFormItem>
-            <NFormItem label="启用">
+            <NFormItem :label="t('common.enabled')">
               <NSwitch v-model:value="form.enabled" />
             </NFormItem>
           </NSpace>
 
           <div class="form-block">
             <div class="block-header">
-              <h3 class="block-title">域名</h3>
-              <NButton size="small" @click="addHost">添加域名</NButton>
+              <h3 class="block-title">{{ t("applications.domains") }}</h3>
+              <NButton size="small" @click="addHost">{{ t("applications.addDomain") }}</NButton>
             </div>
             <NSpace v-for="(host, index) in form.hosts" :key="index" align="center" class="row-line">
               <NInput v-model:value="host.host" placeholder="example.local" />
               <NSwitch v-model:value="host.is_primary" @update:value="updateHostPrimary(index, $event)" />
-              <NButton size="small" quaternary @click="removeHost(index)">删除</NButton>
+              <NButton size="small" quaternary @click="removeHost(index)">{{ t("common.delete") }}</NButton>
             </NSpace>
           </div>
 
           <div class="form-block">
             <div class="block-header">
-              <h3 class="block-title">入口监听</h3>
-              <NButton size="small" @click="addListener">添加监听</NButton>
+              <h3 class="block-title">{{ t("applications.entryListeners") }}</h3>
+              <NButton size="small" @click="addListener">{{ t("applications.addListener") }}</NButton>
             </div>
             <NSpace v-for="(listener, index) in form.listeners" :key="index" align="center" class="row-line">
               <NInputNumber v-model:value="listener.port" :min="1" :max="65535" />
@@ -443,54 +445,54 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
                 v-if="listener.protocol === 'https'"
                 v-model:value="listener.certificate_id"
                 :options="certificateOptions"
-                placeholder="选择证书"
+                :placeholder="t('applications.selectCertificate')"
               />
               <NSwitch v-model:value="listener.enabled" />
-              <NButton size="small" quaternary @click="removeListener(index)">删除</NButton>
+              <NButton size="small" quaternary @click="removeListener(index)">{{ t("common.delete") }}</NButton>
             </NSpace>
           </div>
 
           <div class="form-block">
             <div class="block-header">
-              <h3 class="block-title">上游</h3>
-              <NButton size="small" @click="addUpstream">添加上游</NButton>
+              <h3 class="block-title">{{ t("applications.upstream") }}</h3>
+              <NButton size="small" @click="addUpstream">{{ t("applications.addUpstream") }}</NButton>
             </div>
             <NSpace v-for="(upstream, index) in form.upstreams" :key="index" align="center" class="row-line">
               <NInput v-model:value="upstream.name" placeholder="primary" />
               <NInput v-model:value="upstream.url" placeholder="http://upstream:8080" />
               <NInputNumber v-model:value="upstream.weight" :min="1" />
               <NSwitch v-model:value="upstream.enabled" />
-              <NButton size="small" quaternary @click="removeUpstream(index)">删除</NButton>
+              <NButton size="small" quaternary @click="removeUpstream(index)">{{ t("common.delete") }}</NButton>
             </NSpace>
           </div>
         </NForm>
         <template #footer>
           <NSpace justify="end">
-            <NButton @click="showForm = false">取消</NButton>
-            <NButton type="primary" :loading="saving" @click="saveApplication">保存</NButton>
+            <NButton @click="showForm = false">{{ t("common.cancel") }}</NButton>
+            <NButton type="primary" :loading="saving" @click="saveApplication">{{ t("common.save") }}</NButton>
           </NSpace>
         </template>
       </NDrawerContent>
     </NDrawer>
 
     <NDrawer v-model:show="showCertificateForm" :width="640">
-      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" title="上传证书">
+      <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="t('applications.uploadCertificate')">
         <NForm label-placement="top">
-          <NFormItem label="证书名称">
+          <NFormItem :label="t('applications.certificateName')">
             <NInput v-model:value="certificateForm.name" />
           </NFormItem>
-          <NFormItem label="证书 PEM">
+          <NFormItem :label="t('applications.certPem')">
             <NInput v-model:value="certificateForm.cert_pem" type="textarea" :autosize="{ minRows: 6 }" />
           </NFormItem>
-          <NFormItem label="私钥 PEM">
+          <NFormItem :label="t('applications.keyPem')">
             <NInput v-model:value="certificateForm.key_pem" type="textarea" :autosize="{ minRows: 6 }" />
           </NFormItem>
         </NForm>
         <template #footer>
           <NSpace justify="end">
-            <NButton @click="showCertificateForm = false">取消</NButton>
-            <NButton :loading="validatingCertificate" @click="validateCertificateInput">校验证书</NButton>
-            <NButton type="primary" :loading="savingCertificate" @click="saveCertificate">上传</NButton>
+            <NButton @click="showCertificateForm = false">{{ t("common.cancel") }}</NButton>
+            <NButton :loading="validatingCertificate" @click="validateCertificateInput">{{ t("applications.validateCertificate") }}</NButton>
+            <NButton type="primary" :loading="savingCertificate" @click="saveCertificate">{{ t("applications.upload") }}</NButton>
           </NSpace>
         </template>
       </NDrawerContent>

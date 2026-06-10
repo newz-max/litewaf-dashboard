@@ -1,5 +1,6 @@
 import { computed, reactive, readonly, shallowRef } from "vue"
 import { clearDynamicBan, getDynamicBans, type DynamicBan, type DynamicBanClearResult } from "@/api/litewaf"
+import { i18n } from "@/i18n"
 
 export interface DynamicBanFilters {
   application_id: string
@@ -38,7 +39,7 @@ export function useActiveDynamicBans() {
     try {
       items.value = await getDynamicBans(params())
     } catch (err) {
-      error.value = err instanceof Error ? err.message : "请求失败"
+      error.value = err instanceof Error ? err.message : i18n.global.t("common.requestFailed")
     } finally {
       loading.value = false
     }
@@ -51,7 +52,7 @@ export function useActiveDynamicBans() {
       lastClear.value = await clearDynamicBan({ application_id: item.application_id, client_ip: item.client_ip })
       await refresh()
     } catch (err) {
-      error.value = err instanceof Error ? err.message : "解封失败"
+      error.value = err instanceof Error ? err.message : i18n.global.t("dynamicBans.clearFailed")
     } finally {
       clearingKey.value = ""
     }

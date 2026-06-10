@@ -1,4 +1,5 @@
 import { onMounted, readonly, shallowRef } from "vue"
+import { i18n } from "@/i18n"
 
 export function useApiResource<T>(loader: () => Promise<T>) {
   const data = shallowRef<T | null>(null)
@@ -12,7 +13,7 @@ export function useApiResource<T>(loader: () => Promise<T>) {
     try {
       data.value = await loader()
     } catch (err) {
-      error.value = err instanceof Error ? err.message : "请求失败"
+      error.value = err instanceof Error ? err.message : i18n.global.t("common.requestFailed")
     } finally {
       loading.value = false
     }
