@@ -62,6 +62,11 @@ interface TooltipParams {
   data?: Partial<MapDatum>
 }
 
+interface TooltipPositionSize {
+  contentSize: [number, number]
+  viewSize: [number, number]
+}
+
 const regionDisplayNames = new Intl.DisplayNames(["zh-CN"], { type: "region" })
 const normalizedWorldMap = normalizeWorldMap(worldMap)
 const normalizedChinaMap = normalizeChinaMap(chinaMap)
@@ -175,7 +180,8 @@ const chartOption = computed(() => {
       backgroundColor: panelColor,
       borderColor,
       textStyle: { color: textColor },
-      formatter: formatTooltip
+      formatter: formatTooltip,
+      position: positionTooltipAboveCursor
     },
     visualMap: {
       show: false,
@@ -190,7 +196,7 @@ const chartOption = computed(() => {
         roam: false,
         zoom: 1,
         layoutCenter: ["50%", "50%"],
-        layoutSize: props.scope === "china" ? "118%" : "112%",
+        layoutSize: props.scope === "china" ? "136%" : "128%",
         data: chartData.value,
         selectedMode: false,
         itemStyle: {
@@ -348,6 +354,27 @@ function formatTooltip(params: TooltipParams) {
   return lines.join("<br />")
 }
 
+function positionTooltipAboveCursor(
+  point: [number, number],
+  _params: unknown,
+  _dom: unknown,
+  _rect: unknown,
+  size: TooltipPositionSize
+) {
+  const gap = 16
+  const padding = 8
+  const [contentWidth, contentHeight] = size.contentSize
+  const [viewWidth] = size.viewSize
+  const maxLeft = Math.max(padding, viewWidth - contentWidth - padding)
+  const left = clamp(point[0] - contentWidth / 2, padding, maxLeft)
+  const top = Math.max(padding, point[1] - contentHeight - gap)
+  return [left, top]
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
+
 function createGlobeTexture(
   collection: GeoJsonFeatureCollection,
   colors: { landColor: string; borderColor: string; waterColor: string }
@@ -463,7 +490,7 @@ function withAlpha(color: string, alpha: number) {
 </script>
 
 <template>
-  <section class="geo-panel">
+  <section class="geo-panel" :class="{ 'geo-panel--flat': mapView === '2d' }">
     <div class="panel-heading">
       <div>
         <div class="panel-title">{{ t("statistics.geoTitle") }}</div>
@@ -571,6 +598,11 @@ function withAlpha(color: string, alpha: number) {
   min-height: 500px;
 }
 
+.geo-panel--flat .geo-content--immersive .map-wrap,
+.geo-panel--flat .geo-content--immersive .map-chart {
+  min-height: 640px;
+}
+
 .geo-ranking {
   min-height: 320px;
   background: var(--lw-panel-muted);
@@ -629,6 +661,11 @@ function withAlpha(color: string, alpha: number) {
     min-height: 460px;
   }
 
+  .geo-panel--flat .geo-content--immersive .map-wrap,
+  .geo-panel--flat .geo-content--immersive .map-chart {
+    min-height: 560px;
+  }
+
   .geo-ranking {
     min-height: auto;
   }
@@ -658,6 +695,12 @@ function withAlpha(color: string, alpha: number) {
   .map-wrap,
   .map-chart {
     min-height: 360px;
+  }
+
+  .geo-panel--flat .geo-content--immersive .map-wrap,
+  .geo-panel--flat .geo-content--immersive .map-chart {
+    min-height: 420px;
+    height: 420px;
   }
 
   .geo-content--immersive .geo-ranking {

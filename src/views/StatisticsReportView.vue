@@ -92,7 +92,7 @@ function setMetric(value: StatisticsMetric) {
 
     <StatisticsMetricGrid :cards="report?.cards" />
 
-    <section class="main-report-grid">
+    <section class="main-report-grid" :class="{ 'main-report-grid--flat-map': effectiveMapView === '2d' }">
       <StatisticsGeoPanel
         class="geo-panel-item"
         :geo="report?.geo"
@@ -162,6 +162,14 @@ function setMetric(value: StatisticsMetric) {
   gap: 16px;
 }
 
+.main-report-grid--flat-map {
+  grid-template-columns: 1fr;
+}
+
+.main-report-grid--flat-map .side-trends {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .breakdown-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -175,6 +183,12 @@ function setMetric(value: StatisticsMetric) {
 
   .side-trends {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .main-report-grid--flat-map .side-trends {
+    grid-template-columns: 1fr;
   }
 }
 
