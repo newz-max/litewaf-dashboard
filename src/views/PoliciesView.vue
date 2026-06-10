@@ -210,7 +210,7 @@ async function removePolicy(id: number) {
       </NAlert>
     </section>
 
-    <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="showForm" :width="480">
+    <NDrawer v-model:show="showForm" :width="480">
       <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editingID ? t('policies.editPolicy') : t('policies.createPolicy')">
         <NForm label-placement="top">
           <NFormItem :label="t('policies.form.name')">

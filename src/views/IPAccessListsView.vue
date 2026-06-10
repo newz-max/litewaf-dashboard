@@ -313,7 +313,7 @@ function isIPv6(value: string) {
       />
     </section>
 
-    <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="formVisible" :width="520">
+    <NDrawer v-model:show="formVisible" :width="520">
       <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? t('moduleCommon.editIpAccessList') : t('moduleCommon.createIpAccessList')" closable>
         <NForm class="rule-form" label-placement="top">
           <NFormItem :label="t('common.name')">

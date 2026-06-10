@@ -235,7 +235,7 @@ function formatTime(value?: string) {
       />
     </section>
 
-    <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="drawerVisible" :width="460">
+    <NDrawer v-model:show="drawerVisible" :width="460">
       <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? editing.name : t('moduleCommon.configTitle', { name: t('modules.attack.title') })" closable>
         <NForm class="group-form" label-placement="top">
           <NFormItem :label="t('table.attackType')">

@@ -519,7 +519,7 @@ function formatTime(value?: string) {
       />
     </section>
 
-    <NDrawer :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" v-model:show="formVisible" :width="560">
+    <NDrawer v-model:show="formVisible" :width="560">
       <NDrawerContent :native-scrollbar="false" :scrollbar-props="{ trigger: 'hover' }" :title="editing ? t('moduleCommon.editRule', { name: t('modules.dynamic.title') }) : t('moduleCommon.createRule', { name: t('modules.dynamic.title') })" closable>
         <NForm class="rule-form" label-placement="top">
           <NFormItem v-if="!editing" :label="t('common.template')">
