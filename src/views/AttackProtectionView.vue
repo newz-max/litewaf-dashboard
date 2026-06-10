@@ -13,6 +13,7 @@ import ModuleStateBlock from "@/components/operations/ModuleStateBlock.vue"
 import ModuleStatusSummary from "@/components/operations/ModuleStatusSummary.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
+import { formatDateTime } from "@/utils/dateTime"
 import { useI18n } from "vue-i18n"
 
 const { t } = useI18n()
@@ -109,7 +110,7 @@ const columns = computed<DataTableColumns<AttackProtectionGroup>>(() => [
     key: "updated_at",
     minWidth: 160,
     render(row) {
-      return formatTime(row.updated_at)
+      return formatDateTime(row.updated_at)
     }
   },
   {
@@ -183,12 +184,6 @@ function formatAction(value: string) {
   return labels[value] ?? value
 }
 
-function formatTime(value?: string) {
-  if (!value) {
-    return "-"
-  }
-  return new Date(value).toLocaleString()
-}
 </script>
 
 <template>

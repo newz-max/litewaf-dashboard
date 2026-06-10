@@ -6,6 +6,7 @@ import type { DataTableColumns } from "naive-ui"
 import { getBlockedRejectedRecordsPage, type BlockedRejectedRecord } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 import { useRemotePagination } from "@/composables/useRemotePagination"
+import { formatDateTime } from "@/utils/dateTime"
 import { useI18n } from "vue-i18n"
 
 const { t } = useI18n()
@@ -61,7 +62,7 @@ const schemeOptions = [
 ]
 
 const columns = computed<DataTableColumns<BlockedRejectedRecord>>(() => [
-  { title: t("logs.time"), key: "time", minWidth: 180 },
+  { title: t("logs.time"), key: "time", minWidth: 180, render: (row) => formatDateTime(row.time) },
   { title: t("logs.requestId"), key: "request_id", minWidth: 170 },
   { title: t("logs.application"), key: "application_id", width: 90 },
   { title: t("logs.listener"), key: "listener", width: 110, render: renderListener },

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, reactive } from "vue"
-import { getAccessLogsPage } from "@/api/litewaf"
+import { getAccessLogsPage, type AccessLog } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 import { useRemotePagination } from "@/composables/useRemotePagination"
+import { formatDateTime } from "@/utils/dateTime"
 import { useI18n } from "vue-i18n"
 
 const { t } = useI18n()
@@ -32,7 +33,7 @@ const dispositionOptions = computed(() => [
 ])
 
 const columns = computed(() => [
-  { title: t("logs.time"), key: "time" },
+  { title: t("logs.time"), key: "time", render: (row: AccessLog) => formatDateTime(row.time) },
   { title: t("logs.requestId"), key: "request_id" },
   { title: t("logs.site"), key: "application_id" },
   { title: "Host", key: "host" },

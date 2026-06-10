@@ -15,6 +15,7 @@ import {
   type Certificate
 } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
+import { formatDateTime } from "@/utils/dateTime"
 import { useI18n } from "vue-i18n"
 
 const { t } = useI18n()
@@ -122,7 +123,7 @@ const certificateColumns = computed(() => [
     key: "domains",
     render: (row: Certificate) => row.domains.join(", ")
   },
-  { title: t("applications.validUntil"), key: "not_after" },
+  { title: t("applications.validUntil"), key: "not_after", render: (row: Certificate) => formatDateTime(row.not_after) },
   { title: t("applications.fingerprint"), key: "fingerprint" },
   {
     title: t("common.actions"),

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, reactive } from "vue"
-import { getAuditLogsPage } from "@/api/litewaf"
+import { getAuditLogsPage, type AuditLog } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 import { useRemotePagination } from "@/composables/useRemotePagination"
+import { formatDateTime } from "@/utils/dateTime"
 import { useI18n } from "vue-i18n"
 
 const { t } = useI18n()
@@ -24,7 +25,7 @@ const resultOptions = computed(() => [
 ])
 
 const columns = computed(() => [
-  { title: t("logs.time"), key: "time" },
+  { title: t("logs.time"), key: "time", render: (row: AuditLog) => formatDateTime(row.time) },
   { title: t("logs.actor"), key: "actor" },
   { title: t("logs.role"), key: "role" },
   { title: t("common.action"), key: "action" },

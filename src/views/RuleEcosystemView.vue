@@ -62,6 +62,7 @@ import {
 } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
+import { formatDateTime } from "@/utils/dateTime"
 
 const message = useMessage()
 const { t } = useI18n()
@@ -419,7 +420,7 @@ const trustColumns = computed<DataTableColumns<RuleTrustKey>>(() => [
   { title: t("ruleEcosystem.columns.owner"), key: "owner" },
   { title: t("ruleEcosystem.columns.enabled"), key: "enabled", render: (row) => (row.enabled ? t("ruleEcosystem.yes") : t("ruleEcosystem.no")) },
   { title: t("ruleEcosystem.columns.revoked"), key: "revoked", render: (row) => (row.revoked ? t("ruleEcosystem.yes") : t("ruleEcosystem.no")) },
-  { title: t("ruleEcosystem.columns.expiresAt"), key: "expires_at", render: (row) => row.expires_at || "-" }
+  { title: t("ruleEcosystem.columns.expiresAt"), key: "expires_at", render: (row) => formatDateTime(row.expires_at) }
 ])
 
 const accountSourceColumns = computed<DataTableColumns<RuleCommunityAccountSource>>(() => [

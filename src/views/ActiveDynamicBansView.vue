@@ -4,6 +4,7 @@ import { NButton, NSpace, NTag, useDialog, useMessage } from "naive-ui"
 import { useAuthStore } from "@/stores/auth"
 import { type DynamicBan } from "@/api/litewaf"
 import { useActiveDynamicBans } from "@/composables/useActiveDynamicBans"
+import { formatDateTime } from "@/utils/dateTime"
 import { useI18n } from "vue-i18n"
 
 const { t } = useI18n()
@@ -27,8 +28,8 @@ const columns = computed(() => [
   { title: t("common.source"), key: "source", minWidth: 160 },
   { title: t("dynamicBans.remaining"), key: "ban_remaining_sec", width: 110, render: (row: DynamicBan) => formatDuration(row.ban_remaining_sec) },
   { title: t("dynamicBans.banDuration"), key: "ban_duration_sec", width: 110, render: (row: DynamicBan) => formatDuration(row.ban_duration_sec) },
-  { title: t("dynamicBans.createdAt"), key: "time", minWidth: 180 },
-  { title: t("dynamicBans.expiresAt"), key: "expires_at", minWidth: 180, render: (row: DynamicBan) => formatTime(row.expires_at) },
+  { title: t("dynamicBans.createdAt"), key: "time", minWidth: 180, render: (row: DynamicBan) => formatDateTime(row.time) },
+  { title: t("dynamicBans.expiresAt"), key: "expires_at", minWidth: 180, render: (row: DynamicBan) => formatDateTime(row.expires_at) },
   {
     title: t("common.actions"),
     key: "actions",
@@ -77,13 +78,6 @@ function formatDuration(value: number) {
   const hours = Math.floor(minutes / 60)
   const minuteRest = minutes % 60
   return minuteRest > 0 ? `${hours}h ${minuteRest}m` : `${hours}h`
-}
-
-function formatTime(value: string) {
-  if (!value) {
-    return ""
-  }
-  return new Date(value).toLocaleString()
 }
 
 function confirmClear(row: DynamicBan) {

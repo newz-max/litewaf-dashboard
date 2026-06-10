@@ -13,6 +13,7 @@ import {
 } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
+import { formatDateTime } from "@/utils/dateTime"
 
 const message = useMessage()
 const dialog = useDialog()
@@ -26,7 +27,7 @@ const columns = computed<DataTableColumns<ReleaseRecord>>(() => [
   { title: t("releases.columns.version"), key: "version" },
   { title: t("releases.columns.operator"), key: "operator" },
   { title: t("releases.columns.status"), key: "status" },
-  { title: t("releases.columns.time"), key: "time" },
+  { title: t("releases.columns.time"), key: "time", render: (row) => formatDateTime(row.time) },
   { title: t("releases.columns.configPath"), key: "config_path" },
   { title: t("releases.columns.note"), key: "note" },
   {
