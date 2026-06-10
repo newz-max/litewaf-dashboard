@@ -112,6 +112,7 @@ const columns = computed(() => [
   { title: t("logs.requestId"), key: "request_id" },
   { title: t("logs.site"), key: "application_id" },
   { title: t("logs.sourceIp"), key: "client_ip" },
+  { title: t("logs.requestMethod"), key: "method", render: (row: AttackLog) => row.method || "-" },
   { title: t("logs.type"), key: "event_type" },
   { title: t("logs.module"), key: "module" },
   { title: t("logs.attackType"), key: "attack_type" },
