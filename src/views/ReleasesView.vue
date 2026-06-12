@@ -88,6 +88,9 @@ async function publishNow() {
           : ""
       })
     : ""
+  const gatewayText = preview.summary.gateway
+    ? t("releases.preview.gatewayBodySize", { value: preview.summary.gateway.client_max_body_size })
+    : ""
   dialog.warning({
     title: t("releases.confirmTitle"),
     content: () => renderPublishPreview(
@@ -98,7 +101,7 @@ async function publishNow() {
         rules: preview.summary.rules,
         policies: preview.summary.policies,
         advanced: preview.summary.advanced_protection ?? 0,
-        details: [deploymentText, validationText, moduleText, ipListText, compatibilityText, diagnosticsText].join("")
+        details: [deploymentText, gatewayText, validationText, moduleText, ipListText, compatibilityText, diagnosticsText].join("")
       }),
       moduleSummary,
       preview.summary.risk_warnings ?? [],

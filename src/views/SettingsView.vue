@@ -17,7 +17,8 @@ const settings = computed(() => {
   return [
     { key: t("settings.appName"), value: version.name },
     { key: t("settings.version"), value: version.version },
-    { key: t("settings.environment"), value: version.env }
+    { key: t("settings.environment"), value: version.env },
+    { key: t("settings.gatewayClientMaxBodySize"), value: version.gateway_client_max_body_size }
   ]
 })
 </script>

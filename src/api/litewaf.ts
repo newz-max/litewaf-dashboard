@@ -543,6 +543,17 @@ export interface ReleaseRecord {
   note?: string
   checksum?: string
   config_path?: string
+  activation?: {
+    applications: number
+    listener_count: number
+    https_listener_count: number
+    client_max_body_size?: string
+    certificate_ids: number[]
+    reload_status: string
+    reload_message?: string
+    validation_errors: string[]
+    rollback_target?: string
+  }
 }
 
 export interface PublishPreview {
@@ -579,6 +590,9 @@ export interface PublishPreview {
       port_range: number[]
       raw_port_range: string
       warnings: string[]
+    }
+    gateway?: {
+      client_max_body_size: string
     }
     rules: number
     policies: number
@@ -1380,6 +1394,7 @@ export interface VersionInfo {
   name: string
   version: string
   env: string
+  gateway_client_max_body_size: string
 }
 
 export function getVersion() {
