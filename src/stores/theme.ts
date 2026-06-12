@@ -1,9 +1,9 @@
 import { defineStore } from "pinia"
 import { computed, reactive, shallowRef, watch } from "vue"
 import { darkTheme, type GlobalTheme } from "naive-ui"
+import { buildBrowserCssVars, buildNaiveThemeOverrides } from "@/theme/builders"
+import { normalizeAccentColor } from "@/theme/color"
 import {
-  buildCssVars,
-  buildThemeOverrides,
   defaultThemeSettings,
   getThemePreset,
   type ResolvedThemeMode,
@@ -21,6 +21,7 @@ const legacySafelineAccentColor = "#19d3b5"
 function cloneDefaultSettings(): ThemeSettings {
   return {
     ...defaultThemeSettings,
+    accentColor: normalizeAccentColor(defaultThemeSettings.accentColor),
     chartPalette: [...defaultThemeSettings.chartPalette]
   }
 }
@@ -67,7 +68,7 @@ function loadSettings(): ThemeSettings {
       shouldUpgradeLegacySafeline
         ? preset.accentColor
         : typeof parsed.accentColor === "string" && parsed.accentColor.trim()
-          ? parsed.accentColor
+          ? normalizeAccentColor(parsed.accentColor, preset.accentColor)
           : preset.accentColor
     const radius = typeof parsed.radius === "number" ? Math.min(Math.max(parsed.radius, 4), 12) : preset.radius
     const savedChartPalette = Array.isArray(parsed.chartPalette)
@@ -137,8 +138,8 @@ export const useThemeStore = defineStore("theme", () => {
   const activePreset = computed(() => getThemePreset(settings.presetId))
   const activeTokens = computed(() => (isDark.value ? activePreset.value.dark : activePreset.value.light))
   const activeNaiveTheme = computed<GlobalTheme | null>(() => (isDark.value ? darkTheme : null))
-  const themeOverrides = computed(() => buildThemeOverrides(activeTokens.value, settings))
-  const cssVars = computed(() => buildCssVars(activeTokens.value, settings))
+  const themeOverrides = computed(() => buildNaiveThemeOverrides(activeTokens.value, settings))
+  const cssVars = computed(() => buildBrowserCssVars(activeTokens.value, settings))
   const chartPalette = computed(() => settings.chartPalette)
   const chartTextColor = computed(() => cssVars.value["--lw-chart-text"])
   const chartGridColor = computed(() => cssVars.value["--lw-chart-grid"])
@@ -158,7 +159,7 @@ export const useThemeStore = defineStore("theme", () => {
   function setPreset(presetId: ThemePresetId) {
     const preset = getThemePreset(presetId)
     settings.presetId = preset.id
-    settings.accentColor = preset.accentColor
+    settings.accentColor = normalizeAccentColor(preset.accentColor)
     settings.radius = preset.radius
     settings.chartPalette = [...preset.chartPalette]
   }
@@ -172,7 +173,7 @@ export const useThemeStore = defineStore("theme", () => {
   }
 
   function setAccentColor(color: string) {
-    settings.accentColor = color
+    settings.accentColor = normalizeAccentColor(color, activePreset.value.accentColor)
   }
 
   function setRadius(radius: number) {
