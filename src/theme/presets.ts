@@ -248,18 +248,104 @@ export function getThemePreset(id: ThemePresetId) {
   return themePresets.find((preset) => preset.id === id) ?? themePresets[0]
 }
 
+interface ParsedColor {
+  red: number
+  green: number
+  blue: number
+  alpha: number
+}
+
+const fallbackAccentColor = "#2f7cff"
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
+
+function normalizeChannel(value: number) {
+  return Math.round(clampNumber(value, 0, 255))
+}
+
+function normalizeAlpha(value: number) {
+  return Number(clampNumber(value, 0, 1).toFixed(3))
+}
+
+function parseColor(color: string): ParsedColor | null {
+  const value = color.trim()
+  const hex = value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i)
+
+  if (hex) {
+    const raw = hex[1]
+    const normalized = raw.length === 3
+      ? raw.split("").map((part) => part + part).join("")
+      : raw
+
+    return {
+      red: parseInt(normalized.slice(0, 2), 16),
+      green: parseInt(normalized.slice(2, 4), 16),
+      blue: parseInt(normalized.slice(4, 6), 16),
+      alpha: 1
+    }
+  }
+
+  const rgb = value.match(/^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*([0-9.]+))?\s*\)$/i)
+
+  if (!rgb) {
+    return null
+  }
+
+  return {
+    red: normalizeChannel(Number(rgb[1])),
+    green: normalizeChannel(Number(rgb[2])),
+    blue: normalizeChannel(Number(rgb[3])),
+    alpha: rgb[4] === undefined ? 1 : normalizeAlpha(Number(rgb[4]))
+  }
+}
+
+function safeColor(color: string, fallback = fallbackAccentColor): ParsedColor {
+  return parseColor(color) ?? parseColor(fallback) ?? {
+    red: 47,
+    green: 124,
+    blue: 255,
+    alpha: 1
+  }
+}
+
+function toRgba(color: ParsedColor, alpha = color.alpha) {
+  return `rgba(${color.red}, ${color.green}, ${color.blue}, ${normalizeAlpha(alpha)})`
+}
+
+function transparentMix(color: string, percent: number) {
+  return toRgba(safeColor(color), percent / 100)
+}
+
+function mixColor(foreground: string, percent: number, background: string) {
+  const foregroundColor = safeColor(foreground)
+  const backgroundColor = safeColor(background)
+  const ratio = clampNumber(percent / 100, 0, 1)
+  const inverseRatio = 1 - ratio
+
+  return toRgba({
+    red: normalizeChannel(foregroundColor.red * ratio + backgroundColor.red * inverseRatio),
+    green: normalizeChannel(foregroundColor.green * ratio + backgroundColor.green * inverseRatio),
+    blue: normalizeChannel(foregroundColor.blue * ratio + backgroundColor.blue * inverseRatio),
+    alpha: normalizeAlpha(foregroundColor.alpha * ratio + backgroundColor.alpha * inverseRatio)
+  })
+}
+
 export function buildThemeOverrides(
   tokens: ThemeSurfaceTokens,
   settings: ThemeSettings
 ): GlobalThemeOverrides {
+  const accentColor = parseColor(settings.accentColor) ? settings.accentColor : fallbackAccentColor
+
   return {
     common: {
-      primaryColor: settings.accentColor,
+      primaryColor: accentColor,
       primaryColorHover: tokens.accentStrong,
       primaryColorPressed: tokens.accentStrong,
-      primaryColorSuppl: settings.accentColor,
-      hoverColor: `color-mix(in srgb, ${settings.accentColor} 12%, transparent)`,
-      pressedColor: `color-mix(in srgb, ${settings.accentColor} 16%, transparent)`,
+      primaryColorSuppl: accentColor,
+      hoverColor: transparentMix(accentColor, 12),
+      pressedColor: transparentMix(accentColor, 16),
       infoColor: tokens.info,
       successColor: tokens.success,
       warningColor: tokens.warning,
@@ -295,10 +381,10 @@ export function buildThemeOverrides(
       siderToggleBarColorHover: tokens.text
     },
     Button: {
-      color: `color-mix(in srgb, ${tokens.panelMuted} 86%, transparent)`,
-      colorHover: `color-mix(in srgb, ${settings.accentColor} 16%, ${tokens.panelMuted})`,
-      colorPressed: `color-mix(in srgb, ${settings.accentColor} 22%, ${tokens.panelMuted})`,
-      colorFocus: `color-mix(in srgb, ${settings.accentColor} 16%, ${tokens.panelMuted})`,
+      color: transparentMix(tokens.panelMuted, 86),
+      colorHover: mixColor(accentColor, 16, tokens.panelMuted),
+      colorPressed: mixColor(accentColor, 22, tokens.panelMuted),
+      colorFocus: mixColor(accentColor, 16, tokens.panelMuted),
       textColor: tokens.text,
       textColorHover: tokens.text,
       textColorPressed: tokens.text,
@@ -339,14 +425,14 @@ export function buildThemeOverrides(
       closeIconColor: tokens.textMuted,
       closeIconColorHover: tokens.text,
       closeIconColorPressed: tokens.text,
-      closeColorHover: `color-mix(in srgb, ${settings.accentColor} 12%, transparent)`,
-      closeColorPressed: `color-mix(in srgb, ${settings.accentColor} 18%, transparent)`
+      closeColorHover: transparentMix(accentColor, 12),
+      closeColorPressed: transparentMix(accentColor, 18)
     },
     DataTable: {
       borderRadius: "6px",
       thColor: tokens.panelMuted,
       tdColor: tokens.panel,
-      tdColorHover: `color-mix(in srgb, ${settings.accentColor} 8%, ${tokens.panel})`,
+      tdColorHover: mixColor(accentColor, 8, tokens.panel),
       borderColor: tokens.border,
       thTextColor: tokens.textMuted,
       tdTextColor: tokens.text
@@ -355,9 +441,9 @@ export function buildThemeOverrides(
       width: "8px",
       height: "8px",
       borderRadius: "999px",
-      color: `color-mix(in srgb, ${settings.accentColor} 38%, transparent)`,
-      colorHover: `color-mix(in srgb, ${settings.accentColor} 62%, transparent)`,
-      railColor: `color-mix(in srgb, ${tokens.panelMuted} 42%, transparent)`,
+      color: transparentMix(accentColor, 38),
+      colorHover: transparentMix(accentColor, 62),
+      railColor: transparentMix(tokens.panelMuted, 42),
       railInsetHorizontalBottom: "2px 4px",
       railInsetHorizontalTop: "2px 4px",
       railInsetVerticalRight: "4px 2px",
@@ -365,16 +451,16 @@ export function buildThemeOverrides(
     },
     Alert: {
       borderRadius: "6px",
-      color: `color-mix(in srgb, ${tokens.panelMuted} 94%, ${tokens.panel})`,
-      colorInfo: `color-mix(in srgb, ${tokens.info} 10%, ${tokens.panel})`,
-      colorSuccess: `color-mix(in srgb, ${tokens.success} 10%, ${tokens.panel})`,
-      colorWarning: `color-mix(in srgb, ${tokens.warning} 12%, ${tokens.panel})`,
-      colorError: `color-mix(in srgb, ${tokens.danger} 12%, ${tokens.panel})`,
+      color: mixColor(tokens.panelMuted, 94, tokens.panel),
+      colorInfo: mixColor(tokens.info, 10, tokens.panel),
+      colorSuccess: mixColor(tokens.success, 10, tokens.panel),
+      colorWarning: mixColor(tokens.warning, 12, tokens.panel),
+      colorError: mixColor(tokens.danger, 12, tokens.panel),
       borderColor: tokens.border,
-      borderInfo: `1px solid color-mix(in srgb, ${tokens.info} 42%, ${tokens.border})`,
-      borderSuccess: `1px solid color-mix(in srgb, ${tokens.success} 42%, ${tokens.border})`,
-      borderWarning: `1px solid color-mix(in srgb, ${tokens.warning} 42%, ${tokens.border})`,
-      borderError: `1px solid color-mix(in srgb, ${tokens.danger} 42%, ${tokens.border})`,
+      borderInfo: `1px solid ${mixColor(tokens.info, 42, tokens.border)}`,
+      borderSuccess: `1px solid ${mixColor(tokens.success, 42, tokens.border)}`,
+      borderWarning: `1px solid ${mixColor(tokens.warning, 42, tokens.border)}`,
+      borderError: `1px solid ${mixColor(tokens.danger, 42, tokens.border)}`,
       titleTextColor: tokens.text,
       contentTextColor: tokens.textMuted
     },
@@ -393,7 +479,7 @@ export function buildThemeOverrides(
       placeholderColorDisabled: tokens.textSubtle,
       border: `1px solid ${tokens.border}`,
       borderHover: `1px solid ${tokens.borderStrong}`,
-      borderFocus: `1px solid ${settings.accentColor}`
+      borderFocus: `1px solid ${accentColor}`
     },
     InputNumber: {
       peers: {
@@ -407,7 +493,7 @@ export function buildThemeOverrides(
           placeholderColorDisabled: tokens.textSubtle,
           border: `1px solid ${tokens.border}`,
           borderHover: `1px solid ${tokens.borderStrong}`,
-          borderFocus: `1px solid ${settings.accentColor}`
+          borderFocus: `1px solid ${accentColor}`
         }
       }
     },
@@ -423,7 +509,7 @@ export function buildThemeOverrides(
           placeholderColorDisabled: tokens.textSubtle,
           border: `1px solid ${tokens.border}`,
           borderHover: `1px solid ${tokens.borderStrong}`,
-          borderFocus: `1px solid ${settings.accentColor}`
+          borderFocus: `1px solid ${accentColor}`
         }
       }
     },
@@ -441,14 +527,14 @@ export function buildThemeOverrides(
       buttonTextColorActive: tokens.text,
       buttonTextColorDisabled: tokens.textSubtle,
       buttonColor: tokens.panel,
-      buttonColorActive: `color-mix(in srgb, ${settings.accentColor} 20%, ${tokens.panel})`,
+      buttonColorActive: mixColor(accentColor, 20, tokens.panel),
       buttonBorderColor: tokens.border,
-      buttonBorderColorActive: settings.accentColor
+      buttonBorderColorActive: accentColor
     },
     Switch: {
       textColor: tokens.text,
       railColor: tokens.panelMuted,
-      railColorActive: settings.accentColor,
+      railColorActive: accentColor,
       buttonColor: tokens.text
     },
     Select: {
@@ -463,19 +549,19 @@ export function buildThemeOverrides(
           colorDisabled: tokens.panelMuted,
           border: `1px solid ${tokens.border}`,
           borderHover: `1px solid ${tokens.borderStrong}`,
-          borderActive: `1px solid ${settings.accentColor}`,
-          borderFocus: `1px solid ${settings.accentColor}`,
+          borderActive: `1px solid ${accentColor}`,
+          borderFocus: `1px solid ${accentColor}`,
           arrowColor: tokens.textMuted
         },
         InternalSelectMenu: {
           color: tokens.panel,
           optionTextColor: tokens.text,
           optionTextColorPressed: tokens.accentStrong,
-          optionTextColorActive: settings.accentColor,
+          optionTextColorActive: accentColor,
           optionTextColorDisabled: tokens.textSubtle,
-          optionColorPending: `color-mix(in srgb, ${settings.accentColor} 10%, transparent)`,
-          optionColorActive: `color-mix(in srgb, ${settings.accentColor} 14%, transparent)`,
-          optionColorActivePending: `color-mix(in srgb, ${settings.accentColor} 18%, transparent)`,
+          optionColorPending: transparentMix(accentColor, 10),
+          optionColorActive: transparentMix(accentColor, 14),
+          optionColorActivePending: transparentMix(accentColor, 18),
           groupHeaderTextColor: tokens.textMuted,
           actionTextColor: tokens.text
         }
@@ -492,7 +578,7 @@ export function buildThemeOverrides(
           placeholderColor: tokens.textSubtle,
           border: `1px solid ${tokens.border}`,
           borderHover: `1px solid ${tokens.borderStrong}`,
-          borderFocus: `1px solid ${settings.accentColor}`
+          borderFocus: `1px solid ${accentColor}`
         },
         Button: {
           textColor: tokens.text,
@@ -510,16 +596,16 @@ export function buildThemeOverrides(
       itemTextColorActiveHover: tokens.text,
       itemIconColor: tokens.textMuted,
       itemIconColorHover: tokens.text,
-      itemIconColorActive: settings.accentColor,
-      itemColorHover: `color-mix(in srgb, ${settings.accentColor} 11%, transparent)`,
-      itemColorActive: `color-mix(in srgb, ${settings.accentColor} 18%, transparent)`,
-      itemColorActiveHover: `color-mix(in srgb, ${settings.accentColor} 22%, transparent)`,
+      itemIconColorActive: accentColor,
+      itemColorHover: transparentMix(accentColor, 11),
+      itemColorActive: transparentMix(accentColor, 18),
+      itemColorActiveHover: transparentMix(accentColor, 22),
       itemBorderRadius: "6px"
     },
     Tabs: {
       colorSegment: tokens.panelMuted,
       tabColor: tokens.panel,
-      tabColorSegment: `color-mix(in srgb, ${settings.accentColor} 16%, ${tokens.panel})`,
+      tabColorSegment: mixColor(accentColor, 16, tokens.panel),
       tabBorderColor: tokens.border,
       tabTextColorLine: tokens.textMuted,
       tabTextColorActiveLine: tokens.text,
@@ -534,7 +620,7 @@ export function buildThemeOverrides(
       tabTextColorActiveSegment: tokens.text,
       tabTextColorHoverSegment: tokens.text,
       paneTextColor: tokens.text,
-      barColor: settings.accentColor,
+      barColor: accentColor,
       closeIconColor: tokens.textMuted,
       closeIconColorHover: tokens.text
     },
@@ -565,11 +651,11 @@ export function buildThemeOverrides(
     },
     Tag: {
       borderRadius: "5px",
-      color: `color-mix(in srgb, ${tokens.panelMuted} 88%, transparent)`,
+      color: transparentMix(tokens.panelMuted, 88),
       textColor: tokens.text,
       border: `1px solid ${tokens.border}`,
       colorCheckable: "transparent",
-      colorChecked: `color-mix(in srgb, ${settings.accentColor} 18%, transparent)`,
+      colorChecked: transparentMix(accentColor, 18),
       textColorCheckable: tokens.textMuted,
       textColorHoverCheckable: tokens.text,
       textColorPressedCheckable: tokens.text,
