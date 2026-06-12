@@ -219,6 +219,32 @@ const zhCN = {
     version: "版本",
     environment: "环境",
     gatewayClientMaxBodySize: "网关请求体上限",
+    uploadLimits: {
+      title: "上传限制",
+      empty: "暂无上传限制运行时数据",
+      gateway: "网关请求体硬上限",
+      bodyInspection: "请求体检测读取上限",
+      uploadProtection: "上传防护大小规则",
+      policyDerived: "启用策略 {enabled} 个，范围 {min} - {max}",
+      ruleSummary: "启用规则 {enabled} 条，大小规则 {size} 条，最大 {max}",
+      source: "来源：{value}",
+      stage: "阶段：{value}",
+      eventVisible: "WAF 事件：{value}",
+      eventVisibleYes: "会产生",
+      eventVisibleNo: "不会产生",
+      guidance: "关闭上传防护不等于放开网关请求体硬上限；网关原生 413 发生在 WAF 规则前，通常不会产生上传防护事件。最终可上传大小还会受到前置代理和业务服务限制。",
+      stages: {
+        before_waf: "WAF 前",
+        waf_body_inspection: "WAF 请求体检测",
+        upload_protection: "上传防护规则"
+      },
+      sources: {
+        env: "环境变量",
+        default: "默认值",
+        policy: "策略配置",
+        upload_protection_rules: "上传防护规则"
+      }
+    },
     appearanceTitle: "外观与主题",
     appearanceSubtitle: "主题配置仅保存在当前浏览器，适合先验证后台视觉和操作密度。",
     resetDefault: "恢复默认",
@@ -917,6 +943,7 @@ const zhCN = {
     rolledBack: "已回滚 {version}",
     dashboardPublishNote: "dashboard publish",
     deploymentTag: "部署",
+    uploadLimitTag: "上传限制",
     portRangeUnset: "未配置",
     columns: {
       version: "版本",

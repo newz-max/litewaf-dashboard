@@ -9,7 +9,8 @@ import {
   rollbackRelease,
   type ProtectionModuleOverview,
   type ProtectionModuleRisk,
-  type ReleaseRecord
+  type ReleaseRecord,
+  type UploadLimitWarning
 } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
@@ -105,6 +106,7 @@ async function publishNow() {
       }),
       moduleSummary,
       preview.summary.risk_warnings ?? [],
+      preview.summary.upload_limits?.warnings ?? [],
       validation?.issues ?? [],
       deployment?.warnings ?? []
     ),
@@ -127,6 +129,7 @@ function renderPublishPreview(
   summary: string,
   modules: ProtectionModuleOverview[],
   risks: ProtectionModuleRisk[],
+  uploadLimitWarnings: readonly UploadLimitWarning[],
   applicationIssues: Array<{ severity: string; category: string; message: string }>,
   deploymentWarnings: string[]
 ) {
@@ -152,6 +155,22 @@ function renderPublishPreview(
             h("div", { class: "publish-risk", key: warning }, [
               h(NTag, { size: "small", type: "warning" }, { default: () => t("releases.deploymentTag") }),
               h("div", { class: "publish-risk-body" }, [h("strong", warning)])
+            ])
+          )
+        )
+      : null,
+    uploadLimitWarnings.length > 0
+      ? h(
+          "div",
+          { class: "publish-risk-list" },
+          uploadLimitWarnings.map((warning) =>
+            h("div", { class: "publish-risk", key: warning.code }, [
+              h(NTag, { size: "small", type: "warning" }, { default: () => t("releases.uploadLimitTag") }),
+              h("div", { class: "publish-risk-body" }, [
+                h("strong", warning.message),
+                warning.impact ? h("span", t("releases.preview.impact", { value: warning.impact })) : null,
+                warning.recommendation ? h("span", t("releases.preview.recommendation", { value: warning.recommendation })) : null
+              ])
             ])
           )
         )

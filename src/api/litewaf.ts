@@ -556,6 +556,47 @@ export interface ReleaseRecord {
   }
 }
 
+export interface UploadLimitLayer {
+  layer: string
+  name: string
+  value: string
+  source: string
+  stage: string
+  event_visible: boolean
+  value_bytes?: number
+  total_policies?: number
+  enabled_policies?: number
+  min_bytes?: number
+  max_bytes?: number
+}
+
+export interface UploadProtectionLimitSummary {
+  layer: string
+  name: string
+  source: string
+  stage: string
+  event_visible: boolean
+  enabled_rules: number
+  size_rules: number
+  max_bytes?: number
+}
+
+export interface UploadLimitWarning {
+  code: string
+  layer: string
+  severity: string
+  message: string
+  impact?: string
+  recommendation?: string
+}
+
+export interface UploadLimitSummary {
+  gateway_client_max_body_size: UploadLimitLayer
+  body_inspection_limit: UploadLimitLayer
+  upload_protection: UploadProtectionLimitSummary
+  warnings: readonly UploadLimitWarning[]
+}
+
 export interface PublishPreview {
   summary: {
     applications: number
@@ -594,6 +635,7 @@ export interface PublishPreview {
     gateway?: {
       client_max_body_size: string
     }
+    upload_limits?: UploadLimitSummary
     rules: number
     policies: number
     ip_access_list?: IPAccessListSummary
@@ -1395,6 +1437,7 @@ export interface VersionInfo {
   version: string
   env: string
   gateway_client_max_body_size: string
+  upload_limits?: UploadLimitSummary
 }
 
 export function getVersion() {

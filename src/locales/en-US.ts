@@ -221,6 +221,32 @@ const enUS: typeof zhCN = {
     version: "Version",
     environment: "Environment",
     gatewayClientMaxBodySize: "Gateway request body limit",
+    uploadLimits: {
+      title: "Upload Limits",
+      empty: "No upload limit runtime data",
+      gateway: "Gateway request body hard limit",
+      bodyInspection: "Request body inspection read limit",
+      uploadProtection: "Upload protection size rules",
+      policyDerived: "{enabled} enabled policies, range {min} - {max}",
+      ruleSummary: "{enabled} enabled rules, {size} size rules, max {max}",
+      source: "Source: {value}",
+      stage: "Stage: {value}",
+      eventVisible: "WAF event: {value}",
+      eventVisibleYes: "Visible",
+      eventVisibleNo: "Not visible",
+      guidance: "Disabling upload protection does not disable the gateway request body hard limit. Gateway-native 413 responses happen before WAF rules and normally do not create upload protection events. The effective upload size is also constrained by upstream proxies and the origin service.",
+      stages: {
+        before_waf: "Before WAF",
+        waf_body_inspection: "WAF body inspection",
+        upload_protection: "Upload protection rules"
+      },
+      sources: {
+        env: "Environment variable",
+        default: "Default",
+        policy: "Policy configuration",
+        upload_protection_rules: "Upload protection rules"
+      }
+    },
     appearanceTitle: "Appearance and Theme",
     appearanceSubtitle: "Theme settings are stored in this browser for validating dashboard visuals and density.",
     resetDefault: "Reset defaults",
@@ -919,6 +945,7 @@ const enUS: typeof zhCN = {
     rolledBack: "Rolled back {version}",
     dashboardPublishNote: "dashboard publish",
     deploymentTag: "Deployment",
+    uploadLimitTag: "Upload limit",
     portRangeUnset: "Not configured",
     columns: {
       version: "Version",
