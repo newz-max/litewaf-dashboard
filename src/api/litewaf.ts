@@ -568,6 +568,16 @@ export interface UploadLimitLayer {
   enabled_policies?: number
   min_bytes?: number
   max_bytes?: number
+  policy_limits?: readonly BodyInspectionPolicyLimitSummary[]
+}
+
+export interface BodyInspectionPolicyLimitSummary {
+  policy_id: number
+  policy_name: string
+  enabled: boolean
+  max_bytes: number
+  applications: number
+  rules: number
 }
 
 export interface UploadProtectionLimitSummary {
