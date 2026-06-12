@@ -17,6 +17,7 @@ import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
 import { useI18n } from "vue-i18n"
 import { formatDateTime } from "@/utils/dateTime"
+import { formatPathMatch, pathMatchOptions as createPathMatchOptions, validateGlobPath } from "@/utils/pathMatch"
 import { protectionGuides, protectionRiskPrompts, riskPromptText } from "@/utils/protectionGuidance"
 
 const { t } = useI18n()
@@ -60,10 +61,7 @@ const targetOptions = computed(() => [
   { label: t("common.host"), value: "host" }
 ])
 
-const pathMatchOptions = computed(() => [
-  { label: t("common.exact"), value: "exact" },
-  { label: t("common.prefix"), value: "prefix" }
-])
+const pathMatchOptions = computed(() => createPathMatchOptions(t))
 
 const operatorOptions = computed(() => {
   switch (form.match.target) {
@@ -308,6 +306,12 @@ function validateForm() {
   if (target === "path" && !String(form.match.path || "").startsWith("/")) {
     return t("common.pathMustStartSlash")
   }
+  if (target === "path") {
+    const globError = validateGlobPath(String(form.match.path || ""), form.match.path_match, t)
+    if (globError) {
+      return globError
+    }
+  }
   if (target === "ip" || target === "cidr") {
     return t("modules.access.ipCidrIndependent")
   }
@@ -380,7 +384,7 @@ function hStatus(enabled: boolean) {
 function formatMatch(row: ProtectionRule) {
   const target = row.match.target
   if (target === "path") {
-    return t("modules.access.pathSummary", { mode: row.match.path_match === "prefix" ? t("common.prefix") : t("common.exact"), path: row.match.path })
+    return t("modules.access.pathSummary", { mode: formatPathMatch(row.match.path_match ?? "prefix", t), path: row.match.path })
   }
   if (target === "header") {
     return t("modules.access.headerSummary", { name: row.match.header_name, operator: row.match.operator === "contains" ? t("common.contains") : t("common.equals"), value: row.match.value })

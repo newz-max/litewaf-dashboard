@@ -17,6 +17,7 @@ import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
 import { useI18n } from "vue-i18n"
 import { formatDateTime } from "@/utils/dateTime"
+import { formatPathMatch, pathMatchOptions as createPathMatchOptions, validateGlobPath } from "@/utils/pathMatch"
 import { protectionGuides, protectionRiskPrompts, riskPromptText } from "@/utils/protectionGuidance"
 
 const { t } = useI18n()
@@ -55,10 +56,7 @@ const templateOptions = computed(() => [
   { label: t("modules.upload.observeUploads"), value: "observe" }
 ])
 
-const pathMatchOptions = computed(() => [
-  { label: t("common.exact"), value: "exact" },
-  { label: t("common.prefix"), value: "prefix" }
-])
+const pathMatchOptions = computed(() => createPathMatchOptions(t))
 
 const methodOptions = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].map((method) => ({
   label: method,
@@ -93,7 +91,7 @@ const columns = computed<DataTableColumns<ProtectionRule>>(() => [
     key: "match.path_match",
     width: 96,
     render(row) {
-      return row.match.path_match === "exact" ? t("common.exact") : t("common.prefix")
+      return formatPathMatch(row.match.path_match ?? "prefix", t)
     }
   },
   {
@@ -290,6 +288,10 @@ function validateForm() {
   }
   if (!String(form.match.path || "").startsWith("/")) {
     return t("modules.upload.uploadPathMustStartSlash")
+  }
+  const globError = validateGlobPath(String(form.match.path || ""), form.match.path_match, t)
+  if (globError) {
+    return globError
   }
   if (Number(form.priority ?? 0) < 0) {
     return t("common.invalidPriorityZero")

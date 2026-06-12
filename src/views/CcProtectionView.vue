@@ -19,6 +19,7 @@ import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
 import { useI18n } from "vue-i18n"
 import { formatDateTime } from "@/utils/dateTime"
+import { formatPathMatch, pathMatchOptions as createPathMatchOptions, validateGlobPath } from "@/utils/pathMatch"
 import { protectionGuides, protectionRiskPrompts, riskPromptText } from "@/utils/protectionGuidance"
 
 const { t } = useI18n()
@@ -56,11 +57,7 @@ const templateOptions = computed(() => [
   { label: t("modules.cc.sessionLimit"), value: "session" }
 ])
 
-const pathMatchOptions = computed(() => [
-  { label: t("common.exact"), value: "exact" },
-  { label: t("common.prefix"), value: "prefix" },
-  { label: "Glob", value: "glob" }
-])
+const pathMatchOptions = computed(() => createPathMatchOptions(t))
 
 const methodOptions = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].map((method) => ({
   label: method,
@@ -124,7 +121,7 @@ const columns = computed<DataTableColumns<ProtectionRule>>(() => [
     key: "match.path_match",
     width: 96,
     render(row) {
-      return formatPathMatch(row.match.path_match ?? "exact")
+      return formatPathMatch(row.match.path_match ?? "exact", t)
     }
   },
   {
@@ -389,8 +386,9 @@ function validateForm() {
   if (!String(form.match.path || "").startsWith("/")) {
     return t("common.pathMustStartSlash")
   }
-  if (form.match.path_match === "glob" && String(form.match.path || "").includes("**")) {
-    return t("modules.cc.globPathInvalid")
+  const globError = validateGlobPath(String(form.match.path || ""), form.match.path_match, t)
+  if (globError) {
+    return globError
   }
   if (form.limit.counter === "session" && !form.limit.session_name?.trim()) {
     return t("modules.cc.sessionNameRequired")
@@ -490,15 +488,6 @@ function hSource(row: ProtectionRule) {
   const label = status === "legacy-only" ? t("common.legacy") : status === "migrated" ? t("common.migrated") : t("common.native")
   const type = status === "legacy-only" ? "warning" : status === "migrated" ? "info" : "success"
   return h(NTag, { type, size: "small" }, { default: () => label })
-}
-
-function formatPathMatch(value: string) {
-  const labels: Record<string, string> = {
-    exact: t("common.exact"),
-    prefix: t("common.prefix"),
-    glob: "Glob"
-  }
-  return labels[value] ?? value
 }
 
 function formatCounter(value: string) {
