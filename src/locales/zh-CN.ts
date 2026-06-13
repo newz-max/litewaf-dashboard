@@ -323,8 +323,18 @@ const zhCN = {
       subtitle: "配置常用 proxy header、超时、WebSocket、Host 和 buffering 行为。",
       empty: "暂无防护应用",
       selectApplication: "选择应用",
+      configure: "配置反代",
+      modalTitle: "配置反代：{name}",
+      modalTitleEmpty: "配置应用反代",
       saved: "应用反代配置已保存",
+      saveFailed: "应用反代配置保存失败",
+      statusConfigured: "已配置",
+      statusDefault: "默认配置",
       proxyDefault: "默认",
+      columns: {
+        application: "应用",
+        proxyStatus: "反代状态"
+      },
       connectTimeout: "连接超时",
       readTimeout: "读取超时",
       sendTimeout: "发送超时",

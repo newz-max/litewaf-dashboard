@@ -16,6 +16,10 @@ import {
 } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 import { formatDateTime } from "@/utils/dateTime"
+import {
+  normalizeApplicationProxyConfigForForm,
+  normalizeApplicationProxyConfigInput
+} from "@/utils/applicationProxyConfig"
 import { useI18n } from "vue-i18n"
 
 const { t } = useI18n()
@@ -200,7 +204,7 @@ function editApplication(application: Application) {
       weight: upstream.weight,
       enabled: upstream.enabled
     })),
-    proxy_config: normalizeProxyConfigForForm(application.proxy_config)
+    proxy_config: normalizeApplicationProxyConfigForForm(application.proxy_config)
   })
   showForm.value = true
 }
@@ -280,47 +284,8 @@ function normalizedApplicationInput(): ApplicationInput {
         weight: Number(upstream.weight || 1),
         enabled: upstream.enabled
       })),
-    proxy_config: normalizedProxyConfigInput()
+    proxy_config: normalizeApplicationProxyConfigInput(form.proxy_config)
   }
-}
-
-function normalizeProxyConfigForForm(config: Application["proxy_config"]): ApplicationFormInput["proxy_config"] {
-  return {
-    headers: (config?.headers ?? []).map((header) => ({ name: header.name, value: header.value })),
-    connect_timeout: config?.connect_timeout ?? "",
-    read_timeout: config?.read_timeout ?? "",
-    send_timeout: config?.send_timeout ?? "",
-    websocket_enabled: Boolean(config?.websocket_enabled),
-    preserve_host: config?.preserve_host ?? true,
-    proxy_buffering: config?.proxy_buffering ?? "",
-    request_buffering: config?.request_buffering ?? ""
-  }
-}
-
-function normalizedProxyConfigInput(): ApplicationInput["proxy_config"] | undefined {
-  const config = form.proxy_config ?? normalizeProxyConfigForForm(undefined)
-  const headers = (config.headers ?? [])
-    .filter((header) => header.name.trim() || header.value.trim())
-    .map((header) => ({ name: header.name.trim(), value: header.value.trim() }))
-  const payload = {
-    headers,
-    connect_timeout: config.connect_timeout?.trim() ?? "",
-    read_timeout: config.read_timeout?.trim() ?? "",
-    send_timeout: config.send_timeout?.trim() ?? "",
-    websocket_enabled: Boolean(config.websocket_enabled),
-    preserve_host: config.preserve_host,
-    proxy_buffering: config.proxy_buffering ?? "",
-    request_buffering: config.request_buffering ?? ""
-  }
-  const empty = headers.length === 0 &&
-    !payload.connect_timeout &&
-    !payload.read_timeout &&
-    !payload.send_timeout &&
-    !payload.websocket_enabled &&
-    payload.preserve_host === true &&
-    !payload.proxy_buffering &&
-    !payload.request_buffering
-  return empty ? undefined : payload
 }
 
 function addHost() {

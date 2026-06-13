@@ -325,8 +325,18 @@ const enUS: typeof zhCN = {
       subtitle: "Configure common proxy headers, timeouts, WebSocket, Host, and buffering behavior.",
       empty: "No protected applications",
       selectApplication: "Select application",
+      configure: "Configure proxy",
+      modalTitle: "Configure proxy: {name}",
+      modalTitleEmpty: "Configure application proxy",
       saved: "Application proxy settings saved",
+      saveFailed: "Application proxy settings failed to save",
+      statusConfigured: "Configured",
+      statusDefault: "Default",
       proxyDefault: "Default",
+      columns: {
+        application: "Application",
+        proxyStatus: "Proxy status"
+      },
       connectTimeout: "Connect timeout",
       readTimeout: "Read timeout",
       sendTimeout: "Send timeout",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, shallowRef } from "vue"
+import { computed } from "vue"
 import { getApplications, type Application } from "@/api/litewaf"
 import AdvancedNginxConfigPanel from "@/components/nginx/AdvancedNginxConfigPanel.vue"
 import ApplicationProxySettingsPanel from "@/components/nginx/ApplicationProxySettingsPanel.vue"
@@ -22,8 +22,6 @@ const applications = computed<Application[]>(() =>
       : undefined
   }))
 )
-const selectedApplicationId = shallowRef<number | null>(null)
-const savingApplicationProxy = shallowRef(false)
 </script>
 
 <template>
@@ -36,8 +34,6 @@ const savingApplicationProxy = shallowRef(false)
     </div>
 
     <ApplicationProxySettingsPanel
-      v-model:selected-application-id="selectedApplicationId"
-      v-model:saving="savingApplicationProxy"
       :applications="applications"
       :loading="applicationsResource.loading.value"
       :error="applicationsResource.error.value"
