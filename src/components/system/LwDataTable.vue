@@ -17,7 +17,7 @@ const props = withDefaults(
     pagination?: TablePagination
   }>(),
   {
-    scrollX: "max-content"
+    scrollX: undefined
   }
 )
 
@@ -47,6 +47,7 @@ const resolvedPagination = computed(() => props.pagination ?? defaultPagination)
 
 <style scoped>
 .lw-data-table {
+  contain: inline-size;
   display: block;
   width: 100%;
   max-width: 100%;
@@ -56,11 +57,23 @@ const resolvedPagination = computed(() => props.pagination ?? defaultPagination)
 
 .lw-data-table :deep(.n-data-table-wrapper),
 .lw-data-table :deep(.n-data-table-base-table),
+.lw-data-table :deep(.n-data-table-base-table-header),
 .lw-data-table :deep(.n-data-table-base-table-body),
 .lw-data-table :deep(.n-scrollbar),
-.lw-data-table :deep(.n-scrollbar-container),
+.lw-data-table :deep(.n-scrollbar-container) {
+  contain: inline-size;
+  max-width: 100%;
+  min-width: 0;
+}
+
 .lw-data-table :deep(.n-scrollbar-content) {
   max-width: 100%;
   min-width: 0;
+}
+
+.lw-data-table :deep(.n-data-table-empty) {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 </style>

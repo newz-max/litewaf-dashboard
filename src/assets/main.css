@@ -267,6 +267,19 @@ body {
   --n-td-text-color: var(--lw-text);
 }
 
+.n-layout,
+.n-layout-scroll-container,
+.n-scrollbar,
+.n-scrollbar-container {
+  min-width: 0;
+}
+
+.app-shell .n-layout-scroll-container,
+.app-shell .n-scrollbar,
+.app-shell .n-scrollbar-container {
+  max-width: 100%;
+}
+
 .lw-data-table .n-data-table-th,
 .lw-data-table .n-data-table-td,
 .lw-data-table .n-data-table-th__title,
