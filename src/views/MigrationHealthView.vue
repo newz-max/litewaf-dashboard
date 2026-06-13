@@ -38,21 +38,22 @@ const hasNoData = computed(() =>
 )
 
 const storeColumns = computed<DataTableColumns<LegacyProtectionStoreState>>(() => [
-  { title: t("migrationHealth.columns.legacyStore"), key: "store" },
-  { title: t("migrationHealth.columns.module"), key: "module" },
-  { title: t("migrationHealth.columns.total"), key: "total" },
-  { title: t("migrationHealth.columns.enabled"), key: "enabled" },
-  { title: t("migrationHealth.columns.migrated"), key: "migrated" },
-  { title: t("migrationHealth.columns.missing"), key: "missing" },
-  { title: t("migrationHealth.columns.orphaned"), key: "orphaned" },
-  { title: t("migrationHealth.columns.duplicates"), key: "duplicates" },
-  { title: t("migrationHealth.columns.conflicts"), key: "conflicts" }
+  { title: t("migrationHealth.columns.legacyStore"), key: "store", width: 180, ellipsis: { tooltip: true } },
+  { title: t("migrationHealth.columns.module"), key: "module", width: 140, ellipsis: { tooltip: true } },
+  { title: t("migrationHealth.columns.total"), key: "total", width: 96 },
+  { title: t("migrationHealth.columns.enabled"), key: "enabled", width: 96 },
+  { title: t("migrationHealth.columns.migrated"), key: "migrated", width: 96 },
+  { title: t("migrationHealth.columns.missing"), key: "missing", width: 96 },
+  { title: t("migrationHealth.columns.orphaned"), key: "orphaned", width: 96 },
+  { title: t("migrationHealth.columns.duplicates"), key: "duplicates", width: 104 },
+  { title: t("migrationHealth.columns.conflicts"), key: "conflicts", width: 104 }
 ])
 
 const issueColumns = computed<DataTableColumns<ProtectionRuleHealthIssue>>(() => [
   {
     title: t("migrationHealth.columns.severity"),
     key: "severity",
+    width: 110,
     render(row) {
       return h(
         NTag,
@@ -61,14 +62,16 @@ const issueColumns = computed<DataTableColumns<ProtectionRuleHealthIssue>>(() =>
       )
     }
   },
-  { title: t("migrationHealth.columns.type"), key: "type" },
-  { title: t("migrationHealth.columns.legacyStore"), key: "store" },
-  { title: t("migrationHealth.columns.count"), key: "count" },
-  { title: t("migrationHealth.columns.message"), key: "message" },
-  { title: t("migrationHealth.columns.recommendation"), key: "recommendation" },
+  { title: t("migrationHealth.columns.type"), key: "type", width: 170, ellipsis: { tooltip: true } },
+  { title: t("migrationHealth.columns.legacyStore"), key: "store", width: 180, ellipsis: { tooltip: true } },
+  { title: t("migrationHealth.columns.count"), key: "count", width: 90 },
+  { title: t("migrationHealth.columns.message"), key: "message", width: 260, ellipsis: { tooltip: true } },
+  { title: t("migrationHealth.columns.recommendation"), key: "recommendation", width: 320, ellipsis: { tooltip: true } },
   {
     title: t("migrationHealth.columns.samples"),
     key: "samples",
+    width: 320,
+    ellipsis: { tooltip: true },
     render(row) {
       return row.samples?.join(", ") || "-"
     }
@@ -124,7 +127,9 @@ function statusType(status: string) {
               {{ health?.backfill.status ?? "unknown" }}
             </NTag>
             <div class="muted">{{ health?.backfill.recommendation || t("migrationHealth.noBackfillStatus") }}</div>
-            <NCode v-if="health?.backfill.command" :code="health.backfill.command" />
+            <div v-if="health?.backfill.command" class="command-scroll">
+              <NCode :code="health.backfill.command" />
+            </div>
           </NSpace>
         </section>
       </div>
@@ -133,12 +138,12 @@ function statusType(status: string) {
 
       <section class="section section-pad section-gap">
         <div class="panel-title">{{ t("migrationHealth.legacyStoreCoverage") }}</div>
-        <LwDataTable :scrollbar-props="{ trigger: 'hover' }" :columns="storeColumns" :data="legacyStores" :bordered="false" />
+        <LwDataTable :scrollbar-props="{ trigger: 'hover' }" :columns="storeColumns" :data="legacyStores" :bordered="false" :scroll-x="1008" />
       </section>
 
       <section class="section section-pad section-gap">
         <div class="panel-title">{{ t("migrationHealth.migrationIssues") }}</div>
-        <LwDataTable :scrollbar-props="{ trigger: 'hover' }" :columns="issueColumns" :data="issues" :bordered="false" />
+        <LwDataTable :scrollbar-props="{ trigger: 'hover' }" :columns="issueColumns" :data="issues" :bordered="false" :scroll-x="1450" />
         <NEmpty v-if="issues.length === 0" :description="t('migrationHealth.noIssues')" />
       </section>
 
@@ -195,9 +200,11 @@ function statusType(status: string) {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
+  min-width: 0;
 }
 
 .health-panel {
+  min-width: 0;
   min-height: 150px;
 }
 
@@ -211,10 +218,23 @@ function statusType(status: string) {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  min-width: 0;
 }
 
 .muted {
   color: var(--lw-text-muted);
   line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.command-scroll {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.command-scroll :deep(.n-code) {
+  width: max-content;
+  min-width: 100%;
 }
 </style>

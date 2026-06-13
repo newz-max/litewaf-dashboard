@@ -90,6 +90,9 @@ body {
 .page {
   display: grid;
   gap: var(--lw-density-y);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .page-header {
@@ -97,6 +100,12 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.page-header > * {
+  min-width: 0;
 }
 
 .page-title {
@@ -111,10 +120,13 @@ body {
   margin: 6px 0 0;
   color: var(--lw-text-muted);
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 .section {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--lw-border-strong) 60%, var(--lw-border));
   border-radius: 6px;
@@ -142,6 +154,8 @@ body {
 .section > * {
   position: relative;
   z-index: 1;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .section-pad {
@@ -237,6 +251,9 @@ body {
 }
 
 .n-data-table {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   --n-merged-th-color: color-mix(in srgb, var(--lw-panel-muted) 92%, var(--lw-accent));
   --n-merged-td-color: var(--lw-panel);
   --n-merged-border-color: color-mix(in srgb, var(--lw-border) 78%, transparent);

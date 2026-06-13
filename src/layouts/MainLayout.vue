@@ -285,7 +285,7 @@ onBeforeUnmount(() => {
       <NMenu class="litewaf-menu" :value="activeKey" :options="menuOptions" :indent="18" />
     </NLayoutSider>
 
-    <NLayout>
+    <NLayout class="app-main">
       <NLayoutHeader bordered class="app-header">
         <div class="header-title">
           <NIcon size="22">
@@ -361,6 +361,10 @@ onBeforeUnmount(() => {
     var(--lw-shell-bg),
     var(--lw-bg);
   color: var(--lw-text);
+}
+
+.app-main {
+  min-width: 0;
 }
 
 .app-sider {
@@ -522,6 +526,7 @@ onBeforeUnmount(() => {
 
 .app-content {
   height: calc(100vh - 66px);
+  min-width: 0;
   background:
     radial-gradient(circle at 56% -8%, color-mix(in srgb, var(--lw-accent) 10%, transparent), transparent 24%),
     var(--lw-shell-content),
@@ -531,6 +536,8 @@ onBeforeUnmount(() => {
 
 .app-content :deep(.n-scrollbar-content) {
   min-height: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding: var(--lw-content-padding);
 }
 

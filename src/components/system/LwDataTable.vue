@@ -44,3 +44,23 @@ const resolvedPagination = computed(() => props.pagination ?? defaultPagination)
     <slot />
   </NDataTable>
 </template>
+
+<style scoped>
+.lw-data-table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.lw-data-table :deep(.n-data-table-wrapper),
+.lw-data-table :deep(.n-data-table-base-table),
+.lw-data-table :deep(.n-data-table-base-table-body),
+.lw-data-table :deep(.n-scrollbar),
+.lw-data-table :deep(.n-scrollbar-container),
+.lw-data-table :deep(.n-scrollbar-content) {
+  max-width: 100%;
+  min-width: 0;
+}
+</style>
