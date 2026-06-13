@@ -38,14 +38,28 @@ const savingCertificate = ref(false)
 const validatingCertificate = ref(false)
 const editingID = ref<number | null>(null)
 
-const form = reactive<ApplicationInput>({
+type ApplicationFormInput = ApplicationInput & {
+  proxy_config: NonNullable<ApplicationInput["proxy_config"]>
+}
+
+const form = reactive<ApplicationFormInput>({
   name: "",
   mode: "protect",
   enabled: true,
   description: "",
   hosts: [{ host: "", is_primary: true }],
   listeners: [{ port: 80, protocol: "http", enabled: true }],
-  upstreams: [{ name: "primary", url: "", weight: 1, enabled: true }]
+  upstreams: [{ name: "primary", url: "", weight: 1, enabled: true }],
+  proxy_config: {
+    headers: [],
+    connect_timeout: "",
+    read_timeout: "",
+    send_timeout: "",
+    websocket_enabled: false,
+    preserve_host: true,
+    proxy_buffering: "",
+    request_buffering: ""
+  }
 })
 
 const certificateForm = reactive({
@@ -64,6 +78,12 @@ const protocolOptions = [
   { label: "HTTP", value: "http" },
   { label: "HTTPS", value: "https" }
 ]
+
+const proxySwitchOptions = computed(() => [
+  { label: t("applications.proxyDefault"), value: "" },
+  { label: "on", value: "on" },
+  { label: "off", value: "off" }
+])
 
 const applicationColumns = computed(() => [
   { title: t("applications.application"), key: "name" },
@@ -141,7 +161,17 @@ function resetApplicationForm() {
     description: "",
     hosts: [{ host: "", is_primary: true }],
     listeners: [{ port: 80, protocol: "http", enabled: true }],
-    upstreams: [{ name: "primary", url: "", weight: 1, enabled: true }]
+    upstreams: [{ name: "primary", url: "", weight: 1, enabled: true }],
+    proxy_config: {
+      headers: [],
+      connect_timeout: "",
+      read_timeout: "",
+      send_timeout: "",
+      websocket_enabled: false,
+      preserve_host: true,
+      proxy_buffering: "",
+      request_buffering: ""
+    }
   })
 }
 
@@ -169,7 +199,8 @@ function editApplication(application: Application) {
       url: upstream.url,
       weight: upstream.weight,
       enabled: upstream.enabled
-    }))
+    })),
+    proxy_config: normalizeProxyConfigForForm(application.proxy_config)
   })
   showForm.value = true
 }
@@ -209,7 +240,8 @@ async function toggleApplication(application: Application) {
       url: upstream.url,
       weight: upstream.weight,
       enabled: upstream.enabled
-    }))
+    })),
+    proxy_config: application.proxy_config
   })
   message.success(application.enabled ? t("applications.applicationDisabled") : t("applications.applicationEnabled"))
   await applicationsResource.refresh()
@@ -247,8 +279,48 @@ function normalizedApplicationInput(): ApplicationInput {
         url: upstream.url.trim(),
         weight: Number(upstream.weight || 1),
         enabled: upstream.enabled
-      }))
+      })),
+    proxy_config: normalizedProxyConfigInput()
   }
+}
+
+function normalizeProxyConfigForForm(config: Application["proxy_config"]): ApplicationFormInput["proxy_config"] {
+  return {
+    headers: (config?.headers ?? []).map((header) => ({ name: header.name, value: header.value })),
+    connect_timeout: config?.connect_timeout ?? "",
+    read_timeout: config?.read_timeout ?? "",
+    send_timeout: config?.send_timeout ?? "",
+    websocket_enabled: Boolean(config?.websocket_enabled),
+    preserve_host: config?.preserve_host ?? true,
+    proxy_buffering: config?.proxy_buffering ?? "",
+    request_buffering: config?.request_buffering ?? ""
+  }
+}
+
+function normalizedProxyConfigInput(): ApplicationInput["proxy_config"] | undefined {
+  const config = form.proxy_config ?? normalizeProxyConfigForForm(undefined)
+  const headers = (config.headers ?? [])
+    .filter((header) => header.name.trim() || header.value.trim())
+    .map((header) => ({ name: header.name.trim(), value: header.value.trim() }))
+  const payload = {
+    headers,
+    connect_timeout: config.connect_timeout?.trim() ?? "",
+    read_timeout: config.read_timeout?.trim() ?? "",
+    send_timeout: config.send_timeout?.trim() ?? "",
+    websocket_enabled: Boolean(config.websocket_enabled),
+    preserve_host: config.preserve_host,
+    proxy_buffering: config.proxy_buffering ?? "",
+    request_buffering: config.request_buffering ?? ""
+  }
+  const empty = headers.length === 0 &&
+    !payload.connect_timeout &&
+    !payload.read_timeout &&
+    !payload.send_timeout &&
+    !payload.websocket_enabled &&
+    payload.preserve_host === true &&
+    !payload.proxy_buffering &&
+    !payload.request_buffering
+  return empty ? undefined : payload
 }
 
 function addHost() {
@@ -298,6 +370,17 @@ function removeUpstream(index: number) {
   if (form.upstreams.length === 0) {
     addUpstream()
   }
+}
+
+function addProxyHeader() {
+  form.proxy_config.headers = [...(form.proxy_config.headers ?? []), { name: "", value: "" }]
+}
+
+function removeProxyHeader(index: number) {
+  if (!form.proxy_config.headers) {
+    return
+  }
+  form.proxy_config.headers.splice(index, 1)
 }
 
 function openCertificateForm() {
@@ -465,6 +548,52 @@ function hActions(actions: Array<{ label: string; onClick: () => void }>) {
               <NSwitch v-model:value="upstream.enabled" />
               <NButton size="small" quaternary @click="removeUpstream(index)">{{ t("common.delete") }}</NButton>
             </NSpace>
+          </div>
+
+          <div class="form-block">
+            <div class="block-header">
+              <h3 class="block-title">{{ t("applications.proxySettings") }}</h3>
+              <NButton size="small" @click="addProxyHeader">{{ t("applications.addProxyHeader") }}</NButton>
+            </div>
+            <NSpace :wrap="false" align="center" class="row-line">
+              <NFormItem :label="t('applications.connectTimeout')">
+                <NInput v-model:value="form.proxy_config.connect_timeout" placeholder="30s" />
+              </NFormItem>
+              <NFormItem :label="t('applications.readTimeout')">
+                <NInput v-model:value="form.proxy_config.read_timeout" placeholder="60s" />
+              </NFormItem>
+              <NFormItem :label="t('applications.sendTimeout')">
+                <NInput v-model:value="form.proxy_config.send_timeout" placeholder="60s" />
+              </NFormItem>
+            </NSpace>
+            <NSpace :wrap="false" align="center" class="row-line">
+              <NFormItem :label="t('applications.websocket')">
+                <NSwitch v-model:value="form.proxy_config.websocket_enabled" />
+              </NFormItem>
+              <NFormItem :label="t('applications.preserveHost')">
+                <NSwitch v-model:value="form.proxy_config.preserve_host" />
+              </NFormItem>
+              <NFormItem :label="t('applications.proxyBuffering')">
+                <NSelect v-model:value="form.proxy_config.proxy_buffering" :options="proxySwitchOptions" />
+              </NFormItem>
+              <NFormItem :label="t('applications.requestBuffering')">
+                <NSelect v-model:value="form.proxy_config.request_buffering" :options="proxySwitchOptions" />
+              </NFormItem>
+            </NSpace>
+            <NSpace
+              v-for="(header, index) in form.proxy_config.headers"
+              :key="index"
+              align="center"
+              class="row-line"
+            >
+              <NInput v-model:value="header.name" :placeholder="t('applications.proxyHeaderName')" />
+              <NInput v-model:value="header.value" :placeholder="t('applications.proxyHeaderValue')" />
+              <NButton size="small" quaternary @click="removeProxyHeader(index)">{{ t("common.delete") }}</NButton>
+            </NSpace>
+            <NEmpty
+              v-if="(form.proxy_config?.headers ?? []).length === 0"
+              :description="t('applications.noProxyHeaders')"
+            />
           </div>
         </NForm>
         <template #footer>

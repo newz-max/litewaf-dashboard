@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, h, ref } from "vue"
 import { useI18n } from "vue-i18n"
-import { useDialog, useMessage, NButton, NList, NListItem, NSpace, NTag, type DataTableColumns } from "naive-ui"
+import { useDialog, useMessage, NButton, NCheckbox, NList, NListItem, NSpace, NTag, type DataTableColumns } from "naive-ui"
 import {
   getReleases,
   previewRelease,
@@ -10,7 +10,8 @@ import {
   type ProtectionModuleOverview,
   type ProtectionModuleRisk,
   type ReleaseRecord,
-  type UploadLimitWarning
+  type UploadLimitWarning,
+  type AdvancedNginxReview
 } from "@/api/litewaf"
 import { useApiResource } from "@/composables/useApiResource"
 import { useAuthStore } from "@/stores/auth"
@@ -92,6 +93,8 @@ async function publishNow() {
   const gatewayText = preview.summary.gateway
     ? t("releases.preview.gatewayBodySize", { value: preview.summary.gateway.client_max_body_size })
     : ""
+  const advancedNginx = preview.summary.advanced_nginx
+  const confirmAdvancedNginx = ref(false)
   dialog.warning({
     title: t("releases.confirmTitle"),
     content: () => renderPublishPreview(
@@ -108,14 +111,23 @@ async function publishNow() {
       preview.summary.risk_warnings ?? [],
       preview.summary.upload_limits?.warnings ?? [],
       validation?.issues ?? [],
-      deployment?.warnings ?? []
+      deployment?.warnings ?? [],
+      advancedNginx,
+      confirmAdvancedNginx
     ),
     positiveText: t("releases.publish"),
     negativeText: t("common.cancel"),
     onPositiveClick: async () => {
+      if (advancedNginx?.has_advanced_changes && !confirmAdvancedNginx.value) {
+        message.warning(t("releases.advancedNginx.confirmRequired"))
+        return false
+      }
       publishing.value = true
       try {
-        const record = await publishRelease({ note: t("releases.dashboardPublishNote") })
+        const record = await publishRelease({
+          note: t("releases.dashboardPublishNote"),
+          confirm_advanced_nginx: Boolean(advancedNginx?.has_advanced_changes && confirmAdvancedNginx.value)
+        })
         message.success(t("releases.published", { version: record.version }))
         await releasesResource.refresh()
       } finally {
@@ -131,10 +143,31 @@ function renderPublishPreview(
   risks: ProtectionModuleRisk[],
   uploadLimitWarnings: readonly UploadLimitWarning[],
   applicationIssues: Array<{ severity: string; category: string; message: string }>,
-  deploymentWarnings: string[]
+  deploymentWarnings: string[],
+  advancedNginx: AdvancedNginxReview | undefined,
+  confirmAdvancedNginx: { value: boolean }
 ) {
   return h("div", { class: "publish-preview" }, [
     h("p", summary),
+    advancedNginx?.has_advanced_changes
+      ? h("div", { class: "publish-risk-list" }, [
+          h("div", { class: "publish-risk" }, [
+            h(NTag, { size: "small", type: advancedNginx.validation.status === "passed" ? "success" : "error" }, { default: () => t("releases.advancedNginx.tag") }),
+            h("div", { class: "publish-risk-body" }, [
+              h("strong", t("releases.advancedNginx.validation", { status: advancedNginx.validation.status })),
+              advancedNginx.validation.message ? h("span", advancedNginx.validation.message) : null,
+              ...advancedNginx.warnings.map((warning) => h("span", { key: warning }, warning)),
+              advancedNginx.diff ? h("pre", { class: "nginx-diff" }, advancedNginx.diff) : null,
+              h(NCheckbox, {
+                checked: confirmAdvancedNginx.value,
+                "onUpdate:checked": (value: boolean) => {
+                  confirmAdvancedNginx.value = value
+                }
+              }, { default: () => t("releases.advancedNginx.confirm") })
+            ])
+          ])
+        ])
+      : null,
     applicationIssues.length > 0
       ? h(
           "div",
@@ -277,5 +310,17 @@ async function rollback(version: string) {
 .publish-risk-body {
   display: grid;
   gap: 2px;
+}
+
+.nginx-diff {
+  max-width: min(720px, 72vw);
+  max-height: 260px;
+  overflow: auto;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
 }
 </style>

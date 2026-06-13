@@ -55,6 +55,22 @@ export interface ApplicationUpstream {
   enabled: boolean
 }
 
+export interface ApplicationProxyHeader {
+  name: string
+  value: string
+}
+
+export interface ApplicationProxyConfig {
+  headers?: ApplicationProxyHeader[]
+  connect_timeout?: string
+  read_timeout?: string
+  send_timeout?: string
+  websocket_enabled?: boolean
+  preserve_host?: boolean
+  proxy_buffering?: "on" | "off" | ""
+  request_buffering?: "on" | "off" | ""
+}
+
 export interface Application {
   id: number
   name: string
@@ -64,6 +80,7 @@ export interface Application {
   hosts: ApplicationHost[]
   listeners: ApplicationListener[]
   upstreams: ApplicationUpstream[]
+  proxy_config?: ApplicationProxyConfig
   created_at?: string
   updated_at?: string
 }
@@ -76,6 +93,7 @@ export interface ApplicationInput {
   hosts: Array<Omit<ApplicationHost, "id" | "application_id">>
   listeners: Array<Omit<ApplicationListener, "id" | "application_id">>
   upstreams: Array<Omit<ApplicationUpstream, "id" | "application_id">>
+  proxy_config?: ApplicationProxyConfig
 }
 
 export interface Certificate {
@@ -556,6 +574,42 @@ export interface ReleaseRecord {
   }
 }
 
+export interface NginxValidationResult {
+  status: "unchecked" | "passed" | "failed" | "unavailable" | string
+  command?: string
+  message?: string
+  diagnostics?: string[]
+  validated_at?: string
+}
+
+export interface NginxConfigSnippet {
+  include_point: "http" | "server" | "location" | string
+  content: string
+}
+
+export interface NginxConfigDraft {
+  mode: "snippets" | "full" | string
+  snippets: NginxConfigSnippet[]
+  full_config?: string
+  validation: NginxValidationResult
+  updated_by?: string
+  updated_at?: string
+  published_at?: string
+}
+
+export interface AdvancedNginxReview {
+  has_advanced_changes: boolean
+  mode: string
+  warnings: string[]
+  validation: NginxValidationResult
+  diff: string
+}
+
+export interface NginxConfigValidationResponse {
+  item: NginxConfigDraft
+  review: AdvancedNginxReview
+}
+
 export interface UploadLimitLayer {
   layer: string
   name: string
@@ -717,6 +771,7 @@ export interface PublishPreview {
     module_matrix?: ProtectionModuleOverview[]
     risk_warnings?: ProtectionModuleRisk[]
     compatibility_diagnostics?: PublishCompatibilityDiagnostics
+    advanced_nginx?: AdvancedNginxReview
   }
 }
 
@@ -1474,6 +1529,20 @@ export function deleteApplication(id: number) {
   return apiClient.delete(`/api/v1/applications/${id}`)
 }
 
+export function getNginxConfigDraft() {
+  return apiClient.get<ItemResponse<NginxConfigDraft>>("/api/v1/nginx-config").then((response) => response.data.item)
+}
+
+export function saveNginxConfigDraft(payload: NginxConfigDraft) {
+  return apiClient.put<ItemResponse<NginxConfigDraft>>("/api/v1/nginx-config", payload).then((response) => response.data.item)
+}
+
+export function validateNginxConfigDraft() {
+  return apiClient
+    .post<NginxConfigValidationResponse>("/api/v1/nginx-config/validate", {})
+    .then((response) => response.data)
+}
+
 export function getCertificates() {
   return apiClient.get<ListResponse<Certificate>>("/api/v1/certificates").then((response) => listItems(response.data))
 }
@@ -1853,7 +1922,7 @@ export function getReleases() {
     .then((response) => listItems(response.data))
 }
 
-export function publishRelease(payload: { operator?: string; note?: string } = {}) {
+export function publishRelease(payload: { operator?: string; note?: string; confirm_advanced_nginx?: boolean } = {}) {
   return apiClient
     .post<ItemResponse<ReleaseRecord>>("/api/v1/releases", payload)
     .then((response) => response.data.item)

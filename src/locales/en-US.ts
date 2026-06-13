@@ -221,6 +221,25 @@ const enUS: typeof zhCN = {
     version: "Version",
     environment: "Environment",
     gatewayClientMaxBodySize: "Gateway request body limit",
+    nginx: {
+      title: "Advanced nginx configuration",
+      empty: "No advanced nginx draft",
+      mode: "Edit mode",
+      snippetMode: "Controlled snippets",
+      fullMode: "Full nginx.conf override",
+      httpPoint: "http snippet",
+      serverPoint: "server snippet",
+      locationPoint: "location snippet",
+      fullConfig: "Full nginx.conf",
+      snippetPlaceholder: "Enter nginx directives for this include point",
+      fullPlaceholder: "Enter full nginx.conf and preserve LiteWaf Lua hooks, health checks, listener includes, and proxy_pass $litewaf_upstream",
+      highRiskWarning: "Raw nginx configuration is high risk. Drafts can be saved, but publishing requires effective config validation, diff review, and explicit confirmation.",
+      validationStatus: "Validation status: {status}",
+      validate: "Validate effective config",
+      saved: "nginx draft saved",
+      validationPassed: "nginx effective config validation passed",
+      validationNotPassed: "nginx effective config did not pass validation"
+    },
     uploadLimits: {
       title: "Upload Limits",
       empty: "No upload limit runtime data",
@@ -379,6 +398,19 @@ const enUS: typeof zhCN = {
     addListener: "Add listener",
     selectCertificate: "Select certificate",
     addUpstream: "Add upstream",
+    proxySettings: "Reverse proxy settings",
+    proxyDefault: "Default",
+    connectTimeout: "Connect timeout",
+    readTimeout: "Read timeout",
+    sendTimeout: "Send timeout",
+    websocket: "WebSocket",
+    preserveHost: "Preserve Host",
+    proxyBuffering: "proxy_buffering",
+    requestBuffering: "proxy_request_buffering",
+    addProxyHeader: "Add header",
+    proxyHeaderName: "Header name",
+    proxyHeaderValue: "Header value",
+    noProxyHeaders: "No custom proxy headers",
     certificateName: "Certificate name",
     certPem: "Certificate PEM",
     keyPem: "Private key PEM",
@@ -978,6 +1010,12 @@ const enUS: typeof zhCN = {
       action: "Action: {value}",
       impact: "Impact: {value}",
       recommendation: "Recommendation: {value}"
+    },
+    advancedNginx: {
+      tag: "Advanced nginx",
+      validation: "nginx validation: {status}",
+      confirm: "I reviewed the nginx diff and risks, and confirm publishing advanced nginx configuration",
+      confirmRequired: "Explicit confirmation is required before publishing advanced nginx configuration"
     }
   },
   ruleEcosystem: {

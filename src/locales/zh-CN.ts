@@ -219,6 +219,25 @@ const zhCN = {
     version: "版本",
     environment: "环境",
     gatewayClientMaxBodySize: "网关请求体上限",
+    nginx: {
+      title: "高级 nginx 配置",
+      empty: "暂无高级 nginx 配置草稿",
+      mode: "编辑模式",
+      snippetMode: "受控片段",
+      fullMode: "完整 nginx.conf 覆盖",
+      httpPoint: "http 级片段",
+      serverPoint: "server 级片段",
+      locationPoint: "location 级片段",
+      fullConfig: "完整 nginx.conf",
+      snippetPlaceholder: "输入该 include 点的 nginx 指令",
+      fullPlaceholder: "输入完整 nginx.conf，必须保留 LiteWaf Lua hook、健康检查、监听 include 和 proxy_pass $litewaf_upstream",
+      highRiskWarning: "原始 nginx 配置属于高风险能力。草稿可以保存，但发布必须通过有效配置校验、diff 复核和显式确认。",
+      validationStatus: "校验状态：{status}",
+      validate: "校验有效配置",
+      saved: "nginx 配置草稿已保存",
+      validationPassed: "nginx 有效配置校验通过",
+      validationNotPassed: "nginx 有效配置未通过校验"
+    },
     uploadLimits: {
       title: "上传限制",
       empty: "暂无上传限制运行时数据",
@@ -377,6 +396,19 @@ const zhCN = {
     addListener: "添加监听",
     selectCertificate: "选择证书",
     addUpstream: "添加上游",
+    proxySettings: "反代设置",
+    proxyDefault: "默认",
+    connectTimeout: "连接超时",
+    readTimeout: "读取超时",
+    sendTimeout: "发送超时",
+    websocket: "WebSocket",
+    preserveHost: "保留 Host",
+    proxyBuffering: "proxy_buffering",
+    requestBuffering: "proxy_request_buffering",
+    addProxyHeader: "添加 Header",
+    proxyHeaderName: "Header 名称",
+    proxyHeaderValue: "Header 值",
+    noProxyHeaders: "暂无自定义代理 Header",
     certificateName: "证书名称",
     certPem: "证书 PEM",
     keyPem: "私钥 PEM",
@@ -976,6 +1008,12 @@ const zhCN = {
       action: "动作：{value}",
       impact: "影响：{value}",
       recommendation: "建议：{value}"
+    },
+    advancedNginx: {
+      tag: "高级 nginx",
+      validation: "nginx 校验：{status}",
+      confirm: "我已复核 nginx diff 和风险，确认发布高级 nginx 配置",
+      confirmRequired: "发布高级 nginx 配置前必须显式确认"
     }
   },
   ruleEcosystem: {
