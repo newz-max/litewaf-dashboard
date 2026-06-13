@@ -597,6 +597,15 @@ export interface NginxConfigDraft {
   published_at?: string
 }
 
+export interface NginxEffectiveConfig {
+  source: "runtime_full" | "runtime_snippets" | "generated_default" | "missing" | string
+  mode: "snippets" | "full" | string
+  snippets: NginxConfigSnippet[]
+  full_config?: string
+  runtime_dir?: string
+  config_path?: string
+}
+
 export interface AdvancedNginxReview {
   has_advanced_changes: boolean
   mode: string
@@ -1531,6 +1540,10 @@ export function deleteApplication(id: number) {
 
 export function getNginxConfigDraft() {
   return apiClient.get<ItemResponse<NginxConfigDraft>>("/api/v1/nginx-config").then((response) => response.data.item)
+}
+
+export function getNginxEffectiveConfig() {
+  return apiClient.get<ItemResponse<NginxEffectiveConfig>>("/api/v1/nginx-config/effective").then((response) => response.data.item)
 }
 
 export function saveNginxConfigDraft(payload: NginxConfigDraft) {

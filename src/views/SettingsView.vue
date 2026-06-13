@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, watch, ref } from "vue"
 import {
+  getNginxEffectiveConfig,
   getNginxConfigDraft,
   getVersion,
   saveNginxConfigDraft,
@@ -17,6 +18,7 @@ const { t } = useI18n()
 const message = useMessage()
 const versionResource = useApiResource(getVersion)
 const nginxResource = useApiResource(getNginxConfigDraft)
+const nginxEffectiveResource = useApiResource(getNginxEffectiveConfig)
 const uploadLimits = computed(() => versionResource.data.value?.upload_limits)
 const savingNginx = ref(false)
 const validatingNginx = ref(false)
@@ -55,6 +57,35 @@ const nginxSnippetPoints = computed(() => [
   { label: t("settings.nginx.serverPoint"), value: "server" },
   { label: t("settings.nginx.locationPoint"), value: "location" }
 ])
+
+const effectiveSnippetRows = computed(() => mergeSnippetDrafts(nginxEffectiveResource.data.value?.snippets ?? []))
+
+const effectiveSourceLabel = computed(() => {
+  const source = nginxEffectiveResource.data.value?.source ?? "missing"
+  switch (source) {
+    case "runtime_full":
+      return t("settings.nginx.effectiveSources.runtimeFull")
+    case "runtime_snippets":
+      return t("settings.nginx.effectiveSources.runtimeSnippets")
+    case "generated_default":
+      return t("settings.nginx.effectiveSources.generatedDefault")
+    case "missing":
+      return t("settings.nginx.effectiveSources.missing")
+    default:
+      return source
+  }
+})
+
+const hasEffectiveConfig = computed(() => {
+  const effective = nginxEffectiveResource.data.value
+  if (!effective || effective.source === "missing") {
+    return false
+  }
+  if (effective.mode === "full") {
+    return Boolean(effective.full_config?.trim())
+  }
+  return effectiveSnippetRows.value.some((snippet) => snippet.content.trim() !== "")
+})
 
 const nginxValidationType = computed(() => {
   switch (nginxForm.validation?.status) {
@@ -97,6 +128,20 @@ function mergeSnippetDrafts(snippets: readonly NginxConfigDraft["snippets"][numb
 
 function snippetLabel(point: string) {
   return nginxSnippetPoints.value.find((item) => item.value === point)?.label ?? point
+}
+
+function copyEffectiveToDraft() {
+  const effective = nginxEffectiveResource.data.value
+  if (!effective || !hasEffectiveConfig.value) {
+    return
+  }
+  Object.assign(nginxForm, {
+    mode: effective.mode || "snippets",
+    snippets: effective.mode === "snippets" ? mergeSnippetDrafts(effective.snippets ?? []) : mergeSnippetDrafts([]),
+    full_config: effective.mode === "full" ? effective.full_config ?? "" : "",
+    validation: { status: "unchecked" }
+  })
+  message.success(t("settings.nginx.copiedToDraft"))
 }
 
 async function saveNginxDraft() {
@@ -175,6 +220,55 @@ async function validateNginxDraft() {
       <NAlert type="warning" style="margin-bottom: 12px">
         {{ t("settings.nginx.highRiskWarning") }}
       </NAlert>
+
+      <div class="nginx-panel-title">{{ t("settings.nginx.effectiveTitle") }}</div>
+      <NSpin :show="nginxEffectiveResource.loading.value">
+        <NEmpty
+          v-if="!nginxEffectiveResource.loading.value && !hasEffectiveConfig"
+          :description="t('settings.nginx.effectiveEmpty')"
+        />
+        <div v-else class="nginx-effective">
+          <NDescriptions bordered :column="1" label-placement="left" size="small">
+            <NDescriptionsItem :label="t('settings.nginx.effectiveSource')">
+              {{ effectiveSourceLabel }}
+            </NDescriptionsItem>
+            <NDescriptionsItem v-if="nginxEffectiveResource.data.value?.config_path" :label="t('settings.nginx.configPath')">
+              {{ nginxEffectiveResource.data.value?.config_path }}
+            </NDescriptionsItem>
+          </NDescriptions>
+          <template v-if="nginxEffectiveResource.data.value?.mode === 'snippets'">
+            <div v-for="snippet in effectiveSnippetRows" :key="snippet.include_point" class="nginx-readonly-block">
+              <div class="nginx-readonly-label">{{ snippetLabel(snippet.include_point) }}</div>
+              <NInput
+                :value="snippet.content"
+                type="textarea"
+                readonly
+                :autosize="{ minRows: 3 }"
+                :placeholder="t('settings.nginx.emptySnippet')"
+              />
+            </div>
+          </template>
+          <div v-else class="nginx-readonly-block">
+            <div class="nginx-readonly-label">{{ t("settings.nginx.fullConfig") }}</div>
+            <NInput
+              :value="nginxEffectiveResource.data.value?.full_config ?? ''"
+              type="textarea"
+              readonly
+              :autosize="{ minRows: 8 }"
+            />
+          </div>
+          <NSpace justify="end">
+            <NButton :disabled="!hasEffectiveConfig" @click="copyEffectiveToDraft">
+              {{ t("settings.nginx.copyEffectiveToDraft") }}
+            </NButton>
+          </NSpace>
+        </div>
+      </NSpin>
+      <NAlert v-if="nginxEffectiveResource.error.value" type="error" style="margin-top: 12px">
+        {{ nginxEffectiveResource.error.value }}
+      </NAlert>
+
+      <div class="nginx-panel-title">{{ t("settings.nginx.draftTitle") }}</div>
       <NSpin :show="nginxResource.loading.value">
         <NEmpty
           v-if="!nginxResource.loading.value && !nginxResource.data.value"
@@ -234,5 +328,27 @@ async function validateNginxDraft() {
 .diagnostics {
   margin: 8px 0 0;
   padding-left: 18px;
+}
+
+.nginx-panel-title {
+  margin: 18px 0 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.nginx-effective {
+  display: grid;
+  gap: 12px;
+}
+
+.nginx-readonly-block {
+  display: grid;
+  gap: 8px;
+}
+
+.nginx-readonly-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 650;
 }
 </style>
