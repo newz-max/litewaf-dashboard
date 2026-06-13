@@ -187,6 +187,7 @@ const zhCN = {
       protectionMigrationHealth: "迁移健康检查",
       legacyCompatibility: "兼容入口",
       rateLimits: "限流配置（已废弃）",
+      nginxProxy: "nginx 反代配置",
       settings: "系统设置",
       login: "登录"
     },
@@ -312,6 +313,63 @@ const zhCN = {
       observing: "观察中",
       release: "规则发布",
       ready: "就绪"
+    }
+  },
+  nginxProxy: {
+    title: "nginx 反代配置",
+    subtitle: "集中维护应用级反代选项和高级 nginx 配置草稿。",
+    application: {
+      title: "应用反代选项",
+      subtitle: "配置常用 proxy header、超时、WebSocket、Host 和 buffering 行为。",
+      empty: "暂无防护应用",
+      selectApplication: "选择应用",
+      saved: "应用反代配置已保存",
+      proxyDefault: "默认",
+      connectTimeout: "连接超时",
+      readTimeout: "读取超时",
+      sendTimeout: "发送超时",
+      websocket: "WebSocket",
+      preserveHost: "保留 Host",
+      proxyBuffering: "proxy_buffering",
+      requestBuffering: "proxy_request_buffering",
+      proxyHeaders: "请求头",
+      addProxyHeader: "添加请求头",
+      proxyHeaderName: "Header 名称",
+      proxyHeaderValue: "Header 值",
+      noProxyHeaders: "暂无自定义请求头"
+    },
+    advanced: {
+      title: "高级 nginx 配置",
+      empty: "暂无高级 nginx 配置草稿",
+      mode: "编辑模式",
+      snippetMode: "受控片段",
+      fullMode: "完整 nginx.conf 覆盖",
+      httpPoint: "http 级片段",
+      serverPoint: "server 级片段",
+      locationPoint: "location 级片段",
+      fullConfig: "完整 nginx.conf",
+      snippetPlaceholder: "输入该 include 点的 nginx 指令",
+      fullPlaceholder: "输入完整 nginx.conf，必须保留 LiteWaf Lua hook、健康检查、监听 include 和 proxy_pass $litewaf_upstream",
+      highRiskWarning: "原始 nginx 配置属于高风险能力。草稿可以保存，但发布必须通过有效配置校验、diff 复核和显式确认。",
+      effectiveTitle: "当前生效配置",
+      draftTitle: "草稿编辑",
+      effectiveEmpty: "暂无可回显的生效 nginx 配置",
+      effectiveSource: "配置来源",
+      configPath: "配置路径",
+      emptySnippet: "该 include 点暂无生效片段",
+      copyEffectiveToDraft: "从当前生效配置创建草稿",
+      copiedToDraft: "已复制到本地草稿，保存前不会写入后端",
+      effectiveSources: {
+        runtimeFull: "runtime nginx.conf",
+        runtimeSnippets: "runtime 片段",
+        generatedDefault: "按 listener artifacts 生成的默认配置",
+        missing: "未发现 runtime artifacts"
+      },
+      validationStatus: "校验状态：{status}",
+      validate: "校验有效配置",
+      saved: "nginx 配置草稿已保存",
+      validationPassed: "nginx 有效配置校验通过",
+      validationNotPassed: "nginx 有效配置未通过校验"
     }
   },
   dashboard: {

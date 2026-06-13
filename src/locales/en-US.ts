@@ -189,6 +189,7 @@ const enUS: typeof zhCN = {
       protectionMigrationHealth: "Migration Health",
       legacyCompatibility: "Legacy Entries",
       rateLimits: "Rate Limits (Deprecated)",
+      nginxProxy: "Nginx Proxy",
       settings: "System Settings",
       login: "Sign in"
     },
@@ -314,6 +315,63 @@ const enUS: typeof zhCN = {
       observing: "Observing",
       release: "Rule release",
       ready: "Ready"
+    }
+  },
+  nginxProxy: {
+    title: "Nginx Proxy",
+    subtitle: "Manage application proxy options and advanced nginx draft configuration in one place.",
+    application: {
+      title: "Application proxy options",
+      subtitle: "Configure common proxy headers, timeouts, WebSocket, Host, and buffering behavior.",
+      empty: "No protected applications",
+      selectApplication: "Select application",
+      saved: "Application proxy settings saved",
+      proxyDefault: "Default",
+      connectTimeout: "Connect timeout",
+      readTimeout: "Read timeout",
+      sendTimeout: "Send timeout",
+      websocket: "WebSocket",
+      preserveHost: "Preserve Host",
+      proxyBuffering: "proxy_buffering",
+      requestBuffering: "proxy_request_buffering",
+      proxyHeaders: "Request headers",
+      addProxyHeader: "Add header",
+      proxyHeaderName: "Header name",
+      proxyHeaderValue: "Header value",
+      noProxyHeaders: "No custom request headers"
+    },
+    advanced: {
+      title: "Advanced nginx configuration",
+      empty: "No advanced nginx draft",
+      mode: "Edit mode",
+      snippetMode: "Controlled snippets",
+      fullMode: "Full nginx.conf override",
+      httpPoint: "http snippet",
+      serverPoint: "server snippet",
+      locationPoint: "location snippet",
+      fullConfig: "Full nginx.conf",
+      snippetPlaceholder: "Enter nginx directives for this include point",
+      fullPlaceholder: "Enter full nginx.conf and preserve LiteWaf Lua hooks, health checks, listener includes, and proxy_pass $litewaf_upstream",
+      highRiskWarning: "Raw nginx configuration is high risk. Drafts can be saved, but publishing requires effective config validation, diff review, and explicit confirmation.",
+      effectiveTitle: "Current effective config",
+      draftTitle: "Draft editor",
+      effectiveEmpty: "No effective nginx config is available for readback",
+      effectiveSource: "Config source",
+      configPath: "Config path",
+      emptySnippet: "No effective snippet for this include point",
+      copyEffectiveToDraft: "Create draft from current effective config",
+      copiedToDraft: "Copied into the local draft. It will not be saved until you save it.",
+      effectiveSources: {
+        runtimeFull: "runtime nginx.conf",
+        runtimeSnippets: "runtime snippets",
+        generatedDefault: "default config generated from listener artifacts",
+        missing: "runtime artifacts not found"
+      },
+      validationStatus: "Validation status: {status}",
+      validate: "Validate effective config",
+      saved: "nginx draft saved",
+      validationPassed: "nginx effective config validation passed",
+      validationNotPassed: "nginx effective config did not pass validation"
     }
   },
   dashboard: {

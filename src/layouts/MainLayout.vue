@@ -17,6 +17,7 @@ import {
   ReaderOutline,
   RepeatOutline,
   RocketOutline,
+  ServerOutline,
   SkullOutline,
   LockClosedOutline,
   MedkitOutline,
@@ -201,6 +202,11 @@ const menuOptions = computed<MenuOption[]>(() => [
             label: renderLabel("shell.nav.rateLimits", "/rate-limits")
           }
         ]
+      },
+      {
+        key: "nginxProxy",
+        label: renderLabel("shell.nav.nginxProxy", "/nginx-proxy"),
+        icon: renderIcon(ServerOutline)
       },
       {
         key: "settings",

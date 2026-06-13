@@ -10,6 +10,7 @@ import BlockedRejectedRecordsView from "@/views/BlockedRejectedRecordsView.vue"
 import AccessLogsView from "@/views/AccessLogsView.vue"
 import ReleasesView from "@/views/ReleasesView.vue"
 import MigrationHealthView from "@/views/MigrationHealthView.vue"
+import NginxProxyView from "@/views/NginxProxyView.vue"
 import SettingsView from "@/views/SettingsView.vue"
 import LoginView from "@/views/LoginView.vue"
 import AuditLogsView from "@/views/AuditLogsView.vue"
@@ -175,6 +176,12 @@ const router = createRouter({
           name: "rateLimits",
           component: RateLimitsView,
           meta: { titleKey: "shell.nav.rateLimits" }
+        },
+        {
+          path: "nginx-proxy",
+          name: "nginxProxy",
+          component: NginxProxyView,
+          meta: { titleKey: "shell.nav.nginxProxy" }
         },
         {
           path: "settings",
