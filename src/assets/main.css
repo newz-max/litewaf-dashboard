@@ -89,8 +89,14 @@ body {
 
 .page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--lw-density-y);
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.page > * {
   min-width: 0;
   max-width: 100%;
 }

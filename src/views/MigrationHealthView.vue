@@ -198,9 +198,10 @@ function statusType(status: string) {
 
 .health-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
   gap: 16px;
   min-width: 0;
+  max-width: 100%;
 }
 
 .health-panel {
