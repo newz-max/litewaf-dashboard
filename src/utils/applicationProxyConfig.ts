@@ -1,4 +1,4 @@
-import type { Application, ApplicationInput, ApplicationProxyConfig } from "@/api/litewaf"
+import type { Application, ApplicationInput, ApplicationProxyConfig, ApplicationRoute } from "@/api/litewaf"
 
 export type ApplicationProxyFormInput = Required<ApplicationProxyConfig>
 
@@ -62,6 +62,15 @@ export function applicationToInputWithProxyConfig(
   application: Application,
   proxyConfig: ApplicationInput["proxy_config"] | undefined
 ): ApplicationInput {
+  return applicationToInput(application, {
+    proxy_config: proxyConfig
+  })
+}
+
+export function applicationToInput(
+  application: Application,
+  overrides: Partial<ApplicationInput> = {}
+): ApplicationInput {
   return {
     name: application.name,
     mode: application.mode,
@@ -83,10 +92,36 @@ export function applicationToInputWithProxyConfig(
       weight: upstream.weight,
       enabled: upstream.enabled
     })),
-    proxy_config: proxyConfig
+    routes: normalizeApplicationRoutesInput(application.routes ?? []),
+    proxy_config: normalizeApplicationProxyConfigInput(application.proxy_config),
+    ...overrides
   }
 }
 
 export function hasApplicationProxyConfig(config: Application["proxy_config"]) {
   return Boolean(normalizeApplicationProxyConfigInput(config))
+}
+
+export function cloneApplicationRoute(route: ApplicationRoute): ApplicationRoute {
+  return {
+    ...route,
+    proxy_config: route.proxy_config
+      ? {
+          ...route.proxy_config,
+          headers: (route.proxy_config.headers ?? []).map((header) => ({ ...header }))
+        }
+      : undefined
+  }
+}
+
+export function normalizeApplicationRoutesInput(routes: readonly ApplicationRoute[]): ApplicationInput["routes"] {
+  return routes.map((route, index) => ({
+    name: route.name.trim(),
+    path: route.path.trim() || "/",
+    path_match: route.path_match || "prefix",
+    upstream_name: route.upstream_name.trim(),
+    priority: route.priority > 0 ? route.priority : index + 1,
+    enabled: route.enabled,
+    proxy_config: normalizeApplicationProxyConfigInput(route.proxy_config)
+  }))
 }

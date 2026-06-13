@@ -71,6 +71,18 @@ export interface ApplicationProxyConfig {
   request_buffering?: "on" | "off" | ""
 }
 
+export interface ApplicationRoute {
+  id: number
+  application_id?: number
+  name: string
+  path: string
+  path_match: "exact" | "prefix" | "glob"
+  upstream_name: string
+  priority: number
+  enabled: boolean
+  proxy_config?: ApplicationProxyConfig
+}
+
 export interface Application {
   id: number
   name: string
@@ -80,6 +92,7 @@ export interface Application {
   hosts: ApplicationHost[]
   listeners: ApplicationListener[]
   upstreams: ApplicationUpstream[]
+  routes?: ApplicationRoute[]
   proxy_config?: ApplicationProxyConfig
   created_at?: string
   updated_at?: string
@@ -93,6 +106,7 @@ export interface ApplicationInput {
   hosts: Array<Omit<ApplicationHost, "id" | "application_id">>
   listeners: Array<Omit<ApplicationListener, "id" | "application_id">>
   upstreams: Array<Omit<ApplicationUpstream, "id" | "application_id">>
+  routes?: Array<Omit<ApplicationRoute, "id" | "application_id">>
   proxy_config?: ApplicationProxyConfig
 }
 

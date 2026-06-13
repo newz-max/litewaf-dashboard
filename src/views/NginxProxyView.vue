@@ -2,7 +2,7 @@
 import { computed } from "vue"
 import { getApplications, type Application } from "@/api/litewaf"
 import AdvancedNginxConfigPanel from "@/components/nginx/AdvancedNginxConfigPanel.vue"
-import ApplicationProxySettingsPanel from "@/components/nginx/ApplicationProxySettingsPanel.vue"
+import ApplicationRoutingPanel from "@/components/nginx/ApplicationRoutingPanel.vue"
 import { useApiResource } from "@/composables/useApiResource"
 import { useI18n } from "vue-i18n"
 
@@ -14,6 +14,15 @@ const applications = computed<Application[]>(() =>
     hosts: application.hosts.map((host) => ({ ...host })),
     listeners: application.listeners.map((listener) => ({ ...listener })),
     upstreams: application.upstreams.map((upstream) => ({ ...upstream })),
+    routes: (application.routes ?? []).map((route) => ({
+      ...route,
+      proxy_config: route.proxy_config
+        ? {
+            ...route.proxy_config,
+            headers: (route.proxy_config.headers ?? []).map((header) => ({ ...header }))
+          }
+        : undefined
+    })),
     proxy_config: application.proxy_config
       ? {
           ...application.proxy_config,
@@ -33,7 +42,7 @@ const applications = computed<Application[]>(() =>
       </div>
     </div>
 
-    <ApplicationProxySettingsPanel
+    <ApplicationRoutingPanel
       :applications="applications"
       :loading="applicationsResource.loading.value"
       :error="applicationsResource.error.value"
