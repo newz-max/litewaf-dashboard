@@ -7,7 +7,8 @@ import {
   getUploadProtectionRules,
   updateUploadProtectionRule,
   type ProtectionRule,
-  type ProtectionRuleInput
+  type ProtectionRuleDraft,
+  type UploadProtectionRuleInput
 } from "@/api/litewaf"
 import ModulePageHeader from "@/components/operations/ModulePageHeader.vue"
 import ModuleRiskGuidance from "@/components/operations/ModuleRiskGuidance.vue"
@@ -30,7 +31,7 @@ const items = computed(() => [...(resource.data.value ?? [])])
 const editing = shallowRef<ProtectionRule | null>(null)
 const formVisible = shallowRef(false)
 const saving = shallowRef(false)
-const form = reactive<ProtectionRuleInput>(emptyForm())
+const form = reactive<ProtectionRuleDraft>(emptyForm())
 const guidanceItems = computed(() => protectionGuides(t, "upload-protection"))
 const formRiskPrompts = computed(() => protectionRiskPrompts(form, t))
 const enabledCount = computed(() => items.value.filter((item) => item.enabled).length)
@@ -183,7 +184,7 @@ const columns = computed<DataTableColumns<ProtectionRule>>(() => [
   }
 ])
 
-function emptyForm(): ProtectionRuleInput {
+function emptyForm(): ProtectionRuleDraft {
   return {
     name: "",
     module: "upload-protection",
@@ -212,7 +213,7 @@ function emptyForm(): ProtectionRuleInput {
   }
 }
 
-function assignForm(payload: ProtectionRuleInput) {
+function assignForm(payload: ProtectionRuleDraft) {
   Object.assign(form, {
     ...payload,
     match: { ...payload.match, methods: [...payload.match.methods] },
@@ -256,7 +257,7 @@ function startEdit(item: ProtectionRule) {
 }
 
 function applyTemplate(value: string) {
-  const templates: Record<string, ProtectionRuleInput> = {
+  const templates: Record<string, ProtectionRuleDraft> = {
     script: {
       ...emptyForm(),
       name: t("modules.upload.dangerousScriptExtensionsBlock"),
@@ -318,18 +319,37 @@ async function save() {
     return
   }
   saving.value = true
+  const payload = buildPayload()
   try {
     if (editing.value) {
-      await updateUploadProtectionRule(editing.value.id, form)
+      await updateUploadProtectionRule(editing.value.id, payload)
       message.success(t("common.updated", { name: t("modules.upload.title") }))
     } else {
-      await createUploadProtectionRule(form)
+      await createUploadProtectionRule(payload)
       message.success(t("common.created", { name: t("modules.upload.title") }))
     }
     formVisible.value = false
     await resource.refresh()
   } finally {
     saving.value = false
+  }
+}
+
+function buildPayload(): UploadProtectionRuleInput {
+  return {
+    name: form.name,
+    module: form.module,
+    category: form.category,
+    application_id: form.application_id,
+    enabled: form.enabled,
+    priority: form.priority,
+    match: { ...form.match, methods: [...form.match.methods] },
+    limit: { ...form.limit },
+    upload: {
+      extensions: [...(form.upload?.extensions ?? [])],
+      max_bytes: form.upload?.max_bytes ?? 0
+    },
+    action: { ...form.action }
   }
 }
 

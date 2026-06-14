@@ -6,9 +6,10 @@ import {
   deleteDynamicProtectionRule,
   getDynamicProtectionRules,
   updateDynamicProtectionRule,
+  type DynamicProtectionRuleInput,
   type ProtectionRule,
   type ProtectionRuleDynamic,
-  type ProtectionRuleInput
+  type ProtectionRuleDraft
 } from "@/api/litewaf"
 import ModulePageHeader from "@/components/operations/ModulePageHeader.vue"
 import ModuleRiskGuidance from "@/components/operations/ModuleRiskGuidance.vue"
@@ -31,7 +32,7 @@ const items = computed(() => [...(resource.data.value ?? [])])
 const editing = shallowRef<ProtectionRule | null>(null)
 const formVisible = shallowRef(false)
 const saving = shallowRef(false)
-const form = reactive<ProtectionRuleInput>(emptyForm())
+const form = reactive<ProtectionRuleDraft>(emptyForm())
 const guidanceItems = computed(() => protectionGuides(t, "dynamic-protection"))
 const formRiskPrompts = computed(() => protectionRiskPrompts(form, t))
 const enabledCount = computed(() => items.value.filter((item) => item.enabled).length)
@@ -210,7 +211,7 @@ const columns = computed<DataTableColumns<ProtectionRule>>(() => [
   }
 ])
 
-function emptyForm(): ProtectionRuleInput {
+function emptyForm(): ProtectionRuleDraft {
   return {
     name: "",
     module: "dynamic-protection",
@@ -236,7 +237,7 @@ function emptyForm(): ProtectionRuleInput {
   }
 }
 
-function assignForm(payload: ProtectionRuleInput) {
+function assignForm(payload: ProtectionRuleDraft) {
   Object.assign(form, {
     ...payload,
     match: { ...payload.match, methods: [...payload.match.methods] },
@@ -275,7 +276,7 @@ function startEdit(item: ProtectionRule) {
 
 function applyTemplate(value: string) {
   const base = emptyForm()
-  const templates: Record<string, ProtectionRuleInput> = {
+  const templates: Record<string, ProtectionRuleDraft> = {
     "admin-token": {
       ...base,
       name: t("modules.dynamic.adminDynamicToken"),
@@ -367,18 +368,33 @@ async function save() {
     return
   }
   saving.value = true
+  const payload = buildPayload()
   try {
     if (editing.value) {
-      await updateDynamicProtectionRule(editing.value.id, form)
+      await updateDynamicProtectionRule(editing.value.id, payload)
       message.success(t("common.updated", { name: t("modules.dynamic.title") }))
     } else {
-      await createDynamicProtectionRule(form)
+      await createDynamicProtectionRule(payload)
       message.success(t("common.created", { name: t("modules.dynamic.title") }))
     }
     formVisible.value = false
     await resource.refresh()
   } finally {
     saving.value = false
+  }
+}
+
+function buildPayload(): DynamicProtectionRuleInput {
+  return {
+    name: form.name,
+    module: form.module,
+    category: form.category,
+    application_id: form.application_id,
+    enabled: form.enabled,
+    priority: form.priority,
+    match: { ...form.match, methods: [...form.match.methods] },
+    dynamic: { ...defaultDynamic(), ...(form.dynamic ?? {}) },
+    action: { ...form.action }
   }
 }
 

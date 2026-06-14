@@ -1439,7 +1439,7 @@ export interface ProtectionRule {
   updated_at?: string
 }
 
-export interface ProtectionRuleInput {
+export interface ProtectionRuleBaseInput {
   name: string
   module?: string
   category?: string
@@ -1447,11 +1447,49 @@ export interface ProtectionRuleInput {
   enabled: boolean
   priority?: number
   match: ProtectionRuleMatch
+  action: ProtectionRuleAction
+}
+
+export interface AccessControlRuleInput extends ProtectionRuleBaseInput {
+  limit?: never
+  upload?: never
+  challenge?: never
+  dynamic?: never
+}
+
+export interface CCProtectionRuleInput extends ProtectionRuleBaseInput {
+  limit: ProtectionRuleLimit
+  upload?: never
+  challenge?: never
+  dynamic?: never
+}
+
+export interface UploadProtectionRuleInput extends ProtectionRuleBaseInput {
+  limit: ProtectionRuleLimit
+  upload: ProtectionRuleUpload
+  challenge?: never
+  dynamic?: never
+}
+
+export interface BotProtectionRuleInput extends ProtectionRuleBaseInput {
+  limit?: never
+  upload?: never
+  challenge: ProtectionRuleChallenge
+  dynamic?: never
+}
+
+export interface DynamicProtectionRuleInput extends ProtectionRuleBaseInput {
+  limit?: never
+  upload?: never
+  challenge?: never
+  dynamic: ProtectionRuleDynamic
+}
+
+export interface ProtectionRuleDraft extends ProtectionRuleBaseInput {
   limit: ProtectionRuleLimit
   upload?: ProtectionRuleUpload
   challenge?: ProtectionRuleChallenge
   dynamic?: ProtectionRuleDynamic
-  action: ProtectionRuleAction
 }
 
 export interface CCProtectionPreviewRequest {
@@ -2045,13 +2083,13 @@ export function getCCProtectionRules(params: Record<string, string | number | bo
     .then((response) => listItems(response.data))
 }
 
-export function createCCProtectionRule(payload: ProtectionRuleInput) {
+export function createCCProtectionRule(payload: CCProtectionRuleInput) {
   return apiClient
     .post<ItemResponse<ProtectionRule>>("/api/v1/cc-protection/rules", payload)
     .then((response) => response.data.item)
 }
 
-export function updateCCProtectionRule(id: number, payload: ProtectionRuleInput) {
+export function updateCCProtectionRule(id: number, payload: CCProtectionRuleInput) {
   return apiClient
     .put<ItemResponse<ProtectionRule>>(`/api/v1/cc-protection/rules/${id}`, payload)
     .then((response) => response.data.item)
@@ -2073,13 +2111,13 @@ export function getAccessControlRules(params: Record<string, string | number | b
     .then((response) => listItems(response.data))
 }
 
-export function createAccessControlRule(payload: ProtectionRuleInput) {
+export function createAccessControlRule(payload: AccessControlRuleInput) {
   return apiClient
     .post<ItemResponse<ProtectionRule>>("/api/v1/access-control/rules", payload)
     .then((response) => response.data.item)
 }
 
-export function updateAccessControlRule(id: number, payload: ProtectionRuleInput) {
+export function updateAccessControlRule(id: number, payload: AccessControlRuleInput) {
   return apiClient
     .put<ItemResponse<ProtectionRule>>(`/api/v1/access-control/rules/${id}`, payload)
     .then((response) => response.data.item)
@@ -2095,13 +2133,13 @@ export function getUploadProtectionRules(params: Record<string, string | number 
     .then((response) => listItems(response.data))
 }
 
-export function createUploadProtectionRule(payload: ProtectionRuleInput) {
+export function createUploadProtectionRule(payload: UploadProtectionRuleInput) {
   return apiClient
     .post<ItemResponse<ProtectionRule>>("/api/v1/upload-protection/rules", payload)
     .then((response) => response.data.item)
 }
 
-export function updateUploadProtectionRule(id: number, payload: ProtectionRuleInput) {
+export function updateUploadProtectionRule(id: number, payload: UploadProtectionRuleInput) {
   return apiClient
     .put<ItemResponse<ProtectionRule>>(`/api/v1/upload-protection/rules/${id}`, payload)
     .then((response) => response.data.item)
@@ -2117,13 +2155,13 @@ export function getBotProtectionRules(params: Record<string, string | number | b
     .then((response) => listItems(response.data))
 }
 
-export function createBotProtectionRule(payload: ProtectionRuleInput) {
+export function createBotProtectionRule(payload: BotProtectionRuleInput) {
   return apiClient
     .post<ItemResponse<ProtectionRule>>("/api/v1/bot-protection/rules", payload)
     .then((response) => response.data.item)
 }
 
-export function updateBotProtectionRule(id: number, payload: ProtectionRuleInput) {
+export function updateBotProtectionRule(id: number, payload: BotProtectionRuleInput) {
   return apiClient
     .put<ItemResponse<ProtectionRule>>(`/api/v1/bot-protection/rules/${id}`, payload)
     .then((response) => response.data.item)
@@ -2139,13 +2177,13 @@ export function getDynamicProtectionRules(params: Record<string, string | number
     .then((response) => listItems(response.data))
 }
 
-export function createDynamicProtectionRule(payload: ProtectionRuleInput) {
+export function createDynamicProtectionRule(payload: DynamicProtectionRuleInput) {
   return apiClient
     .post<ItemResponse<ProtectionRule>>("/api/v1/dynamic-protection/rules", payload)
     .then((response) => response.data.item)
 }
 
-export function updateDynamicProtectionRule(id: number, payload: ProtectionRuleInput) {
+export function updateDynamicProtectionRule(id: number, payload: DynamicProtectionRuleInput) {
   return apiClient
     .put<ItemResponse<ProtectionRule>>(`/api/v1/dynamic-protection/rules/${id}`, payload)
     .then((response) => response.data.item)

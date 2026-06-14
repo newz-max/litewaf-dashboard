@@ -6,8 +6,9 @@ import {
   deleteBotProtectionRule,
   getBotProtectionRules,
   updateBotProtectionRule,
+  type BotProtectionRuleInput,
   type ProtectionRule,
-  type ProtectionRuleInput
+  type ProtectionRuleDraft
 } from "@/api/litewaf"
 import ModulePageHeader from "@/components/operations/ModulePageHeader.vue"
 import ModuleRiskGuidance from "@/components/operations/ModuleRiskGuidance.vue"
@@ -30,7 +31,7 @@ const items = computed(() => [...(resource.data.value ?? [])])
 const editing = shallowRef<ProtectionRule | null>(null)
 const formVisible = shallowRef(false)
 const saving = shallowRef(false)
-const form = reactive<ProtectionRuleInput>(emptyForm())
+const form = reactive<ProtectionRuleDraft>(emptyForm())
 const guidanceItems = computed(() => protectionGuides(t, "bot-protection"))
 const formRiskPrompts = computed(() => protectionRiskPrompts(form, t))
 const enabledCount = computed(() => items.value.filter((item) => item.enabled).length)
@@ -198,7 +199,7 @@ const columns = computed<DataTableColumns<ProtectionRule>>(() => [
   }
 ])
 
-function emptyForm(): ProtectionRuleInput {
+function emptyForm(): ProtectionRuleDraft {
   return {
     name: "",
     module: "bot-protection",
@@ -234,7 +235,7 @@ function emptyForm(): ProtectionRuleInput {
   }
 }
 
-function assignForm(payload: ProtectionRuleInput) {
+function assignForm(payload: ProtectionRuleDraft) {
   Object.assign(form, {
     ...payload,
     match: { ...payload.match, methods: [...payload.match.methods] },
@@ -282,7 +283,7 @@ function startEdit(item: ProtectionRule) {
 }
 
 function applyTemplate(value: string) {
-  const templates: Record<string, ProtectionRuleInput> = {
+  const templates: Record<string, ProtectionRuleDraft> = {
     admin: {
       ...emptyForm(),
       name: t("modules.bot.adminPathJsChallenge"),
@@ -376,18 +377,33 @@ async function save() {
     return
   }
   saving.value = true
+  const payload = buildPayload()
   try {
     if (editing.value) {
-      await updateBotProtectionRule(editing.value.id, form)
+      await updateBotProtectionRule(editing.value.id, payload)
       message.success(t("common.updated", { name: t("modules.bot.title") }))
     } else {
-      await createBotProtectionRule(form)
+      await createBotProtectionRule(payload)
       message.success(t("common.created", { name: t("modules.bot.title") }))
     }
     formVisible.value = false
     await resource.refresh()
   } finally {
     saving.value = false
+  }
+}
+
+function buildPayload(): BotProtectionRuleInput {
+  return {
+    name: form.name,
+    module: form.module,
+    category: form.category,
+    application_id: form.application_id,
+    enabled: form.enabled,
+    priority: form.priority,
+    match: { ...form.match, methods: [...form.match.methods] },
+    challenge: { ...(form.challenge ?? emptyForm().challenge!) },
+    action: { ...form.action }
   }
 }
 

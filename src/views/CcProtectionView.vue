@@ -9,7 +9,8 @@ import {
   updateCCProtectionRule,
   type CCProtectionPreviewMatch,
   type ProtectionRule,
-  type ProtectionRuleInput
+  type ProtectionRuleDraft,
+  type CCProtectionRuleInput
 } from "@/api/litewaf"
 import ModulePageHeader from "@/components/operations/ModulePageHeader.vue"
 import ModuleRiskGuidance from "@/components/operations/ModuleRiskGuidance.vue"
@@ -32,7 +33,7 @@ const items = computed(() => [...(resource.data.value ?? [])])
 const editing = shallowRef<ProtectionRule | null>(null)
 const formVisible = shallowRef(false)
 const saving = shallowRef(false)
-const form = reactive<ProtectionRuleInput>(emptyForm())
+const form = reactive<ProtectionRuleDraft>(emptyForm())
 const previewing = shallowRef(false)
 const previewResult = shallowRef<CCProtectionPreviewMatch[] | null>(null)
 const guidanceItems = computed(() => protectionGuides(t, "cc-protection"))
@@ -279,7 +280,7 @@ const guidanceAlerts = computed(() => guidanceItems.value.map((item) => ({ title
 const activeRiskAlerts = computed(() => activeRiskWarnings.value.map((warning) => ({ title: warning, tone: "warning" as const })))
 const formRiskAlerts = computed(() => formRiskPrompts.value.map((risk) => ({ title: risk.message, message: riskPromptText(risk, t), tone: "warning" as const })))
 
-function emptyForm(): ProtectionRuleInput {
+function emptyForm(): ProtectionRuleDraft {
   return {
     name: "",
     module: "cc-protection",
@@ -307,7 +308,7 @@ function emptyForm(): ProtectionRuleInput {
   }
 }
 
-function assignForm(payload: ProtectionRuleInput) {
+function assignForm(payload: ProtectionRuleDraft) {
   Object.assign(form, {
     ...payload,
     match: { ...payload.match, methods: [...payload.match.methods] },
@@ -339,7 +340,7 @@ function startEdit(item: ProtectionRule) {
 }
 
 function applyTemplate(value: string) {
-  const templates: Record<string, ProtectionRuleInput> = {
+  const templates: Record<string, ProtectionRuleDraft> = {
     login: {
       ...emptyForm(),
       name: t("modules.cc.loginBruteforce"),
@@ -436,18 +437,33 @@ async function save() {
     return
   }
   saving.value = true
+  const payload = buildPayload()
   try {
     if (editing.value) {
-      await updateCCProtectionRule(editing.value.id, form)
+      await updateCCProtectionRule(editing.value.id, payload)
       message.success(t("common.updated", { name: t("modules.cc.title") }))
     } else {
-      await createCCProtectionRule(form)
+      await createCCProtectionRule(payload)
       message.success(t("common.created", { name: t("modules.cc.title") }))
     }
     formVisible.value = false
     await resource.refresh()
   } finally {
     saving.value = false
+  }
+}
+
+function buildPayload(): CCProtectionRuleInput {
+  return {
+    name: form.name,
+    module: form.module,
+    category: form.category,
+    application_id: form.application_id,
+    enabled: form.enabled,
+    priority: form.priority,
+    match: { ...form.match, methods: [...form.match.methods] },
+    limit: { ...form.limit },
+    action: { ...form.action }
   }
 }
 

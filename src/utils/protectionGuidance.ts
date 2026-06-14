@@ -1,4 +1,4 @@
-import type { ProtectionRuleInput } from "@/api/litewaf"
+import type { ProtectionRuleDraft } from "@/api/litewaf"
 
 export interface ProtectionGuideItem {
   title: string
@@ -30,7 +30,7 @@ export function protectionGuides(t: Translate, module: string): ProtectionGuideI
   }))
 }
 
-export function protectionRiskPrompts(rule: ProtectionRuleInput, t: Translate): ProtectionRiskPrompt[] {
+export function protectionRiskPrompts(rule: ProtectionRuleDraft, t: Translate): ProtectionRiskPrompt[] {
   if (!rule.enabled) {
     return []
   }
@@ -59,7 +59,7 @@ export function riskPromptText(prompt: ProtectionRiskPrompt, t: Translate) {
   })
 }
 
-function ccRiskPrompts(rule: ProtectionRuleInput, t: Translate): ProtectionRiskPrompt[] {
+function ccRiskPrompts(rule: ProtectionRuleDraft, t: Translate): ProtectionRiskPrompt[] {
   const blocking = ["block", "ban", "rate-limit"].includes(rule.action.type)
   const lowThreshold = Number(rule.limit.threshold) > 0 && Number(rule.limit.threshold) < 60 && Number(rule.limit.window_sec) <= 60
   if (!blocking || !lowThreshold || !isBroadPath(rule.match.path, rule.match.path_match)) {
@@ -76,7 +76,7 @@ function ccRiskPrompts(rule: ProtectionRuleInput, t: Translate): ProtectionRiskP
   ]
 }
 
-function accessRiskPrompts(rule: ProtectionRuleInput, t: Translate): ProtectionRiskPrompt[] {
+function accessRiskPrompts(rule: ProtectionRuleDraft, t: Translate): ProtectionRiskPrompt[] {
   const prompts: ProtectionRiskPrompt[] = []
   if (rule.action.type === "allow" && (isBroadAccessSource(rule) || isBroadPath(rule.match.path, rule.match.path_match))) {
     prompts.push(
@@ -103,7 +103,7 @@ function accessRiskPrompts(rule: ProtectionRuleInput, t: Translate): ProtectionR
   return prompts
 }
 
-function uploadRiskPrompts(rule: ProtectionRuleInput, t: Translate): ProtectionRiskPrompt[] {
+function uploadRiskPrompts(rule: ProtectionRuleDraft, t: Translate): ProtectionRiskPrompt[] {
   if (rule.action.type !== "block") {
     return []
   }
@@ -134,7 +134,7 @@ function uploadRiskPrompts(rule: ProtectionRuleInput, t: Translate): ProtectionR
   return prompts
 }
 
-function botRiskPrompts(rule: ProtectionRuleInput, t: Translate): ProtectionRiskPrompt[] {
+function botRiskPrompts(rule: ProtectionRuleDraft, t: Translate): ProtectionRiskPrompt[] {
   if (rule.challenge?.failure_action !== "block") {
     return []
   }
@@ -165,7 +165,7 @@ function botRiskPrompts(rule: ProtectionRuleInput, t: Translate): ProtectionRisk
   return prompts
 }
 
-function dynamicRiskPrompts(rule: ProtectionRuleInput, t: Translate): ProtectionRiskPrompt[] {
+function dynamicRiskPrompts(rule: ProtectionRuleDraft, t: Translate): ProtectionRiskPrompt[] {
   const dynamic = rule.dynamic
   if (!dynamic) {
     return []
@@ -227,12 +227,12 @@ function isBroadPath(path = "", pathMatch = "") {
   return path === "/" && (pathMatch === "" || pathMatch === "prefix" || pathMatch === "glob")
 }
 
-function isBroadAccessSource(rule: ProtectionRuleInput) {
+function isBroadAccessSource(rule: ProtectionRuleDraft) {
   const value = rule.match.value || rule.match.host || ""
   return value === "*" || value === ""
 }
 
-function isBroadAccessScope(rule: ProtectionRuleInput) {
+function isBroadAccessScope(rule: ProtectionRuleDraft) {
   return isBroadPath(rule.match.path, rule.match.path_match) || isBroadAccessSource(rule)
 }
 
@@ -240,7 +240,7 @@ function methodScope(methods: string[], t: Translate) {
   return methods.length > 0 ? methods.join(", ") : t("common.allMethods")
 }
 
-function pathScope(rule: ProtectionRuleInput, t: Translate) {
+function pathScope(rule: ProtectionRuleDraft, t: Translate) {
   return t("protectionGuidance.scopes.path", {
     pathMatch: rule.match.path_match || "prefix",
     path: rule.match.path || "/",
@@ -248,7 +248,7 @@ function pathScope(rule: ProtectionRuleInput, t: Translate) {
   })
 }
 
-function accessScope(rule: ProtectionRuleInput, t: Translate) {
+function accessScope(rule: ProtectionRuleDraft, t: Translate) {
   if (rule.match.target === "host") {
     return t("protectionGuidance.scopes.host", {
       operator: rule.match.operator || "exact",
@@ -267,7 +267,7 @@ function accessScope(rule: ProtectionRuleInput, t: Translate) {
   return pathScope(rule, t)
 }
 
-function uploadScope(rule: ProtectionRuleInput, t: Translate) {
+function uploadScope(rule: ProtectionRuleDraft, t: Translate) {
   const extensions = rule.upload?.extensions?.length ? rule.upload.extensions.join(", ") : t("protectionGuidance.scopes.allExtensions")
   const maxBytes = rule.upload?.max_bytes ? `${rule.upload.max_bytes} bytes` : t("protectionGuidance.scopes.noSizeLimit")
   return t("protectionGuidance.scopes.upload", {
@@ -277,7 +277,7 @@ function uploadScope(rule: ProtectionRuleInput, t: Translate) {
   })
 }
 
-function botScope(rule: ProtectionRuleInput, t: Translate) {
+function botScope(rule: ProtectionRuleDraft, t: Translate) {
   return t("protectionGuidance.scopes.bot", {
     scope: pathScope(rule, t),
     mode: rule.challenge?.mode ?? "js-challenge",
@@ -285,7 +285,7 @@ function botScope(rule: ProtectionRuleInput, t: Translate) {
   })
 }
 
-function dynamicScope(rule: ProtectionRuleInput, t: Translate) {
+function dynamicScope(rule: ProtectionRuleDraft, t: Translate) {
   const dynamic = rule.dynamic
   if (!dynamic) {
     return t("protectionGuidance.scopes.dynamicFallback", {
