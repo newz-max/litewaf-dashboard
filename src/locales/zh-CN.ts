@@ -354,7 +354,13 @@ const zhCN = {
       routeName: "路由名称",
       path: "URL 路径",
       pathMatch: "匹配方式",
+      targetType: "目标类型",
+      targetProxy: "反代服务",
+      targetStatic: "静态目录",
       upstreamTarget: "目标上游",
+      staticRoot: "本地目录",
+      staticMode: "映射模式",
+      staticRouteHint: "静态目录路由只负责 URL 到本机目录的映射；WAF 放行、拦截或记录仍由访问控制和防护策略决定。Docker 部署时需要把该目录挂载到 gateway 容器内。",
       priority: "优先级",
       noRoutes: "暂无 URL 路由，未命中时会使用第一个启用上游。",
       newRoute: "新路由",
@@ -370,7 +376,7 @@ const zhCN = {
       upstreamName: "上游名称",
       routeOrder: "匹配顺序",
       defaultFallback: "默认上游兜底",
-      routeCountSummary: "{enabled}/{total} 条启用",
+      routeCountSummary: "{enabled}/{total} 条启用，静态 {static} 条",
       routeProxyOptions: "路由代理选项"
     },
     advanced: {

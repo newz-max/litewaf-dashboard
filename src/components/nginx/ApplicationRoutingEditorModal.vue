@@ -65,6 +65,10 @@ watch(
     }))
     form.routes = (props.application.routes ?? []).map((route) => ({
       ...route,
+      target_type: route.target_type || "proxy",
+      upstream_name: route.upstream_name ?? "",
+      static_root: route.static_root ?? "",
+      static_mode: route.static_mode || "alias",
       proxy_config: normalizeApplicationProxyConfigForForm(route.proxy_config)
     }))
     form.proxy_config = normalizeApplicationProxyConfigForForm(props.application.proxy_config)
@@ -113,7 +117,10 @@ function addRoute() {
     name: t("nginxProxy.routing.newRoute"),
     path: "/",
     path_match: "prefix",
+    target_type: "proxy",
     upstream_name: form.upstreams.find((upstream) => upstream.enabled)?.name ?? form.upstreams[0]?.name ?? "",
+    static_root: "",
+    static_mode: "alias",
     priority: nextRoutePriority(),
     enabled: true,
     proxy_config: defaultApplicationProxyForm()
@@ -240,7 +247,7 @@ function closeModal() {
             {{ form.listeners.filter((listener) => listener.enabled).map((listener) => `${listener.port}/${listener.protocol}`).join(", ") || t("common.noData") }}
           </NDescriptionsItem>
           <NDescriptionsItem :label="t('nginxProxy.routing.routeOrder')">
-            {{ orderedRoutes.map((route) => `${route.priority}:${route.path} -> ${route.upstream_name}`).join(" | ") || t("common.noData") }}
+            {{ orderedRoutes.map((route) => `${route.priority}:${route.path} -> ${(route.target_type || "proxy") === "static" ? route.static_root : route.upstream_name}`).join(" | ") || t("common.noData") }}
           </NDescriptionsItem>
         </NDescriptions>
       </NTabPane>

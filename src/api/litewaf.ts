@@ -77,7 +77,10 @@ export interface ApplicationRoute {
   name: string
   path: string
   path_match: "exact" | "prefix" | "glob"
-  upstream_name: string
+  target_type?: "proxy" | "static"
+  upstream_name?: string
+  static_root?: string
+  static_mode?: "alias" | "root" | ""
   priority: number
   enabled: boolean
   proxy_config?: ApplicationProxyConfig

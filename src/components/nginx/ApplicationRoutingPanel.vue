@@ -124,7 +124,8 @@ function summarizeRoutes(application: Application) {
     return t("nginxProxy.routing.defaultFallback")
   }
   const enabled = routes.filter((route) => route.enabled).length
-  return t("nginxProxy.routing.routeCountSummary", { total: routes.length, enabled })
+  const staticRoutes = routes.filter((route) => route.target_type === "static").length
+  return t("nginxProxy.routing.routeCountSummary", { total: routes.length, enabled, static: staticRoutes })
 }
 
 function openRoutingModal(application: Application) {

@@ -115,13 +115,27 @@ export function cloneApplicationRoute(route: ApplicationRoute): ApplicationRoute
 }
 
 export function normalizeApplicationRoutesInput(routes: readonly ApplicationRoute[]): ApplicationInput["routes"] {
-  return routes.map((route, index) => ({
-    name: route.name.trim(),
-    path: route.path.trim() || "/",
-    path_match: route.path_match || "prefix",
-    upstream_name: route.upstream_name.trim(),
-    priority: route.priority > 0 ? route.priority : index + 1,
-    enabled: route.enabled,
-    proxy_config: normalizeApplicationProxyConfigInput(route.proxy_config)
-  }))
+  return routes.map((route, index) => {
+    const targetType: NonNullable<ApplicationRoute["target_type"]> = route.target_type === "static" ? "static" : "proxy"
+    const base = {
+      name: route.name.trim(),
+      path: route.path.trim() || "/",
+      path_match: targetType === "static" ? ("prefix" as const) : route.path_match || "prefix",
+      target_type: targetType,
+      priority: route.priority > 0 ? route.priority : index + 1,
+      enabled: route.enabled
+    }
+    if (targetType === "static") {
+      return {
+        ...base,
+        static_root: route.static_root?.trim() ?? "",
+        static_mode: route.static_mode || "alias"
+      }
+    }
+    return {
+      ...base,
+      upstream_name: route.upstream_name?.trim() ?? "",
+      proxy_config: normalizeApplicationProxyConfigInput(route.proxy_config)
+    }
+  })
 }

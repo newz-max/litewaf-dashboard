@@ -356,7 +356,13 @@ const enUS: typeof zhCN = {
       routeName: "Route name",
       path: "URL path",
       pathMatch: "Match mode",
+      targetType: "Target type",
+      targetProxy: "Reverse proxy",
+      targetStatic: "Static directory",
       upstreamTarget: "Target upstream",
+      staticRoot: "Local directory",
+      staticMode: "Mapping mode",
+      staticRouteHint: "Static directory routes only map a URL to a local directory. WAF allow, block, and logging behavior still comes from access-control and protection policies. Docker deployments must mount this directory into the gateway container.",
       priority: "Priority",
       noRoutes: "No URL routes. Unmatched traffic uses the first enabled upstream.",
       newRoute: "New route",
@@ -372,7 +378,7 @@ const enUS: typeof zhCN = {
       upstreamName: "Upstream name",
       routeOrder: "Match order",
       defaultFallback: "Default upstream fallback",
-      routeCountSummary: "{enabled}/{total} enabled",
+      routeCountSummary: "{enabled}/{total} enabled, {static} static",
       routeProxyOptions: "Route proxy options"
     },
     advanced: {
